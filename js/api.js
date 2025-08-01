@@ -112,7 +112,7 @@ class ApiService {
     async logout() {
         this.clearToken();
         localStorage.removeItem('user'); // Clear user data too
-        window.location.href = '/frontend/index.html'; // Fix path
+        window.location.href = '/'; // Fix path
     }
 
     async getCurrentUser() {
