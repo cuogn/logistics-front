@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Điều Phối Xe - Admin</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="../css/dashboard.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo"><a href="../index.html">NTT Express</a></div>
+                <nav class="nav">
+                    <ul class="nav-list">
+                        <li><a href="admin-dashboard.html" class="nav-link">Dashboard</a></li>
+                        <li><a href="admin-orders.html" class="nav-link">Quản Lý Đơn Hàng</a></li>
+                        <li><a href="admin-users.html" class="nav-link">Quản Lý Người Dùng</a></li>
+                        <li><a href="admin-stats.html" class="nav-link">Thống Kê</a></li>
+                        <li><a href="admin-vehicles.html" class="nav-link">Phương Tiện</a></li>
+                        <li><a href="admin-vehicle-assignments.html" class="nav-link active">Điều Phối Xe</a></li>
+                        <li><a href="admin-settings.html" class="nav-link">Cài Đặt</a></li>
+                    </ul>
+                </nav>
+                <div class="header-actions">
+                    <div class="user-menu">
+                        <span class="user-name" id="userName">Admin</span>
+                        <button class="btn btn-secondary" onclick="logout()">Đăng Xuất</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+    <main class="main-content">
+        <div class="container">
+            <div class="page-header">
+                <h1>Điều Phối Xe Cho Đơn Hàng</h1>
+            </div>
+            <div class="table-container">
+                <table class="table" id="assignmentsTable">
+                    <thead>
+                        <tr>
+                            <th>Mã Đơn</th>
+                            <th>Phương Tiện</th>
+                            <th>Tài Xế</th>
+                            <th>Thời Gian Gán</th>
+                            <th>Trạng Thái</th>
+                            <th>Thao Tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="assignmentsBody">
+                        <tr><td colspan="6" class="text-center">Đang tải...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <button class="btn btn-primary" onclick="openAssignModal()"><i data-lucide="plus"></i> Gán Xe Cho Đơn Hàng</button>
+        </div>
+    </main>
+    <div class="modal" id="assignModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Gán Xe Cho Đơn Hàng</h2>
+                <button class="modal-close" onclick="closeAssignModal()"><i data-lucide="x"></i></button>
+            </div>
+            <form id="assignForm">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="order_id">Đơn Hàng</label>
+                        <select id="order_id" name="order_id" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="vehicle_id">Phương Tiện</label>
+                        <select id="vehicle_id" name="vehicle_id" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="driver_id">Tài Xế</label>
+                        <select id="driver_id" name="driver_id" required></select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeAssignModal()">Hủy</button>
+                    <button type="submit" class="btn btn-primary">Gán Xe</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script src="../js/lucide.min.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/script.js"></script>
+    <script>
+        lucide.createIcons();
+        auth.redirectIfNotAdmin();
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        document.getElementById('userName').textContent = user.full_name || 'Admin';
+        async function loadAssignments() {
+            const res = await api.getVehicleAssignments();
+            const tbody = document.getElementById('assignmentsBody');
+            if (!res.success || !res.data.length) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center">Không có lịch sử điều phối</td></tr>';
+                return;
+            }
+            tbody.innerHTML = res.data.map(a => `
+                <tr>
+                    <td>${a.order_code}</td>
+                    <td>${a.vehicle_license_plate}</td>
+                    <td>${a.driver_name}</td>
+                    <td>${ui.formatDateTime(a.assigned_at)}</td>
+                    <td>${ui.getAssignmentStatusBadge(a.status)}</td>
+                    <td><button class="btn btn-sm btn-danger" onclick="deleteAssignment(${a.id})"><i data-lucide='trash-2'></i></button></td>
+                </tr>
+            `).join('');
+            lucide.createIcons();
+        }
+        async function loadOrders() {
+            const res = await api.getUnassignedOrders();
+            const select = document.getElementById('order_id');
+            select.innerHTML = '';
+            if (res.success && res.data.length) {
+                res.data.forEach(order => {
+                    const opt = document.createElement('option');
+                    opt.value = order.id;
+                    opt.textContent = order.order_code + ' - ' + order.receiver_name;
+                    select.appendChild(opt);
+                });
+            } else {
+                select.innerHTML = '<option value="">Không có đơn hàng</option>';
+            }
+        }
+        async function loadVehicles() {
+            const res = await api.getAvailableVehicles();
+            const select = document.getElementById('vehicle_id');
+            select.innerHTML = '';
+            if (res.success && res.data.length) {
+                res.data.forEach(vehicle => {
+                    const opt = document.createElement('option');
+                    opt.value = vehicle.id;
+                    opt.textContent = vehicle.license_plate + ' - ' + vehicle.type;
+                    select.appendChild(opt);
+                });
+            } else {
+                select.innerHTML = '<option value="">Không có xe</option>';
+            }
+        }
+        async function loadDrivers() {
+            const res = await api.getStaffList();
+            const select = document.getElementById('driver_id');
+            select.innerHTML = '';
+            if (res.success && res.data.length) {
+                res.data.forEach(staff => {
+                    const opt = document.createElement('option');
+                    opt.value = staff.id;
+                    opt.textContent = staff.full_name + ' (' + staff.username + ')';
+                    select.appendChild(opt);
+                });
+            } else {
+                select.innerHTML = '<option value="">Không có tài xế</option>';
+            }
+        }
+        function openAssignModal() {
+            document.getElementById('assignModal').style.display = 'flex';
+            loadOrders();
+            loadVehicles();
+            loadDrivers();
+        }
+        function closeAssignModal() {
+            document.getElementById('assignModal').style.display = 'none';
+            document.getElementById('assignForm').reset();
+        }
+        async function deleteAssignment(id) {
+            if (!confirm('Bạn chắc chắn muốn xoá điều phối này?')) return;
+            const res = await api.deleteVehicleAssignment(id);
+            if (res.success) {
+                ui.showSuccess('Đã xoá điều phối');
+                loadAssignments();
+            } else {
+                ui.showError('Xoá thất bại');
+            }
+        }
+        document.getElementById('assignForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+            const res = await api.createVehicleAssignment(data);
+            if (res.success) {
+                ui.showSuccess('Gán xe thành công');
+                closeAssignModal();
+                loadAssignments();
+            } else {
+                ui.showError(res.message || 'Gán xe thất bại');
+            }
+        });
+        function logout() { api.logout(); }
+        document.addEventListener('DOMContentLoaded', loadAssignments);
+    </script>
+    <style>
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.2); align-items: center; justify-content: center; }
+        .modal-content { background: #fff; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); padding: 2rem; min-width: 350px; max-width: 95vw; }
+        .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+        .modal-close { background: none; border: none; font-size: 1.2rem; cursor: pointer; }
+        .modal-footer { display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1rem; }
+    </style>
+</body>
+</html> 

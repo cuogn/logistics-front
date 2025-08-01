@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dịch Vụ - NTT Express</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="../css/services.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <a href="../index.html">
+                        NTT Express
+                    </a>
+                </div>
+                
+                <nav class="nav">
+                    <ul class="nav-list">
+                        <li><a href="../index.html" class="nav-link">Trang Chủ</a></li>
+                        <li><a href="dashboard.html" class="nav-link">Bảng Điều Khiển</a></li>
+                        <li><a href="services.html" class="nav-link active">Dịch Vụ</a></li>
+                        <li><a href="track.html" class="nav-link">Theo Dõi</a></li>
+                        <li><a href="about.html" class="nav-link">Giới Thiệu</a></li>
+                        <li><a href="contact.html" class="nav-link">Liên Hệ</a></li>
+                        <li><a href="faq.html" class="nav-link">FAQ</a></li>
+                    </ul>
+                </nav>
+                
+                <div class="header-actions">
+                    <a href="login.html" class="btn btn-secondary">Đăng Nhập</a>
+                    <a href="register.html" class="btn btn-primary">Đăng Ký</a>
+                </div>
+                
+                <button class="mobile-menu-toggle" id="mobileMenuToggle">
+                    <i data-lucide="menu"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Services Hero -->
+    <section class="services-hero">
+        <div class="container">
+            <div class="hero-content">
+                <h1>Dịch Vụ Logistics Toàn Diện</h1>
+                <p>NTT Express cung cấp các giải pháp logistics hiện đại, đáp ứng mọi nhu cầu vận chuyển của doanh nghiệp</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Services -->
+    <section class="main-services">
+        <div class="container">
+            <div class="services-grid">
+                <div class="service-card">
+                    <div class="service-icon">
+                        <i data-lucide="truck"></i>
+                    </div>
+                    <h3>Vận Chuyển Nội Địa</h3>
+                    <p>Dịch vụ vận chuyển hàng hóa trong nước với mạng lưới rộng khắp 63 tỉnh thành</p>
+                    <ul class="service-features">
+                        <li>Giao hàng trong ngày</li>
+                        <li>Giao hàng tiêu chuẩn 2-3 ngày</li>
+                        <li>Giao hàng tiết kiệm 3-5 ngày</li>
+                        <li>Theo dõi trực tuyến 24/7</li>
+                    </ul>
+                    <a href="#" class="btn btn-primary">Tìm Hiểu Thêm</a>
+                </div>
+
+                <div class="service-card">
+                    <div class="service-icon">
+                        <i data-lucide="plane"></i>
+                    </div>
+                    <h3>Vận Chuyển Quốc Tế</h3>
+                    <p>Dịch vụ vận chuyển hàng hóa quốc tế với các tuyến đường toàn cầu</p>
+                    <ul class="service-features">
+                        <li>Vận chuyển đường hàng không</li>
+                        <li>Vận chuyển đường biển</li>
+                        <li>Vận chuyển đường bộ</li>
+                        <li>Thủ tục hải quan trọn gói</li>
+                    </ul>
+                    <a href="#" class="btn btn-primary">Tìm Hiểu Thêm</a>
+                </div>
+
+                <div class="service-card">
+                    <div class="service-icon">
+                        <i data-lucide="warehouse"></i>
+                    </div>
+                    <h3>Kho Bãi & Lưu Trữ</h3>
+                    <p>Hệ thống kho bãi hiện đại với công nghệ quản lý tiên tiến</p>
+                    <ul class="service-features">
+                        <li>Kho hàng tiêu chuẩn</li>
+                        <li>Kho lạnh bảo quản</li>
+                        <li>Kho nguy hiểm</li>
+                        <li>Quản lý tồn kho thông minh</li>
+                    </ul>
+                    <a href="#" class="btn btn-primary">Tìm Hiểu Thêm</a>
+                </div>
+
+                <div class="service-card">
+                    <div class="service-icon">
+                        <i data-lucide="package"></i>
+                    </div>
+                    <h3>Đóng Gói & Xử Lý</h3>
+                    <p>Dịch vụ đóng gói chuyên nghiệp và xử lý hàng hóa đặc biệt</p>
+                    <ul class="service-features">
+                        <li>Đóng gói theo yêu cầu</li>
+                        <li>Xử lý hàng dễ vỡ</li>
+                        <li>Đóng gói hàng điện tử</li>
+                        <li>Bảo hiểm hàng hóa</li>
+                    </ul>
+                    <a href="#" class="btn btn-primary">Tìm Hiểu Thêm</a>
+                </div>
+
+                <div class="service-card">
+                    <div class="service-icon">
+                        <i data-lucide="map-pin"></i>
+                    </div>
+                    <h3>Giao Hàng Cuối Mile</h3>
+                    <p>Dịch vụ giao hàng tận nơi với đội ngũ giao hàng chuyên nghiệp</p>
+                    <ul class="service-features">
+                        <li>Giao hàng trong 2 giờ</li>
+                        <li>Giao hàng theo lịch hẹn</li>
+                        <li>Xác nhận giao hàng</li>
+                        <li>Thu hộ tiền hàng</li>
+                    </ul>
+                    <a href="#" class="btn btn-primary">Tìm Hiểu Thêm</a>
+                </div>
+
+                <div class="service-card">
+                    <div class="service-icon">
+                        <i data-lucide="bar-chart-3"></i>
+                    </div>
+                    <h3>Giải Pháp E-commerce</h3>
+                    <p>Giải pháp logistics toàn diện cho các sàn thương mại điện tử</p>
+                    <ul class="service-features">
+                        <li>Tích hợp API</li>
+                        <li>Quản lý đơn hàng tự động</li>
+                        <li>Báo cáo chi tiết</li>
+                        <li>Hỗ trợ đa kênh</li>
+                    </ul>
+                    <a href="#" class="btn btn-primary">Tìm Hiểu Thêm</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Service Features -->
+    <section class="service-features">
+        <div class="container">
+            <div class="section-header">
+                <h2>Tại Sao Chọn NTT Express?</h2>
+                <p>Chúng tôi cam kết mang đến trải nghiệm logistics tốt nhất cho khách hàng</p>
+            </div>
+            
+            <div class="features-grid">
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <i data-lucide="clock"></i>
+                    </div>
+                    <h3>Giao Hàng Nhanh Chóng</h3>
+                    <p>Mạng lưới rộng khắp với thời gian giao hàng tối ưu</p>
+                </div>
+                
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <i data-lucide="shield"></i>
+                    </div>
+                    <h3>An Toàn & Bảo Mật</h3>
+                    <p>Hàng hóa được bảo vệ toàn diện với hệ thống theo dõi 24/7</p>
+                </div>
+                
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <i data-lucide="headphones"></i>
+                    </div>
+                    <h3>Hỗ Trợ 24/7</h3>
+                    <p>Đội ngũ chăm sóc khách hàng chuyên nghiệp, sẵn sàng hỗ trợ mọi lúc</p>
+                </div>
+                
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <i data-lucide="dollar-sign"></i>
+                    </div>
+                    <h3>Giá Cả Cạnh Tranh</h3>
+                    <p>Mức giá hợp lý với chất lượng dịch vụ cao cấp</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="container">
+            <div class="cta-content">
+                <h2>Sẵn Sàng Bắt Đầu?</h2>
+                <p>Liên hệ với chúng tôi để được tư vấn và báo giá chi tiết</p>
+                <div class="cta-buttons">
+                    <a href="contact.html" class="btn btn-primary btn-large">Liên Hệ Ngay</a>
+                    <a href="register.html" class="btn btn-secondary btn-large">Đăng Ký Dịch Vụ</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script src="../js/lucide.min.js"></script>
+    <script src="../js/script.js"></script>
+</body>
+</html> 

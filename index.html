@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NTT Express - Quản Lý Logistics Hiện Đại</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <a href="index.html">
+                        NTT Express
+                    </a>
+                </div>
+                
+                <nav class="nav">
+                    <ul class="nav-list">
+                        <li><a href="index.html" class="nav-link active">Trang Chủ</a></li>
+                        <li><a href="pages/dashboard.html" class="nav-link">Bảng Điều Khiển</a></li>
+                        <li><a href="pages/services.html" class="nav-link">Dịch Vụ</a></li>
+                        <li><a href="pages/track.html" class="nav-link">Theo Dõi</a></li>
+                        <li><a href="pages/about.html" class="nav-link">Giới Thiệu</a></li>
+                        <li><a href="pages/contact.html" class="nav-link">Liên Hệ</a></li>
+                        <li><a href="pages/faq.html" class="nav-link">FAQ</a></li>
+                    </ul>
+                </nav>
+                
+                <div class="header-actions">
+                    <a href="pages/login.html" class="btn btn-secondary">Đăng Nhập</a>
+                    <a href="pages/register.html" class="btn btn-primary">Đăng Ký</a>
+                    <div id="userMenu" style="display:none; align-items:center; gap:8px;">
+                        <span id="userName" style="font-weight:500;"></span>
+                        <button class="btn btn-secondary" id="logoutBtn">Đăng Xuất</button>
+                    </div>
+                </div>
+                
+                <button class="mobile-menu-toggle" id="mobileMenuToggle">
+                    <i data-lucide="menu"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-text">
+                    <h1 class="hero-title">Tối Ưu Hóa Hoạt Động Logistics Trực Tuyến</h1>
+                    <p class="hero-subtitle">Theo dõi logistics hiện đại và quản lý đơn hàng để tăng hiệu quả và minh bạch.</p>
+                    <button class="btn btn-primary btn-large">Bắt Đầu Ngay</button>
+                </div>
+                <div class="hero-visual">
+                    <img src="images/nttbanner.png" alt="Logistics Banner" class="hero-image">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="stats-section">
+        <div class="container">
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-icon">
+                        <i data-lucide="users"></i>
+                    </div>
+                    <div class="stat-number">10,000+</div>
+                    <div class="stat-label">Khách Hàng</div>
+                </div>
+                
+                <div class="stat-item">
+                    <div class="stat-icon">
+                        <i data-lucide="package"></i>
+                    </div>
+                    <div class="stat-number">1M+</div>
+                    <div class="stat-label">Đơn Hàng</div>
+                </div>
+                
+                <div class="stat-item">
+                    <div class="stat-icon">
+                        <i data-lucide="map-pin"></i>
+                    </div>
+                    <div class="stat-number">500+</div>
+                    <div class="stat-label">Điểm Giao Dịch</div>
+                </div>
+                
+                <div class="stat-item">
+                    <div class="stat-icon">
+                        <i data-lucide="award"></i>
+                    </div>
+                    <div class="stat-number">99.9%</div>
+                    <div class="stat-label">Hài Lòng</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features" id="features">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Tính Năng Mạnh Mẽ</h2>
+                <p class="section-subtitle">Tất cả những gì bạn cần để quản lý hoạt động logistics hiệu quả</p>
+            </div>
+            
+            <div class="features-visual">
+                <img src="images/features.png" alt="Tính năng NTT Express" class="features-image">
+            </div>
+            
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i data-lucide="package"></i>
+                    </div>
+                    <h3 class="feature-title">Quản Lý Đơn Hàng</h3>
+                    <p class="feature-description">Tối ưu hóa quy trình xử lý đơn hàng với theo dõi thời gian thực và quy trình tự động.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i data-lucide="map-pin"></i>
+                    </div>
+                    <h3 class="feature-title">Theo Dõi Giao Hàng</h3>
+                    <p class="feature-description">Theo dõi hàng hóa thời gian thực với tích hợp GPS và cập nhật trạng thái.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i data-lucide="warehouse"></i>
+                    </div>
+                    <h3 class="feature-title">Giám Sát Kho Hàng</h3>
+                    <p class="feature-description">Giám sát mức tồn kho và hoạt động kho hàng với phân tích thông minh.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i data-lucide="shield"></i>
+                    </div>
+                    <h3 class="feature-title">Phân Quyền Người Dùng</h3>
+                    <p class="feature-description">Kiểm soát truy cập dựa trên vai trò với quyền tùy chỉnh và bảo mật.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Services Overview -->
+    <section class="services-overview">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Dịch Vụ Logistics Toàn Diện</h2>
+                <p class="section-subtitle">Giải pháp vận chuyển hiện đại cho mọi nhu cầu kinh doanh</p>
+            </div>
+            
+            <div class="services-grid">
+                <div class="service-overview-card">
+                    <div class="service-image">
+                        <img src="images/banner.svg" alt="Vận chuyển nội địa" class="service-img">
+                    </div>
+                    <div class="service-content">
+                        <h3>Vận Chuyển Nội Địa</h3>
+                        <p>Mạng lưới rộng khắp 63 tỉnh thành với thời gian giao hàng tối ưu</p>
+                        <ul>
+                            <li>Giao hàng trong ngày</li>
+                            <li>Giao hàng tiêu chuẩn 2-3 ngày</li>
+                            <li>Giao hàng tiết kiệm 3-5 ngày</li>
+                        </ul>
+                        <a href="pages/services.html" class="btn btn-secondary">Tìm Hiểu Thêm</a>
+                    </div>
+                </div>
+                
+                <div class="service-overview-card">
+                    <div class="service-image">
+                        <img src="images/about.svg" alt="Vận chuyển quốc tế" class="service-img">
+                    </div>
+                    <div class="service-content">
+                        <h3>Vận Chuyển Quốc Tế</h3>
+                        <p>Dịch vụ vận chuyển toàn cầu với các tuyến đường tối ưu</p>
+                        <ul>
+                            <li>Vận chuyển đường hàng không</li>
+                            <li>Vận chuyển đường biển</li>
+                            <li>Thủ tục hải quan trọn gói</li>
+                        </ul>
+                        <a href="pages/services.html" class="btn btn-secondary">Tìm Hiểu Thêm</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section class="pricing" id="pricing">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Giá Cả Đơn Giản</h2>
+                <p class="section-subtitle">Chọn gói phù hợp với nhu cầu kinh doanh của bạn</p>
+            </div>
+            
+            <div class="pricing-grid">
+                <div class="pricing-card">
+                    <div class="pricing-header">
+                        <h3 class="pricing-title">Cơ Bản</h3>
+                        <div class="pricing-price">
+                            <span class="price">29$</span>
+                            <span class="period">/tháng</span>
+                        </div>
+                    </div>
+                    <ul class="pricing-features">
+                        <li><i data-lucide="check"></i> Tối đa 100 đơn hàng/tháng</li>
+                        <li><i data-lucide="check"></i> Theo dõi cơ bản</li>
+                        <li><i data-lucide="check"></i> Hỗ trợ qua email</li>
+                        <li><i data-lucide="check"></i> Truy cập ứng dụng di động</li>
+                    </ul>
+                    <button class="btn btn-primary">Bắt Đầu</button>
+                </div>
+                
+                <div class="pricing-card featured">
+                    <div class="pricing-badge">Phổ Biến Nhất</div>
+                    <div class="pricing-header">
+                        <h3 class="pricing-title">Chuyên Nghiệp</h3>
+                        <div class="pricing-price">
+                            <span class="price">79$</span>
+                            <span class="period">/tháng</span>
+                        </div>
+                    </div>
+                    <ul class="pricing-features">
+                        <li><i data-lucide="check"></i> Tối đa 1,000 đơn hàng/tháng</li>
+                        <li><i data-lucide="check"></i> Theo dõi nâng cao</li>
+                        <li><i data-lucide="check"></i> Hỗ trợ ưu tiên</li>
+                        <li><i data-lucide="check"></i> Truy cập API</li>
+                        <li><i data-lucide="check"></i> Bảng điều khiển phân tích</li>
+                    </ul>
+                    <button class="btn btn-primary">Bắt Đầu</button>
+                </div>
+                
+                <div class="pricing-card">
+                    <div class="pricing-header">
+                        <h3 class="pricing-title">Doanh Nghiệp</h3>
+                        <div class="pricing-price">
+                            <span class="price">199$</span>
+                            <span class="period">/tháng</span>
+                        </div>
+                    </div>
+                    <ul class="pricing-features">
+                        <li><i data-lucide="check"></i> Không giới hạn đơn hàng</li>
+                        <li><i data-lucide="check"></i> Theo dõi thời gian thực</li>
+                        <li><i data-lucide="check"></i> Hỗ trợ 24/7</li>
+                        <li><i data-lucide="check"></i> Tích hợp tùy chỉnh</li>
+                        <li><i data-lucide="check"></i> Phân tích nâng cao</li>
+                        <li><i data-lucide="check"></i> Tùy chọn white-label</li>
+                    </ul>
+                    <button class="btn btn-primary">Bắt Đầu</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section class="about" id="about">
+        <div class="container">
+            <div class="about-content">
+                <div class="about-text">
+                    <h2 class="section-title">Về NTT Express</h2>
+                    <p class="about-description">
+                        Được phát triển để hỗ trợ hoạt động logistics hiện đại, NTT Express cung cấp giải pháp toàn diện 
+                        cho quản lý đơn hàng, theo dõi giao hàng và giám sát kho hàng. 
+                        Nền tảng của chúng tôi được thiết kế để tăng cường hiệu quả và minh bạch trong toàn bộ 
+                        chuỗi cung ứng của bạn.
+                    </p>
+                    <div class="about-stats">
+                        <div class="stat">
+                            <span class="stat-number">500+</span>
+                            <span class="stat-label">Người Dùng Hoạt Động</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-number">10K+</span>
+                            <span class="stat-label">Đơn Hàng Đã Xử Lý</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-number">99.9%</span>
+                            <span class="stat-label">Thời Gian Hoạt Động</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="about-visual">
+                    <img src="images/about.svg" alt="Thống kê NTT Express" class="about-image">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Network Section -->
+    <section class="network-section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Mạng Lưới Toàn Quốc</h2>
+                <p class="section-subtitle">Phủ sóng rộng khắp 63 tỉnh thành với hơn 500 điểm giao dịch</p>
+            </div>
+            
+            <div class="network-carousel">
+                <div class="carousel-container">
+                    <div class="carousel-track">
+                        <div class="carousel-slide">
+                            <img src="images/network-hanoi.svg" alt="Hà Nội" class="network-image">
+                            <div class="slide-content">
+                                <h3>Hà Nội</h3>
+                                <p>50+ điểm giao dịch</p>
+                            </div>
+                        </div>
+                        
+                        <div class="carousel-slide">
+                            <img src="images/network-hcm.svg" alt="TP.HCM" class="network-image">
+                            <div class="slide-content">
+                                <h3>TP.HCM</h3>
+                                <p>80+ điểm giao dịch</p>
+                            </div>
+                        </div>
+                        
+                        <div class="carousel-slide">
+                            <img src="images/network-danang.svg" alt="Đà Nẵng" class="network-image">
+                            <div class="slide-content">
+                                <h3>Đà Nẵng</h3>
+                                <p>25+ điểm giao dịch</p>
+                            </div>
+                        </div>
+                        
+                        <div class="carousel-slide">
+                            <img src="images/network-hue.svg" alt="Huế" class="network-image">
+                            <div class="slide-content">
+                                <h3>Huế</h3>
+                                <p>20+ điểm giao dịch</p>
+                            </div>
+                        </div>
+                        
+                        <div class="carousel-slide">
+                            <img src="images/network-nhatrang.svg" alt="Nha Trang" class="network-image">
+                            <div class="slide-content">
+                                <h3>Nha Trang</h3>
+                                <p>15+ điểm giao dịch</p>
+                            </div>
+                        </div>
+                        
+                        <div class="carousel-slide">
+                            <img src="images/network-can-tho.svg" alt="Cần Thơ" class="network-image">
+                            <div class="slide-content">
+                                <h3>Cần Thơ</h3>
+                                <p>30+ điểm giao dịch</p>
+                            </div>
+                        </div>
+                        
+                        <div class="carousel-slide">
+                            <img src="images/network-hai-phong.svg" alt="Hải Phòng" class="network-image">
+                            <div class="slide-content">
+                                <h3>Hải Phòng</h3>
+                                <p>35+ điểm giao dịch</p>
+                            </div>
+                        </div>
+                        
+                        <div class="carousel-slide">
+                            <img src="images/network-quang-ninh.svg" alt="Quảng Ninh" class="network-image">
+                            <div class="slide-content">
+                                <h3>Quảng Ninh</h3>
+                                <p>20+ điểm giao dịch</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="carousel-btn prev-btn" id="prevBtn">
+                    <i data-lucide="chevron-left"></i>
+                </button>
+                <button class="carousel-btn next-btn" id="nextBtn">
+                    <i data-lucide="chevron-right"></i>
+                </button>
+                
+                <div class="carousel-dots">
+                    <span class="dot active" data-slide="0"></span>
+                    <span class="dot" data-slide="1"></span>
+                    <span class="dot" data-slide="2"></span>
+                    <span class="dot" data-slide="3"></span>
+                    <span class="dot" data-slide="4"></span>
+                    <span class="dot" data-slide="5"></span>
+                    <span class="dot" data-slide="6"></span>
+                    <span class="dot" data-slide="7"></span>
+                </div>
+            </div>
+            
+            <div class="network-stats">
+                <div class="network-stat">
+                    <div class="stat-number">63</div>
+                    <div class="stat-label">Tỉnh Thành</div>
+                </div>
+                <div class="network-stat">
+                    <div class="stat-number">500+</div>
+                    <div class="stat-label">Điểm Giao Dịch</div>
+                </div>
+                <div class="network-stat">
+                    <div class="stat-number">1,000+</div>
+                    <div class="stat-label">Nhân Viên</div>
+                </div>
+                <div class="network-stat">
+                    <div class="stat-number">24/7</div>
+                    <div class="stat-label">Hỗ Trợ</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <div class="footer-logo">
+                        NTT Express
+                        </div>
+                    <p class="footer-description">
+                        Nền tảng quản lý logistics hiện đại cho hoạt động hiệu quả và theo dõi minh bạch.
+                    </p>
+                </div>
+                
+                <div class="footer-section">
+                    <h4 class="footer-title">Công Ty</h4>
+                    <ul class="footer-links">
+                        <li><a href="pages/about.html">Giới Thiệu</a></li>
+                        <li><a href="pages/contact.html">Liên Hệ</a></li>
+                        <li><a href="pages/faq.html">FAQ</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h4 class="footer-title">Dịch Vụ</h4>
+                    <ul class="footer-links">
+                        <li><a href="pages/services.html">Vận Chuyển Nội Địa</a></li>
+                        <li><a href="pages/services.html">Vận Chuyển Quốc Tế</a></li>
+                        <li><a href="pages/services.html">Kho Bãi & Lưu Trữ</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h4 class="footer-title">Pháp Lý</h4>
+                    <ul class="footer-links">
+                        <li><a href="#terms">Điều Khoản Sử Dụng</a></li>
+                        <li><a href="#privacy">Chính Sách Bảo Mật</a></li>
+                        <li><a href="#cookies">Chính Sách Cookie</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h4 class="footer-title">Liên Hệ</h4>
+                    <div class="contact-info">
+                        <p><i data-lucide="mail"></i> info@nttexpress.com</p>
+                        <p><i data-lucide="phone"></i> +84 (24) 123-4567</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2024 NTT Express. Tất cả quyền được bảo lưu.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/lucide.min.js"></script>
+    <script src="js/script.js"></script>
+    <script src="js/api.js"></script>
+    <script>
+document.addEventListener('DOMContentLoaded', function() {
+    const user = JSON.parse(localStorage.getItem('user') || 'null');
+    const userMenu = document.getElementById('userMenu');
+    const userName = document.getElementById('userName');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const loginBtn = document.querySelector('.header-actions a[href*="login"]');
+    const registerBtn = document.querySelector('.header-actions a[href*="register"]');
+    if (user && user.role) {
+        if (userMenu && userName && logoutBtn) {
+            userMenu.style.display = 'flex';
+            userName.textContent = user.lastName ? (user.firstName + ' ' + user.lastName) : user.email;
+            if (loginBtn) loginBtn.style.display = 'none';
+            if (registerBtn) registerBtn.style.display = 'none';
+            logoutBtn.onclick = function() { if (window.api && api.logout) api.logout(); else window.location.href = 'pages/login.html'; };
+        }
+    } else {
+        if (userMenu) userMenu.style.display = 'none';
+        if (loginBtn) loginBtn.style.display = '';
+        if (registerBtn) registerBtn.style.display = '';
+    }
+});
+</script>
+</body>
+</html> 

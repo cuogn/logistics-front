@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Lý Đơn Hàng - Admin</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="../css/dashboard.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <a href="../index.html">
+                        NTT Express
+                    </a>
+                </div>
+                
+                <nav class="nav">
+                    <ul class="nav-list">
+                        <li><a href="admin-dashboard.html" class="nav-link">Dashboard</a></li>
+                        <li><a href="admin-orders.html" class="nav-link active">Quản Lý Đơn Hàng</a></li>
+                        <li><a href="admin-users.html" class="nav-link">Quản Lý Người Dùng</a></li>
+                        <li><a href="admin-stats.html" class="nav-link">Thống Kê</a></li>
+                        <li><a href="admin-settings.html" class="nav-link">Cài Đặt</a></li>
+                    </ul>
+                </nav>
+                
+                <div class="header-actions">
+                    <div class="user-menu">
+                        <span class="user-name" id="userName">Admin</span>
+                        <button class="btn btn-secondary" onclick="logout()">Đăng Xuất</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Page Header -->
+            <div class="page-header">
+                <h1>Quản Lý Đơn Hàng</h1>
+                <button class="btn btn-primary" onclick="openCreateOrderModal()">
+                    <i data-lucide="plus"></i>
+                    Tạo Đơn Hàng Mới
+                </button>
+            </div>
+
+            <!-- Filters -->
+            <div class="filters-section">
+                <div class="filters-grid">
+                    <div class="filter-group">
+                        <label for="statusFilter">Trạng Thái</label>
+                        <select id="statusFilter" class="form-select">
+                            <option value="">Tất cả</option>
+                            <option value="pending">Chờ xử lý</option>
+                            <option value="processing">Đang xử lý</option>
+                            <option value="shipping">Đang giao</option>
+                            <option value="delivered">Đã giao</option>
+                            <option value="failed">Thất bại</option>
+                            <option value="cancelled">Đã hủy</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label for="searchFilter">Tìm Kiếm</label>
+                        <input type="text" id="searchFilter" class="form-input" placeholder="Mã đơn, tên người gửi/nhận...">
+                    </div>
+
+                    <div class="filter-group">
+                        <label for="dateFromFilter">Từ Ngày</label>
+                        <input type="date" id="dateFromFilter" class="form-input">
+                    </div>
+
+                    <div class="filter-group">
+                        <label for="dateToFilter">Đến Ngày</label>
+                        <input type="date" id="dateToFilter" class="form-input">
+                    </div>
+
+                    <div class="filter-group">
+                        <button class="btn btn-secondary" onclick="applyFilters()">
+                            <i data-lucide="search"></i>
+                            Lọc
+                        </button>
+                        <button class="btn btn-outline" onclick="clearFilters()">
+                            <i data-lucide="x"></i>
+                            Xóa
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Orders Table -->
+            <div class="table-container">
+                <table class="table" id="ordersTable">
+                    <thead>
+                        <tr>
+                            <th>Mã Đơn</th>
+                            <th>Người Gửi</th>
+                            <th>Người Nhận</th>
+                            <th>Trạng Thái</th>
+                            <th>Tổng Tiền</th>
+                            <th>Ngày Tạo</th>
+                            <th>Ngày Giao Dự Kiến</th>
+                            <th>Thao Tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ordersTableBody">
+                        <tr>
+                            <td colspan="8" class="text-center">Đang tải...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination" id="pagination">
+                <!-- Pagination will be generated here -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Create Order Modal -->
+    <div class="modal" id="createOrderModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Tạo Đơn Hàng Mới</h2>
+                <button class="modal-close" onclick="closeCreateOrderModal()">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <form id="createOrderForm">
+                <div class="modal-body">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="senderName">Tên Người Gửi *</label>
+                            <input type="text" id="senderName" name="sender_name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="senderPhone">Số Điện Thoại Người Gửi *</label>
+                            <input type="tel" id="senderPhone" name="sender_phone" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="senderAddress">Địa Chỉ Người Gửi *</label>
+                        <textarea id="senderAddress" name="sender_address" required></textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="receiverName">Tên Người Nhận *</label>
+                            <input type="text" id="receiverName" name="receiver_name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="receiverPhone">Số Điện Thoại Người Nhận *</label>
+                            <input type="tel" id="receiverPhone" name="receiver_phone" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="receiverAddress">Địa Chỉ Người Nhận *</label>
+                        <textarea id="receiverAddress" name="receiver_address" required></textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="packageWeight">Trọng Lượng (kg) *</label>
+                            <input type="number" id="packageWeight" name="package_weight" step="0.1" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="packageDimensions">Kích Thước</label>
+                            <input type="text" id="packageDimensions" name="package_dimensions" placeholder="Dài x Rộng x Cao">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="packageDescription">Mô Tả Hàng Hóa</label>
+                        <textarea id="packageDescription" name="package_description"></textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="shippingFee">Phí Vận Chuyển (VNĐ) *</label>
+                            <input type="number" id="shippingFee" name="shipping_fee" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="estimatedDeliveryDate">Ngày Giao Dự Kiến</label>
+                            <input type="date" id="estimatedDeliveryDate" name="estimated_delivery_date">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeCreateOrderModal()">Hủy</button>
+                    <button type="submit" class="btn btn-primary">Tạo Đơn Hàng</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="../js/lucide.min.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/script.js"></script>
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // Check authentication
+        auth.redirectIfNotAdmin();
+
+        // Load user info
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        document.getElementById('userName').textContent = user.full_name || 'Admin';
+
+        // Current page and filters
+        let currentPage = 1;
+        let currentFilters = {};
+
+        // Load orders
+        async function loadOrders(page = 1, filters = {}) {
+            try {
+                const params = {
+                    page,
+                    limit: 10,
+                    ...filters
+                };
+
+                const response = await api.getOrders(params);
+                
+                if (response.success) {
+                    displayOrders(response.data.orders);
+                    displayPagination(response.data.pagination);
+                } else {
+                    ui.showError('Không thể tải danh sách đơn hàng');
+                }
+            } catch (error) {
+                console.error('Error loading orders:', error);
+                ui.showError('Có lỗi xảy ra khi tải dữ liệu');
+            }
+        }
+
+        function displayOrders(orders) {
+            const tbody = document.getElementById('ordersTableBody');
+            
+            if (orders.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center">Không có đơn hàng nào</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = orders.map(order => `
+                <tr>
+                    <td><strong>${order.order_code}</strong></td>
+                    <td>
+                        <div>${order.sender_name}</div>
+                        <small>${order.sender_phone}</small>
+                    </td>
+                    <td>
+                        <div>${order.receiver_name}</div>
+                        <small>${order.receiver_phone}</small>
+                    </td>
+                    <td>${ui.getStatusBadge(order.current_status)}</td>
+                    <td>${ui.formatCurrency(order.total_amount)}</td>
+                    <td>${ui.formatDateTime(order.created_at)}</td>
+                    <td>${order.estimated_delivery_date ? ui.formatDate(order.estimated_delivery_date) : '-'}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <a href="admin-order-detail.html?id=${order.id}" class="btn btn-sm btn-primary">Xem</a>
+                            <a href="admin-order-edit.html?id=${order.id}" class="btn btn-sm btn-secondary">Sửa</a>
+                            <button class="btn btn-sm btn-danger" onclick="deleteOrder(${order.id})">Xóa</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function displayPagination(pagination) {
+            const paginationElement = document.getElementById('pagination');
+            
+            if (pagination.pages <= 1) {
+                paginationElement.innerHTML = '';
+                return;
+            }
+
+            let paginationHTML = '<div class="pagination-controls">';
+            
+            // Previous button
+            if (pagination.page > 1) {
+                paginationHTML += `<button class="btn btn-sm" onclick="changePage(${pagination.page - 1})">Trước</button>`;
+            }
+
+            // Page numbers
+            for (let i = 1; i <= pagination.pages; i++) {
+                if (i === pagination.page) {
+                    paginationHTML += `<button class="btn btn-sm btn-primary">${i}</button>`;
+                } else {
+                    paginationHTML += `<button class="btn btn-sm" onclick="changePage(${i})">${i}</button>`;
+                }
+            }
+
+            // Next button
+            if (pagination.page < pagination.pages) {
+                paginationHTML += `<button class="btn btn-sm" onclick="changePage(${pagination.page + 1})">Sau</button>`;
+            }
+
+            paginationHTML += '</div>';
+            paginationElement.innerHTML = paginationHTML;
+        }
+
+        function changePage(page) {
+            currentPage = page;
+            loadOrders(page, currentFilters);
+        }
+
+        function applyFilters() {
+            const status = document.getElementById('statusFilter').value;
+            const search = document.getElementById('searchFilter').value;
+            const dateFrom = document.getElementById('dateFromFilter').value;
+            const dateTo = document.getElementById('dateToFilter').value;
+
+            currentFilters = {};
+            if (status) currentFilters.status = status;
+            if (search) currentFilters.search = search;
+            if (dateFrom) currentFilters.start_date = dateFrom;
+            if (dateTo) currentFilters.end_date = dateTo;
+
+            currentPage = 1;
+            loadOrders(currentPage, currentFilters);
+        }
+
+        function clearFilters() {
+            document.getElementById('statusFilter').value = '';
+            document.getElementById('searchFilter').value = '';
+            document.getElementById('dateFromFilter').value = '';
+            document.getElementById('dateToFilter').value = '';
+            
+            currentFilters = {};
+            currentPage = 1;
+            loadOrders(currentPage);
+        }
+
+        // Modal functions
+        function openCreateOrderModal() {
+            document.getElementById('createOrderModal').style.display = 'flex';
+        }
+
+        function closeCreateOrderModal() {
+            document.getElementById('createOrderModal').style.display = 'none';
+            document.getElementById('createOrderForm').reset();
+        }
+
+        // Create order form handling
+        document.getElementById('createOrderForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const orderData = Object.fromEntries(formData.entries());
+            
+            try {
+                const response = await api.createOrder(orderData);
+                
+                if (response.success) {
+                    ui.showSuccess('Tạo đơn hàng thành công!');
+                    closeCreateOrderModal();
+                    loadOrders(currentPage, currentFilters);
+                } else {
+                    ui.showError(response.message || 'Tạo đơn hàng thất bại');
+                }
+            } catch (error) {
+                ui.showError(error.message || 'Có lỗi xảy ra khi tạo đơn hàng');
+            }
+        });
+
+        async function deleteOrder(orderId) {
+            if (!confirm('Bạn có chắc chắn muốn xóa đơn hàng này?')) {
+                return;
+            }
+
+            try {
+                const response = await api.deleteOrder(orderId);
+                
+                if (response.success) {
+                    ui.showSuccess('Xóa đơn hàng thành công!');
+                    loadOrders(currentPage, currentFilters);
+                } else {
+                    ui.showError(response.message || 'Xóa đơn hàng thất bại');
+                }
+            } catch (error) {
+                ui.showError(error.message || 'Có lỗi xảy ra khi xóa đơn hàng');
+            }
+        }
+
+        function logout() {
+            api.logout();
+        }
+
+        // Load data when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            loadOrders();
+        });
+    </script>
+</body>
+</html> 

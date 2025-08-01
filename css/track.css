@@ -1,0 +1,448 @@
+/* Track Page Styles */
+.track-main {
+    padding: 2rem 0;
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    min-height: calc(100vh - 80px);
+}
+
+.track-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.track-header h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 1rem;
+}
+
+.track-header p {
+    font-size: 1.125rem;
+    color: #64748b;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* Track Form */
+.track-form-container {
+    max-width: 600px;
+    margin: 0 auto 2rem;
+}
+
+.track-form {
+    background: white;
+    border-radius: 1rem;
+    padding: 2rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e5e7eb;
+}
+
+.track-form .input-group {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    position: relative;
+}
+
+.track-form .input-group input {
+    flex: 1;
+    padding: 1rem 1rem 1rem 3rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+}
+
+.track-form .input-group input:focus {
+    outline: none;
+    border-color: #1e40af;
+    box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1);
+}
+
+.track-form .input-group .input-icon {
+    position: absolute;
+    left: 1rem;
+    width: 1.25rem;
+    height: 1.25rem;
+    color: #9ca3af;
+    z-index: 2;
+}
+
+.track-form .input-group button {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem 1.5rem;
+    white-space: nowrap;
+}
+
+/* Sample Tracking */
+.sample-tracking {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.sample-tracking p {
+    color: #64748b;
+    margin-bottom: 1rem;
+}
+
+.sample-numbers {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.sample-btn {
+    background: white;
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    color: #374151;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.sample-btn:hover {
+    border-color: #1e40af;
+    background: #f8fafc;
+    color: #1e40af;
+}
+
+/* Tracking Results */
+.tracking-results {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.shipment-info {
+    background: white;
+    border-radius: 1rem;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e5e7eb;
+}
+
+.shipment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.shipment-header h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.tracking-number {
+    background: #1e40af;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.shipment-details {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.detail-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+}
+
+.detail-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.detail-item .label {
+    font-size: 0.875rem;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.detail-item .value {
+    font-size: 1rem;
+    color: #1e293b;
+    font-weight: 600;
+}
+
+.detail-item .status {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #d97706;
+    background: #fef3c7;
+    padding: 0.25rem 0.75rem;
+    border-radius: 0.25rem;
+    display: inline-block;
+    width: fit-content;
+}
+
+/* Timeline */
+.tracking-timeline {
+    background: white;
+    border-radius: 1rem;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e5e7eb;
+}
+
+.tracking-timeline h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 1.5rem;
+}
+
+.timeline {
+    position: relative;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 1.5rem;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #e5e7eb;
+}
+
+.timeline-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    position: relative;
+}
+
+.timeline-item:last-child {
+    margin-bottom: 0;
+}
+
+.timeline-item.completed .timeline-icon {
+    background: #10b981;
+    color: white;
+}
+
+.timeline-item.current .timeline-icon {
+    background: #1e40af;
+    color: white;
+}
+
+.timeline-item.pending .timeline-icon {
+    background: #f3f4f6;
+    color: #9ca3af;
+}
+
+.timeline-icon {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    z-index: 2;
+    position: relative;
+}
+
+.timeline-icon i {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+.timeline-content {
+    flex: 1;
+}
+
+.timeline-content h4 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 0.25rem;
+}
+
+.timeline-content p {
+    color: #64748b;
+    font-size: 0.875rem;
+    margin-bottom: 0.5rem;
+}
+
+.timeline-content .time {
+    font-size: 0.75rem;
+    color: #9ca3af;
+}
+
+/* Map Section */
+.map-section {
+    background: white;
+    border-radius: 1rem;
+    padding: 2rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e5e7eb;
+}
+
+.map-section h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 1.5rem;
+}
+
+.map-container {
+    height: 300px;
+    background: #f8fafc;
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.map-placeholder {
+    text-align: center;
+    color: #64748b;
+}
+
+.map-icon {
+    width: 4rem;
+    height: 4rem;
+    color: #1e40af;
+    margin-bottom: 1rem;
+}
+
+.location-info {
+    margin-top: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.location-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+}
+
+.location-item i {
+    width: 1rem;
+    height: 1rem;
+    color: #1e40af;
+}
+
+/* No Results */
+.no-results {
+    max-width: 500px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.no-results-content {
+    background: white;
+    border-radius: 1rem;
+    padding: 3rem 2rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e5e7eb;
+}
+
+.no-results-icon {
+    width: 4rem;
+    height: 4rem;
+    color: #9ca3af;
+    margin-bottom: 1.5rem;
+}
+
+.no-results-content h3 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 1rem;
+}
+
+.no-results-content p {
+    color: #64748b;
+    margin-bottom: 2rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .track-header h1 {
+        font-size: 2rem;
+    }
+    
+    .track-form .input-group {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .track-form .input-group button {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .sample-numbers {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .shipment-header {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: flex-start;
+    }
+    
+    .detail-row {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .timeline::before {
+        left: 1rem;
+    }
+    
+    .timeline-icon {
+        width: 2rem;
+        height: 2rem;
+    }
+    
+    .timeline-icon i {
+        width: 1rem;
+        height: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .track-main {
+        padding: 1rem 0;
+    }
+    
+    .track-header h1 {
+        font-size: 1.75rem;
+    }
+    
+    .track-form {
+        padding: 1.5rem;
+    }
+    
+    .shipment-info,
+    .tracking-timeline,
+    .map-section {
+        padding: 1.5rem;
+    }
+} 

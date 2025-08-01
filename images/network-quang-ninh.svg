@@ -1,0 +1,53 @@
+<svg width="300" height="200" viewBox="0 0 300 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="quangninhGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#7c2d12;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#a16207;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="300" height="200" fill="url(#quangninhGradient)"/>
+  
+  <!-- Mountains -->
+  <polygon points="0,200 50,120 100,140 150,100 200,130 250,110 300,140 300,200" fill="#6b7280" opacity="0.8"/>
+  <polygon points="0,200 30,130 60,150 90,120 120,140 150,110 180,130 210,115 240,135 270,120 300,150 300,200" fill="#9ca3af" opacity="0.6"/>
+  
+  <!-- Bay area -->
+  <rect x="0" y="160" width="300" height="40" fill="#0ea5e9" opacity="0.6"/>
+  
+  <!-- Islands -->
+  <circle cx="80" cy="150" r="8" fill="#fbbf24" opacity="0.9"/>
+  <circle cx="220" cy="145" r="10" fill="#fbbf24" opacity="0.9"/>
+  <circle cx="150" cy="155" r="6" fill="#fbbf24" opacity="0.9"/>
+  
+  <!-- City buildings -->
+  <rect x="20" y="120" width="30" height="40" fill="white" opacity="0.9"/>
+  <rect x="60" y="110" width="35" height="50" fill="white" opacity="0.9"/>
+  <rect x="105" y="115" width="30" height="45" fill="white" opacity="0.9"/>
+  <rect x="145" y="105" width="40" height="55" fill="white" opacity="0.9"/>
+  <rect x="195" y="120" width="25" height="40" fill="white" opacity="0.9"/>
+  <rect x="230" y="110" width="35" height="50" fill="white" opacity="0.9"/>
+  <rect x="275" y="115" width="25" height="45" fill="white" opacity="0.9"/>
+  
+  <!-- Windows -->
+  <rect x="25" y="125" width="8" height="8" fill="#7c2d12"/>
+  <rect x="40" y="125" width="8" height="8" fill="#7c2d12"/>
+  <rect x="25" y="140" width="8" height="8" fill="#7c2d12"/>
+  <rect x="40" y="140" width="8" height="8" fill="#7c2d12"/>
+  
+  <!-- Logo/Icon -->
+  <circle cx="150" cy="50" r="25" fill="white" opacity="0.9"/>
+  <text x="150" y="58" text-anchor="middle" fill="#7c2d12" font-family="Arial" font-size="12" font-weight="bold">QN</text>
+  
+  <!-- Network dots -->
+  <circle cx="50" cy="40" r="3" fill="white" opacity="0.8"/>
+  <circle cx="250" cy="60" r="3" fill="white" opacity="0.8"/>
+  <circle cx="80" cy="30" r="3" fill="white" opacity="0.8"/>
+  <circle cx="220" cy="45" r="3" fill="white" opacity="0.8"/>
+  
+  <!-- Boats -->
+  <ellipse cx="60" cy="170" rx="12" ry="4" fill="#fbbf24" opacity="0.8"/>
+  <ellipse cx="180" cy="168" rx="12" ry="4" fill="#fbbf24" opacity="0.8"/>
+  <ellipse cx="240" cy="172" rx="12" ry="4" fill="#fbbf24" opacity="0.8"/>
+</svg> 

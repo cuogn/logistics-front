@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Dashboard - NTT Express</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="../css/dashboard.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <a href="../index.html">
+                        NTT Express
+                    </a>
+                </div>
+                
+                <nav class="nav">
+                    <ul class="nav-list">
+                        <li><a href="staff-dashboard.html" class="nav-link active">Dashboard</a></li>
+                        <li><a href="staff-orders.html" class="nav-link">Quản Lý Đơn Hàng</a></li>
+                        <li><a href="staff-track.html" class="nav-link">Theo Dõi Giao Hàng</a></li>
+                        <li><a href="staff-stats.html" class="nav-link">Thống Kê</a></li>
+                    </ul>
+                </nav>
+                
+                <div class="header-actions">
+                    <div class="user-menu">
+                        <span class="user-name" id="userName">Staff</span>
+                        <button class="btn btn-secondary" onclick="logout()">Đăng Xuất</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Page Header -->
+            <div class="page-header">
+                <h1>Staff Dashboard</h1>
+                <p>Quản lý đơn hàng và giao hàng</p>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="stats-grid" id="statsGrid">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i data-lucide="package"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number" id="totalOrders">
+                            <span class="loading-spinner" id="totalOrdersSpinner"> </span>
+                            <span class="stat-value" style="display: none;">-</span>
+                        </div>
+                        <div class="stat-label">Tổng Đơn Hàng</div>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i data-lucide="clock"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number" id="pendingOrders">
+                            <span class="loading-spinner" id="pendingOrdersSpinner"> </span>
+                            <span class="stat-value" style="display: none;">-</span>
+                        </div>
+                        <div class="stat-label">Chờ Xử Lý</div>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i data-lucide="truck"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number" id="shippingOrders">
+                            <span class="loading-spinner" id="shippingOrdersSpinner"> </span>
+                            <span class="stat-value" style="display: none;">-</span>
+                        </div>
+                        <div class="stat-label">Đang Giao</div>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i data-lucide="check-circle"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number" id="deliveredOrders">
+                            <span class="loading-spinner" id="deliveredOrdersSpinner"> </span>
+                            <span class="stat-value" style="display: none;">-</span>
+                        </div>
+                        <div class="stat-label">Đã Giao</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="quick-actions">
+                <h2>Thao Tác Nhanh</h2>
+                <div class="actions-grid">
+                    <a href="staff-orders.html" class="action-card">
+                        <i data-lucide="plus"></i>
+                        <span>Tạo Đơn Hàng Mới</span>
+                    </a>
+                    <a href="staff-track.html" class="action-card">
+                        <i data-lucide="map-pin"></i>
+                        <span>Theo Dõi Giao Hàng</span>
+                    </a>
+                    <a href="staff-stats.html" class="action-card">
+                        <i data-lucide="bar-chart-3"></i>
+                        <span>Xem Thống Kê</span>
+                    </a>
+                    <a href="staff-settings.html" class="action-card">
+                        <i data-lucide="settings"></i>
+                        <span>Cài Đặt</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Recent Orders -->
+            <div class="recent-orders">
+                <div class="section-header">
+                    <h2>Đơn Hàng Gần Đây</h2>
+                    <a href="staff-orders.html" class="btn btn-secondary">Xem Tất Cả</a>
+                </div>
+                <div class="table-container">
+                    <table class="table" id="recentOrdersTable">
+                        <thead>
+                            <tr>
+                                <th>Mã Đơn</th>
+                                <th>Người Gửi</th>
+                                <th>Người Nhận</th>
+                                <th>Trạng Thái</th>
+                                <th>Ngày Tạo</th>
+                                <th>Thao Tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recentOrdersBody">
+                            <tr>
+                                <td colspan="6" class="text-center">Đang tải...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Today's Tasks -->
+            <div class="today-tasks">
+                <h2>Công Việc Hôm Nay</h2>
+                <div class="tasks-grid" id="tasksGrid">
+                    <!-- Tasks will be populated here -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="../js/lucide.min.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/script.js"></script>
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // Check authentication
+        auth.redirectIfNotStaff();
+
+        // Load user info
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        document.getElementById('userName').textContent = user.full_name || 'Staff';
+
+        // Load dashboard data
+        async function loadDashboardData() {
+            try {
+                console.log('🔄 Loading staff dashboard data...');
+                
+                // Show loading state
+                showStatsLoading(true);
+                
+                // Load daily stats from statistics table
+                const statsResponse = await api.getDailyStats();
+                console.log('📊 Stats response:', statsResponse);
+                
+                if (statsResponse.success && statsResponse.data && statsResponse.data.totals) {
+                    const totals = statsResponse.data.totals;
+                    console.log('📈 Totals:', totals);
+                    
+                    // Ensure all values are numbers, not NaN
+                    const totalOrders = parseInt(totals.total_orders) || 0;
+                    const pendingOrders = parseInt(totals.pending_orders) || 0;
+                    const shippingOrders = parseInt(totals.shipping_orders) || 0;
+                    const deliveredOrders = parseInt(totals.delivered_orders) || 0;
+                    
+                    // Update stats with proper loading state handling
+                    updateStatValue('totalOrders', totalOrders);
+                    updateStatValue('pendingOrders', pendingOrders);
+                    updateStatValue('shippingOrders', shippingOrders);
+                    updateStatValue('deliveredOrders', deliveredOrders);
+                    
+                    console.log('✅ Stats updated successfully');
+                } else {
+                    console.error('❌ Stats API failed or no data:', statsResponse);
+                    // Set default values if API fails
+                    updateStatValue('totalOrders', 0);
+                    updateStatValue('pendingOrders', 0);
+                    updateStatValue('shippingOrders', 0);
+                    updateStatValue('deliveredOrders', 0);
+                }
+
+                // Load recent orders
+                const ordersResponse = await api.getOrders({ limit: 5 });
+                if (ordersResponse.success) {
+                    displayRecentOrders(ordersResponse.data.orders);
+                }
+
+            } catch (error) {
+                console.error('❌ Staff dashboard load error:', error);
+                ui.showError('Không thể tải dữ liệu dashboard');
+                
+                // Set default values on error
+                updateStatValue('totalOrders', 0);
+                updateStatValue('pendingOrders', 0);
+                updateStatValue('shippingOrders', 0);
+                updateStatValue('deliveredOrders', 0);
+            } finally {
+                // Hide loading state
+                showStatsLoading(false);
+            }
+        }
+        
+        function showStatsLoading(show) {
+            const spinnerIds = ['totalOrdersSpinner', 'pendingOrdersSpinner', 'shippingOrdersSpinner', 'deliveredOrdersSpinner'];
+            const valueIds = ['totalOrders', 'pendingOrders', 'shippingOrders', 'deliveredOrders'];
+            
+            spinnerIds.forEach((spinnerId, index) => {
+                const spinner = document.getElementById(spinnerId);
+                const valueElement = document.getElementById(valueIds[index]);
+                const statValue = valueElement.querySelector('.stat-value');
+                
+                if (show) {
+                    spinner.style.display = 'inline';
+                    statValue.style.display = 'none';
+                } else {
+                    spinner.style.display = 'none';
+                    statValue.style.display = 'inline';
+                }
+            });
+        }
+        
+        function updateStatValue(elementId, value) {
+            const element = document.getElementById(elementId);
+            const statValue = element.querySelector('.stat-value');
+            const spinner = element.querySelector('.loading-spinner');
+            
+            statValue.textContent = value;
+            statValue.style.display = 'inline';
+            spinner.style.display = 'none';
+        }
+
+        function displayRecentOrders(orders) {
+            const tbody = document.getElementById('recentOrdersBody');
+            
+            if (orders.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center">Không có đơn hàng nào</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = orders.map(order => `
+                <tr>
+                    <td><strong>${order.order_code}</strong></td>
+                    <td>${order.sender_name}</td>
+                    <td>${order.receiver_name}</td>
+                    <td>${ui.getStatusBadge(order.current_status)}</td>
+                    <td>${ui.formatDateTime(order.created_at)}</td>
+                    <td>
+                        <a href="staff-order-detail.html?id=${order.id}" class="btn btn-sm btn-primary">Xem</a>
+                        <a href="staff-order-edit.html?id=${order.id}" class="btn btn-sm btn-secondary">Sửa</a>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        async function loadTodayTasks() {
+            try {
+                const today = new Date().toISOString().split('T')[0];
+                const ordersResponse = await api.getOrders({ 
+                    start_date: today, 
+                    end_date: today,
+                    limit: 10 
+                });
+
+                if (ordersResponse.success) {
+                    displayTodayTasks(ordersResponse.data.orders);
+                }
+            } catch (error) {
+                console.error('Error loading today tasks:', error);
+            }
+        }
+
+        function displayTodayTasks(orders) {
+            const tasksGrid = document.getElementById('tasksGrid');
+            
+            if (orders.length === 0) {
+                tasksGrid.innerHTML = '<div class="no-tasks">Không có công việc nào cho hôm nay</div>';
+                return;
+            }
+
+            tasksGrid.innerHTML = orders.map(order => `
+                <div class="task-card ${order.current_status}">
+                    <div class="task-header">
+                        <h4>${order.order_code}</h4>
+                        <span class="task-status">${getStatusText(order.current_status)}</span>
+                    </div>
+                    <div class="task-content">
+                        <p><strong>Gửi:</strong> ${order.sender_name}</p>
+                        <p><strong>Nhận:</strong> ${order.receiver_name}</p>
+                        <p><strong>Địa chỉ:</strong> ${order.receiver_address}</p>
+                    </div>
+                    <div class="task-actions">
+                        <a href="staff-order-detail.html?id=${order.id}" class="btn btn-sm btn-primary">Xem Chi Tiết</a>
+                        <button class="btn btn-sm btn-secondary" onclick="updateOrderStatus(${order.id})">Cập Nhật Trạng Thái</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function getStatusText(status) {
+            const textMap = {
+                'pending': 'Chờ xử lý',
+                'processing': 'Đang xử lý',
+                'shipping': 'Đang giao',
+                'delivered': 'Đã giao',
+                'failed': 'Thất bại',
+                'cancelled': 'Đã hủy'
+            };
+            return textMap[status] || status;
+        }
+
+        async function updateOrderStatus(orderId) {
+            const status = prompt('Nhập trạng thái mới (pending/processing/shipping/delivered/failed/cancelled):');
+            if (!status) return;
+
+            const description = prompt('Nhập mô tả:');
+            if (!description) return;
+
+            const location = prompt('Nhập vị trí hiện tại (tùy chọn):');
+
+            try {
+                const response = await api.updateOrderStatus(orderId, status, description, location);
+                
+                if (response.success) {
+                    ui.showSuccess('Cập nhật trạng thái thành công!');
+                    loadDashboardData();
+                } else {
+                    ui.showError(response.message || 'Cập nhật trạng thái thất bại');
+                }
+            } catch (error) {
+                ui.showError(error.message || 'Có lỗi xảy ra khi cập nhật trạng thái');
+            }
+        }
+
+        function logout() {
+            api.logout();
+        }
+
+        // Load dashboard data immediately when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Staff dashboard page loaded, starting data load...');
+            loadDashboardData();
+            loadTodayTasks();
+        });
+        
+        // Also try to load data immediately if DOM is already ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', function() {
+                loadDashboardData();
+                loadTodayTasks();
+            });
+        } else {
+            // DOM is already ready, load immediately
+            console.log('⚡ DOM already ready, loading staff dashboard data immediately...');
+            loadDashboardData();
+            loadTodayTasks();
+        }
+    </script>
+</body>
+</html> 

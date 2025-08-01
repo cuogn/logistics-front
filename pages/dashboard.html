@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Khách Hàng</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="../css/dashboard.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo"><a href="../index.html">NTT Express</a></div>
+                <nav class="nav">
+                    <ul class="nav-list">
+                        <li><a href="dashboard.html" class="nav-link active">Dashboard</a></li>
+                        <li><a href="track.html" class="nav-link">Theo Dõi Đơn Hàng</a></li>
+                        <li><a href="about.html" class="nav-link">Giới Thiệu</a></li>
+                        <li><a href="contact.html" class="nav-link">Liên Hệ</a></li>
+                    </ul>
+                </nav>
+                <div class="header-actions">
+                    <div class="user-menu">
+                        <span class="user-name" id="userName">Khách hàng</span>
+                        <button class="btn btn-secondary" onclick="logout()">Đăng Xuất</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+    <main class="main-content">
+        <div class="container">
+            <div class="page-header">
+                <h1>Xin chào, <span id="customerName">Khách hàng</span>!</h1>
+                <p>Quản lý đơn hàng và tra cứu trạng thái giao hàng của bạn.</p>
+            </div>
+            <div class="stats-grid" id="statsGrid">
+                <div class="stat-card">
+                    <div class="stat-icon"><i data-lucide="package"></i></div>
+                    <div class="stat-content">
+                        <div class="stat-number" id="totalOrders">
+                            <span class="loading-spinner" id="totalOrdersSpinner"> </span>
+                            <span class="stat-value" style="display: none;">-</span>
+                        </div>
+                        <div class="stat-label">Tổng Đơn Hàng</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i data-lucide="clock"></i></div>
+                    <div class="stat-content">
+                        <div class="stat-number" id="pendingOrders">
+                            <span class="loading-spinner" id="pendingOrdersSpinner"> </span>
+                            <span class="stat-value" style="display: none;">-</span>
+                        </div>
+                        <div class="stat-label">Chờ Xử Lý</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i data-lucide="truck"></i></div>
+                    <div class="stat-content">
+                        <div class="stat-number" id="shippingOrders">
+                            <span class="loading-spinner" id="shippingOrdersSpinner"> </span>
+                            <span class="stat-value" style="display: none;">-</span>
+                        </div>
+                        <div class="stat-label">Đang Giao</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i data-lucide="check-circle"></i></div>
+                    <div class="stat-content">
+                        <div class="stat-number" id="deliveredOrders">
+                            <span class="loading-spinner" id="deliveredOrdersSpinner"> </span>
+                            <span class="stat-value" style="display: none;">-</span>
+                        </div>
+                        <div class="stat-label">Đã Giao</div>
+                    </div>
+                </div>
+            </div>
+            <div class="quick-actions">
+                <h2>Thao Tác Nhanh</h2>
+                <div class="actions-grid">
+                    <a href="track.html" class="action-card">
+                        <i data-lucide="search"></i>
+                        <span>Tra Cứu Đơn Hàng</span>
+                    </a>
+                    <a href="register.html" class="action-card">
+                        <i data-lucide="plus"></i>
+                        <span>Tạo Đơn Hàng Mới</span>
+                    </a>
+                    <a href="dashboard.html#changePassword" class="action-card" onclick="openChangePasswordModal();return false;">
+                        <i data-lucide="lock"></i>
+                        <span>Đổi Mật Khẩu</span>
+                    </a>
+                </div>
+            </div>
+            <div class="recent-orders">
+                <div class="section-header">
+                    <h2>Đơn Hàng Gần Đây</h2>
+                    <a href="track.html" class="btn btn-secondary">Xem Tất Cả</a>
+                </div>
+                <div class="table-container">
+                    <table class="table" id="recentOrdersTable">
+                        <thead>
+                            <tr>
+                                <th>Mã Đơn</th>
+                                <th>Người Nhận</th>
+                                <th>Trạng Thái</th>
+                                <th>Ngày Tạo</th>
+                                <th>Thao Tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recentOrdersBody">
+                            <tr><td colspan="5" class="text-center">Đang tải...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+    <div class="modal" id="changePasswordModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Đổi Mật Khẩu</h2>
+                <button class="modal-close" onclick="closeChangePasswordModal()"><i data-lucide="x"></i></button>
+            </div>
+            <form id="changePasswordForm">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="currentPassword">Mật khẩu hiện tại</label>
+                        <input type="password" id="currentPassword" name="currentPassword" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="newPassword">Mật khẩu mới</label>
+                        <input type="password" id="newPassword" name="newPassword" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeChangePasswordModal()">Hủy</button>
+                    <button type="submit" class="btn btn-primary">Đổi Mật Khẩu</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script src="../js/lucide.min.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/script.js"></script>
+    <script>
+        lucide.createIcons();
+        auth.redirectIfNotLoggedIn();
+        
+        // Chỉ customer mới truy cập được
+        auth.redirectIfNotCustomerOnly();
+        
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        document.getElementById('userName').textContent = user.full_name || 'Khách hàng';
+        document.getElementById('customerName').textContent = user.full_name || 'Khách hàng';
+        async function loadDashboard() {
+            try {
+                console.log('🔄 Loading dashboard data...');
+                
+                // Show loading state
+                showStatsLoading(true);
+                
+                // Load daily stats
+                const statsResponse = await api.getDailyStats();
+                console.log('📊 Stats response:', statsResponse);
+                
+                if (statsResponse.success && statsResponse.data && statsResponse.data.totals) {
+                    const totals = statsResponse.data.totals;
+                    console.log('📈 Totals:', totals);
+                    
+                    // Ensure all values are numbers, not NaN
+                    const totalOrders = parseInt(totals.total_orders) || 0;
+                    const pendingOrders = parseInt(totals.pending_orders) || 0;
+                    const shippingOrders = parseInt(totals.shipping_orders) || 0;
+                    const deliveredOrders = parseInt(totals.delivered_orders) || 0;
+                    
+                    // Update stats with proper loading state handling
+                    updateStatValue('totalOrders', totalOrders);
+                    updateStatValue('pendingOrders', pendingOrders);
+                    updateStatValue('shippingOrders', shippingOrders);
+                    updateStatValue('deliveredOrders', deliveredOrders);
+                    
+                    console.log('✅ Stats updated successfully');
+                } else {
+                    console.error('❌ Stats API failed or no data:', statsResponse);
+                    // Set default values if API fails
+                    updateStatValue('totalOrders', 0);
+                    updateStatValue('pendingOrders', 0);
+                    updateStatValue('shippingOrders', 0);
+                    updateStatValue('deliveredOrders', 0);
+                }
+                
+                // Load recent orders
+                const ordersResponse = await api.getOrders({ limit: 5 });
+                if (ordersResponse.success) {
+                    displayRecentOrders(ordersResponse.data.orders);
+                }
+            } catch (error) { 
+                console.error('❌ Dashboard load error:', error);
+                ui.showError('Không thể tải dữ liệu dashboard');
+                
+                // Set default values on error
+                updateStatValue('totalOrders', 0);
+                updateStatValue('pendingOrders', 0);
+                updateStatValue('shippingOrders', 0);
+                updateStatValue('deliveredOrders', 0);
+            } finally {
+                // Hide loading state
+                showStatsLoading(false);
+            }
+        }
+        
+        function showStatsLoading(show) {
+            const spinnerIds = ['totalOrdersSpinner', 'pendingOrdersSpinner', 'shippingOrdersSpinner', 'deliveredOrdersSpinner'];
+            const valueIds = ['totalOrders', 'pendingOrders', 'shippingOrders', 'deliveredOrders'];
+            
+            spinnerIds.forEach((spinnerId, index) => {
+                const spinner = document.getElementById(spinnerId);
+                const valueElement = document.getElementById(valueIds[index]);
+                const statValue = valueElement.querySelector('.stat-value');
+                
+                if (show) {
+                    spinner.style.display = 'inline';
+                    statValue.style.display = 'none';
+                } else {
+                    spinner.style.display = 'none';
+                    statValue.style.display = 'inline';
+                }
+            });
+        }
+        
+        function updateStatValue(elementId, value) {
+            const element = document.getElementById(elementId);
+            const statValue = element.querySelector('.stat-value');
+            const spinner = element.querySelector('.loading-spinner');
+            
+            statValue.textContent = value;
+            statValue.style.display = 'inline';
+            spinner.style.display = 'none';
+        }
+        function displayRecentOrders(orders) {
+            const tbody = document.getElementById('recentOrdersBody');
+            if (orders.length === 0) { tbody.innerHTML = '<tr><td colspan="5" class="text-center">Không có đơn hàng nào</td></tr>'; return; }
+            tbody.innerHTML = orders.map(order => `
+                <tr>
+                    <td><strong>${order.order_code}</strong></td>
+                    <td>${order.receiver_name}</td>
+                    <td>${ui.getStatusBadge(order.current_status)}</td>
+                    <td>${ui.formatDateTime(order.created_at)}</td>
+                    <td><a href="order-detail.html?id=${order.id}" class="btn btn-sm btn-primary">Xem</a></td>
+                </tr>
+            `).join('');
+        }
+        function openChangePasswordModal() { document.getElementById('changePasswordModal').style.display = 'flex'; }
+        function closeChangePasswordModal() { document.getElementById('changePasswordModal').style.display = 'none'; document.getElementById('changePasswordForm').reset(); }
+        document.getElementById('changePasswordForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            try {
+                const response = await api.changePassword(currentPassword, newPassword);
+                if (response.success) {
+                    ui.showSuccess('Đổi mật khẩu thành công!');
+                    closeChangePasswordModal();
+                } else {
+                    ui.showError(response.message || 'Đổi mật khẩu thất bại');
+                }
+            } catch (error) {
+                ui.showError('Có lỗi xảy ra khi đổi mật khẩu');
+            }
+        });
+        function logout() { api.logout(); }
+        
+        // Load dashboard data immediately when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Dashboard page loaded, starting data load...');
+            loadDashboard();
+        });
+        
+        // Also try to load data immediately if DOM is already ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', loadDashboard);
+        } else {
+            // DOM is already ready, load immediately
+            console.log('⚡ DOM already ready, loading dashboard data immediately...');
+            loadDashboard();
+        }
+    </script>
+</body>
+</html> 

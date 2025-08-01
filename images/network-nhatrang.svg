@@ -1,0 +1,47 @@
+<svg width="300" height="200" viewBox="0 0 300 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="nhatrangGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0891b2;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#06b6d4;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="300" height="200" fill="url(#nhatrangGradient)"/>
+  
+  <!-- Ocean -->
+  <rect x="0" y="130" width="300" height="70" fill="#0ea5e9" opacity="0.7"/>
+  
+  <!-- Beach -->
+  <rect x="0" y="130" width="300" height="20" fill="#fbbf24" opacity="0.8"/>
+  
+  <!-- Island -->
+  <circle cx="250" cy="120" r="15" fill="#fbbf24" opacity="0.9"/>
+  
+  <!-- City buildings -->
+  <rect x="20" y="110" width="30" height="40" fill="white" opacity="0.9"/>
+  <rect x="60" y="100" width="35" height="50" fill="white" opacity="0.9"/>
+  <rect x="105" y="105" width="30" height="45" fill="white" opacity="0.9"/>
+  <rect x="145" y="95" width="40" height="55" fill="white" opacity="0.9"/>
+  <rect x="195" y="110" width="25" height="40" fill="white" opacity="0.9"/>
+  
+  <!-- Windows -->
+  <rect x="25" y="115" width="6" height="6" fill="#0891b2"/>
+  <rect x="35" y="115" width="6" height="6" fill="#0891b2"/>
+  <rect x="25" y="125" width="6" height="6" fill="#0891b2"/>
+  <rect x="35" y="125" width="6" height="6" fill="#0891b2"/>
+  
+  <!-- Logo/Icon -->
+  <circle cx="150" cy="50" r="25" fill="white" opacity="0.9"/>
+  <text x="150" y="58" text-anchor="middle" fill="#0891b2" font-family="Arial" font-size="12" font-weight="bold">NT</text>
+  
+  <!-- Network dots -->
+  <circle cx="50" cy="40" r="3" fill="white" opacity="0.8"/>
+  <circle cx="250" cy="60" r="3" fill="white" opacity="0.8"/>
+  <circle cx="80" cy="30" r="3" fill="white" opacity="0.8"/>
+  <circle cx="220" cy="45" r="3" fill="white" opacity="0.8"/>
+  
+  <!-- Waves -->
+  <path d="M 0 150 Q 50 145 100 150 Q 150 155 200 150 Q 250 145 300 150" stroke="white" stroke-width="2" fill="none" opacity="0.6"/>
+  <path d="M 0 160 Q 50 155 100 160 Q 150 165 200 160 Q 250 155 300 160" stroke="white" stroke-width="2" fill="none" opacity="0.4"/>
+</svg> 

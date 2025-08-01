@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nhiệm Vụ Điều Phối - Nhân Viên</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="../css/dashboard.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo"><a href="../index.html">NTT Express</a></div>
+                <nav class="nav">
+                    <ul class="nav-list">
+                        <li><a href="staff-dashboard.html" class="nav-link">Dashboard</a></li>
+                        <li><a href="staff-orders.html" class="nav-link">Quản Lý Đơn Hàng</a></li>
+                        <li><a href="staff-track.html" class="nav-link">Theo Dõi Giao Hàng</a></li>
+                        <li><a href="staff-stats.html" class="nav-link">Thống Kê</a></li>
+                        <li><a href="staff-vehicles.html" class="nav-link">Phương Tiện</a></li>
+                        <li><a href="staff-vehicle-assignments.html" class="nav-link active">Nhiệm Vụ Điều Phối</a></li>
+                        <li><a href="staff-settings.html" class="nav-link">Cài Đặt</a></li>
+                    </ul>
+                </nav>
+                <div class="header-actions">
+                    <div class="user-menu">
+                        <span class="user-name" id="userName">Staff</span>
+                        <button class="btn btn-secondary" onclick="logout()">Đăng Xuất</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+    <main class="main-content">
+        <div class="container">
+            <div class="page-header">
+                <h1>Nhiệm Vụ Điều Phối Xe</h1>
+            </div>
+            <div class="table-container">
+                <table class="table" id="assignmentsTable">
+                    <thead>
+                        <tr>
+                            <th>Mã Đơn</th>
+                            <th>Phương Tiện</th>
+                            <th>Thời Gian Gán</th>
+                            <th>Trạng Thái</th>
+                            <th>Thao Tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="assignmentsBody">
+                        <tr><td colspan="5" class="text-center">Đang tải...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+    <script src="../js/lucide.min.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/script.js"></script>
+    <script>
+        lucide.createIcons();
+        auth.redirectIfNotStaff();
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        document.getElementById('userName').textContent = user.full_name || 'Staff';
+        async function loadAssignments() {
+            const res = await api.getMyVehicleAssignments();
+            const tbody = document.getElementById('assignmentsBody');
+            if (!res.success || !res.data.length) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center">Không có nhiệm vụ nào</td></tr>';
+                return;
+            }
+            tbody.innerHTML = res.data.map(a => `
+                <tr>
+                    <td>${a.order_code}</td>
+                    <td>${a.vehicle_license_plate}</td>
+                    <td>${ui.formatDateTime(a.assigned_at)}</td>
+                    <td>${ui.getAssignmentStatusBadge(a.status)}</td>
+                    <td>
+                        ${a.status === 'assigned' ? `<button class='btn btn-sm btn-primary' onclick='confirmAssignment(${a.id})'>Xác Nhận Nhận Xe</button>` : ''}
+                    </td>
+                </tr>
+            `).join('');
+            lucide.createIcons();
+        }
+        async function confirmAssignment(id) {
+            const res = await api.confirmVehicleAssignment(id);
+            if (res.success) {
+                ui.showSuccess('Đã xác nhận nhận xe');
+                loadAssignments();
+            } else {
+                ui.showError(res.message || 'Xác nhận thất bại');
+            }
+        }
+        function logout() { api.logout(); }
+        document.addEventListener('DOMContentLoaded', loadAssignments);
+    </script>
+</body>
+</html> 

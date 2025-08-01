@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng Ký - NTT Express</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="../css/auth.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <div class="logo">
+                    <a href="../index.html">
+                        NTT Express
+                    </a>
+                </div>
+                <h1>Đăng Ký</h1>
+                <p>Tạo tài khoản mới để bắt đầu sử dụng NTT Express.</p>
+            </div>
+
+            <form class="auth-form" id="registerForm">
+                <div class="form-group">
+                    <label for="username">Tên đăng nhập *</label>
+                    <div class="input-group">
+                        <i data-lucide="user" class="input-icon"></i>
+                        <input type="text" id="username" name="username" placeholder="Nhập tên đăng nhập" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="fullName">Họ và Tên *</label>
+                    <div class="input-group">
+                        <i data-lucide="user" class="input-icon"></i>
+                        <input type="text" id="fullName" name="full_name" placeholder="Nhập họ và tên" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email *</label>
+                    <div class="input-group">
+                        <i data-lucide="mail" class="input-icon"></i>
+                        <input type="email" id="email" name="email" placeholder="Nhập email của bạn" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="phone">Số Điện Thoại</label>
+                    <div class="input-group">
+                        <i data-lucide="phone" class="input-icon"></i>
+                        <input type="tel" id="phone" name="phone" placeholder="Nhập số điện thoại">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="address">Địa Chỉ</label>
+                    <div class="input-group">
+                        <i data-lucide="map-pin" class="input-icon"></i>
+                        <input type="text" id="address" name="address" placeholder="Nhập địa chỉ">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="role">Vai Trò</label>
+                    <div class="input-group">
+                        <i data-lucide="shield" class="input-icon"></i>
+                        <select id="role" name="role" required>
+                            <option value="customer">Khách hàng</option>
+                            <option value="staff">Nhân viên</option>
+                            <option value="admin">Quản trị viên</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Mật Khẩu *</label>
+                    <div class="input-group">
+                        <i data-lucide="lock" class="input-icon"></i>
+                        <input type="password" id="password" name="password" placeholder="Tạo mật khẩu" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="confirmPassword">Xác Nhận Mật Khẩu *</label>
+                    <div class="input-group">
+                        <i data-lucide="lock" class="input-icon"></i>
+                        <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Nhập lại mật khẩu" required>
+                    </div>
+                </div>
+
+                <div class="form-options">
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="terms" required>
+                        Tôi đồng ý với <a href="#">Điều khoản sử dụng</a> và <a href="#">Chính sách bảo mật</a>
+                    </label>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-full" id="registerBtn">
+                    <span class="btn-text">Đăng Ký</span>
+                    <span class="btn-loading" style="display: none;">
+                        <i data-lucide="loader-2" class="animate-spin"></i>
+                        Đang đăng ký...
+                    </span>
+                </button>
+            </form>
+
+            <div class="auth-footer">
+                <p>Đã có tài khoản? <a href="login.html">Đăng nhập</a></p>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/lucide.min.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/script.js"></script>
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // Register form handling
+        document.getElementById('registerForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const registerBtn = document.getElementById('registerBtn');
+            const btnText = registerBtn.querySelector('.btn-text');
+            const btnLoading = registerBtn.querySelector('.btn-loading');
+            
+            // Show loading state
+            btnText.style.display = 'none';
+            btnLoading.style.display = 'inline-flex';
+            registerBtn.disabled = true;
+
+            try {
+                const password = document.getElementById('password').value;
+                const confirmPassword = document.getElementById('confirmPassword').value;
+
+                // Validate password confirmation
+                if (password !== confirmPassword) {
+                    ui.showError('Mật khẩu xác nhận không khớp');
+                    return;
+                }
+
+                // Validate password length
+                if (password.length < 6) {
+                    ui.showError('Mật khẩu phải có ít nhất 6 ký tự');
+                    return;
+                }
+
+                const formData = new FormData(e.target);
+                const userData = Object.fromEntries(formData.entries());
+                
+                // Remove confirmPassword from userData
+                delete userData.confirmPassword;
+
+                // Debug: log userData
+                console.log('Registering user with data:', userData);
+
+                const response = await api.register(userData);
+                
+                console.log('Register response:', response);
+                
+                if (response.success) {
+                    // Store user info
+                    localStorage.setItem('user', JSON.stringify(response.data.user));
+                    
+                    ui.showSuccess('Đăng ký thành công!');
+                    
+                    // Redirect based on user role
+                    setTimeout(() => {
+                        if (response.data.user.role === 'admin') {
+                            window.location.href = 'admin-dashboard.html';
+                        } else if (response.data.user.role === 'staff') {
+                            window.location.href = 'staff-dashboard.html';
+                        } else {
+                            window.location.href = '../index.html';
+                        }
+                    }, 1000);
+                } else {
+                    ui.showError(response.message || 'Đăng ký thất bại');
+                }
+            } catch (error) {
+                console.error('Register error:', error);
+                ui.showError(error.message || 'Có lỗi xảy ra khi đăng ký');
+            } finally {
+                // Reset button state
+                btnText.style.display = 'inline';
+                btnLoading.style.display = 'none';
+                registerBtn.disabled = false;
+            }
+        });
+
+        // Check if user is already logged in
+        if (auth.isLoggedIn()) {
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            if (user.role === 'admin') {
+                window.location.href = 'admin-dashboard.html';
+            } else if (user.role === 'staff') {
+                window.location.href = 'staff-dashboard.html';
+            } else {
+                window.location.href = '../index.html';
+            }
+        }
+    </script>
+</body>
+</html> 

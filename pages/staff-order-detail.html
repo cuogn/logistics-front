@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chi Tiết Đơn Hàng - Staff</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="../css/dashboard.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <a href="../index.html">NTT Express</a>
+                </div>
+                <nav class="nav">
+                    <ul class="nav-list">
+                        <li><a href="staff-dashboard.html" class="nav-link">Dashboard</a></li>
+                        <li><a href="staff-orders.html" class="nav-link active">Quản Lý Đơn Hàng</a></li>
+                        <li><a href="staff-track.html" class="nav-link">Theo Dõi Giao Hàng</a></li>
+                        <li><a href="staff-stats.html" class="nav-link">Thống Kê</a></li>
+                    </ul>
+                </nav>
+                <div class="header-actions">
+                    <div class="user-menu">
+                        <span class="user-name" id="userName">Staff</span>
+                        <button class="btn btn-secondary" onclick="logout()">Đăng Xuất</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <div class="page-header">
+                <h1>Chi Tiết Đơn Hàng</h1>
+                <a href="staff-orders.html" class="btn btn-secondary">Quay lại danh sách</a>
+            </div>
+
+            <div id="orderDetail">
+                <div class="loading">Đang tải...</div>
+            </div>
+
+            <div class="tracking-section">
+                <h2>Lịch Sử Trạng Thái</h2>
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Thời Gian</th>
+                                <th>Trạng Thái</th>
+                                <th>Vị Trí</th>
+                                <th>Mô Tả</th>
+                                <th>Người Thực Hiện</th>
+                            </tr>
+                        </thead>
+                        <tbody id="trackingBody">
+                            <tr><td colspan="5" class="text-center">Đang tải...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="update-status-section">
+                <h2>Cập Nhật Trạng Thái Đơn Hàng</h2>
+                
+                <!-- Quick Status Update -->
+                <div class="quick-status-update">
+                    <h3>Cập Nhật Nhanh</h3>
+                    <div class="status-buttons">
+                        <button class="status-btn pending" onclick="quickUpdateStatus('pending')">
+                            <i data-lucide="clock"></i>
+                            Chờ Xử Lý
+                        </button>
+                        <button class="status-btn processing" onclick="quickUpdateStatus('processing')">
+                            <i data-lucide="settings"></i>
+                            Đang Xử Lý
+                        </button>
+                        <button class="status-btn shipping" onclick="quickUpdateStatus('shipping')">
+                            <i data-lucide="truck"></i>
+                            Đang Giao
+                        </button>
+                        <button class="status-btn delivered" onclick="quickUpdateStatus('delivered')">
+                            <i data-lucide="check-circle"></i>
+                            Đã Giao
+                        </button>
+                        <button class="status-btn failed" onclick="quickUpdateStatus('failed')">
+                            <i data-lucide="x-circle"></i>
+                            Thất Bại
+                        </button>
+                        <button class="status-btn cancelled" onclick="quickUpdateStatus('cancelled')">
+                            <i data-lucide="x"></i>
+                            Đã Hủy
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Detailed Status Update -->
+                <div class="detailed-status-update">
+                    <h3>Cập Nhật Chi Tiết</h3>
+                    <form id="updateStatusForm" class="form-row">
+                        <div class="form-group">
+                            <label for="status">Trạng thái mới <span class="required">*</span></label>
+                            <select id="status" name="status" required>
+                                <option value="">Chọn trạng thái</option>
+                                <option value="pending">Chờ xử lý</option>
+                                <option value="processing">Đang xử lý</option>
+                                <option value="shipping">Đang giao</option>
+                                <option value="delivered">Đã giao</option>
+                                <option value="failed">Thất bại</option>
+                                <option value="cancelled">Đã hủy</option>
+                            </select>
+                            <small class="form-text">Chọn trạng thái mới cho đơn hàng</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="description">Mô tả <span class="required">*</span></label>
+                            <textarea id="description" name="description" required 
+                                      placeholder="Nhập mô tả chi tiết về trạng thái mới..."
+                                      rows="3" maxlength="500"></textarea>
+                            <small class="form-text">Mô tả từ 3-500 ký tự</small>
+                            <div class="char-count">
+                                <span id="charCount">0</span>/500
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="location">Vị trí hiện tại (tùy chọn)</label>
+                            <input type="text" id="location" name="location" 
+                                   placeholder="Nhập vị trí hiện tại..."
+                                   maxlength="255">
+                            <small class="form-text">Vị trí hiện tại của đơn hàng</small>
+                        </div>
+                        <div class="form-group" style="align-self: flex-end;">
+                            <button type="submit" class="btn btn-primary" id="updateStatusBtn">
+                                <i data-lucide="check-circle" class="icon-sm"></i>
+                                Cập Nhật
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="../js/lucide.min.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/script.js"></script>
+    <script>
+        lucide.createIcons();
+        auth.redirectIfNotStaff();
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        document.getElementById('userName').textContent = user.full_name || 'Staff';
+
+        function getOrderId() {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('id');
+        }
+
+        async function loadOrderDetail() {
+            const orderId = getOrderId();
+            if (!orderId) return;
+            const detailDiv = document.getElementById('orderDetail');
+            try {
+                const response = await api.getOrder(orderId);
+                if (response.success) {
+                    const { order, tracking } = response.data;
+                    detailDiv.innerHTML = `
+                        <div class="order-detail-card">
+                            <h2>Mã Đơn: <span>${order.order_code}</span></h2>
+                            <div class="order-info-grid">
+                                <div>
+                                    <h3>Người Gửi</h3>
+                                    <p><strong>${order.sender_name}</strong></p>
+                                    <p>${order.sender_phone}</p>
+                                    <p>${order.sender_address}</p>
+                                </div>
+                                <div>
+                                    <h3>Người Nhận</h3>
+                                    <p><strong>${order.receiver_name}</strong></p>
+                                    <p>${order.receiver_phone}</p>
+                                    <p>${order.receiver_address}</p>
+                                </div>
+                                <div>
+                                    <h3>Thông Tin Đơn Hàng</h3>
+                                    <p>Trạng thái: ${ui.getStatusBadge(order.current_status)}</p>
+                                    <p>Khối lượng: ${order.package_weight} kg</p>
+                                    <p>Kích thước: ${order.package_dimensions || '-'}</p>
+                                    <p>Phí vận chuyển: ${ui.formatCurrency(order.shipping_fee)}</p>
+                                    <p>Tổng tiền: ${ui.formatCurrency(order.total_amount)}</p>
+                                    <p>Ngày tạo: ${ui.formatDateTime(order.created_at)}</p>
+                                    <p>Ngày giao dự kiến: ${order.estimated_delivery_date ? ui.formatDate(order.estimated_delivery_date) : '-'}</p>
+                                    <p>Ngày giao thực tế: ${order.actual_delivery_date ? ui.formatDateTime(order.actual_delivery_date) : '-'}</p>
+                                </div>
+                            </div>
+                            <div class="order-desc">
+                                <h3>Mô tả hàng hóa</h3>
+                                <p>${order.package_description || '-'}</p>
+                            </div>
+                        </div>
+                    `;
+                    // Tracking
+                    const trackingBody = document.getElementById('trackingBody');
+                    if (tracking.length === 0) {
+                        trackingBody.innerHTML = '<tr><td colspan="5" class="text-center">Không có lịch sử trạng thái</td></tr>';
+                    } else {
+                        trackingBody.innerHTML = tracking.map(item => `
+                            <tr>
+                                <td>${ui.formatDateTime(item.created_at)}</td>
+                                <td>${ui.getStatusBadge(item.status)}</td>
+                                <td>${item.location || '-'}</td>
+                                <td>${item.description || '-'}</td>
+                                <td>${item.created_by_name || '-'}</td>
+                            </tr>
+                        `).join('');
+                    }
+                } else {
+                    detailDiv.innerHTML = '<div class="alert alert-error">Không tìm thấy đơn hàng</div>';
+                }
+            } catch (error) {
+                detailDiv.innerHTML = '<div class="alert alert-error">Có lỗi xảy ra khi tải dữ liệu</div>';
+            }
+        }
+
+        // Cập nhật trạng thái đơn hàng
+        document.getElementById('updateStatusForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const orderId = getOrderId();
+            if (!orderId) {
+                ui.showError('Không tìm thấy ID đơn hàng');
+                return;
+            }
+
+            const status = document.getElementById('status').value;
+            const description = document.getElementById('description').value.trim();
+            const location = document.getElementById('location').value.trim();
+            const updateBtn = document.getElementById('updateStatusBtn');
+
+            // Validation
+            if (!status) {
+                ui.showError('Vui lòng chọn trạng thái');
+                return;
+            }
+
+            if (!description) {
+                ui.showError('Vui lòng nhập mô tả');
+                return;
+            }
+
+            if (description.length < 3) {
+                ui.showError('Mô tả phải có ít nhất 3 ký tự');
+                return;
+            }
+
+            // Disable button và hiển thị loading
+            updateBtn.disabled = true;
+            updateBtn.innerHTML = '<i data-lucide="loader-2" class="icon-sm spin"></i> Đang cập nhật...';
+            lucide.createIcons();
+
+            try {
+                const response = await api.updateOrderStatus(orderId, status, description, location);
+                if (response.success) {
+                    ui.showSuccess('Cập nhật trạng thái thành công!');
+                    
+                    // Reset form
+                    document.getElementById('updateStatusForm').reset();
+                    document.getElementById('charCount').textContent = '0';
+                    
+                    // Reload order detail
+                    await loadOrderDetail();
+                } else {
+                    ui.showError(response.message || 'Cập nhật trạng thái thất bại');
+                }
+            } catch (error) {
+                ui.showError(error.message || 'Có lỗi xảy ra khi cập nhật trạng thái');
+            } finally {
+                // Re-enable button
+                updateBtn.disabled = false;
+                updateBtn.innerHTML = '<i data-lucide="check-circle" class="icon-sm"></i> Cập Nhật';
+                lucide.createIcons();
+            }
+        });
+
+        // Character counter cho textarea
+        document.getElementById('description').addEventListener('input', function() {
+            const charCount = document.getElementById('charCount');
+            const count = this.value.length;
+            charCount.textContent = count;
+            
+            if (count > 450) {
+                charCount.style.color = '#dc3545';
+            } else if (count > 400) {
+                charCount.style.color = '#ffc107';
+            } else {
+                charCount.style.color = '#6c757d';
+            }
+        });
+
+        // Auto-resize textarea
+        document.getElementById('description').addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+        });
+
+        // Quick status update function
+        async function quickUpdateStatus(newStatus) {
+            const orderId = getOrderId();
+            if (!orderId) {
+                ui.showError('Không tìm thấy ID đơn hàng');
+                return;
+            }
+
+            const descriptions = {
+                'pending': 'Đơn hàng đã được đặt về trạng thái chờ xử lý',
+                'processing': 'Đơn hàng đang được xử lý tại kho',
+                'shipping': 'Đơn hàng đang được vận chuyển',
+                'delivered': 'Đơn hàng đã được giao thành công',
+                'failed': 'Đơn hàng giao thất bại',
+                'cancelled': 'Đơn hàng đã được hủy'
+            };
+
+            const description = descriptions[newStatus] || 'Cập nhật trạng thái đơn hàng';
+            
+            try {
+                const response = await api.updateOrderStatus(orderId, newStatus, description, '');
+                if (response.success) {
+                    ui.showSuccess(`Đã cập nhật trạng thái thành "${newStatus}"!`);
+                    await loadOrderDetail();
+                } else {
+                    ui.showError(response.message || 'Cập nhật trạng thái thất bại');
+                }
+            } catch (error) {
+                ui.showError(error.message || 'Có lỗi xảy ra khi cập nhật trạng thái');
+            }
+        }
+
+        function logout() { api.logout(); }
+        document.addEventListener('DOMContentLoaded', loadOrderDetail);
+    </script>
+    <style>
+        .order-detail-card {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        .order-detail-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+        }
+        .order-info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 2rem;
+            margin-bottom: 1.5rem;
+        }
+        .order-info-grid h3 {
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+        }
+        .order-desc {
+            margin-top: 1.5rem;
+        }
+        .order-desc h3 {
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+        }
+        .update-status-section {
+            margin-top: 2rem;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            padding: 2rem;
+        }
+        
+        /* Form styling */
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .required {
+            color: #dc3545;
+        }
+        
+        .form-text {
+            font-size: 0.875rem;
+            color: #6c757d;
+            margin-top: 0.25rem;
+        }
+        
+        .char-count {
+            font-size: 0.75rem;
+            color: #6c757d;
+            text-align: right;
+            margin-top: 0.25rem;
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        
+        /* Loading states */
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .spin {
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Status badges */
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        .status-pending { background: #fff3cd; color: #856404; }
+        .status-processing { background: #cce5ff; color: #004085; }
+        .status-shipping { background: #d1ecf1; color: #0c5460; }
+        .status-delivered { background: #d4edda; color: #155724; }
+        .status-failed { background: #f8d7da; color: #721c24; }
+        .status-cancelled { background: #e2e3e5; color: #383d41; }
+        
+        /* Quick status update */
+        .quick-status-update {
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .quick-status-update h3 {
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+            color: #333;
+        }
+        
+        .status-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+        }
+        
+        .status-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            font-size: 14px;
+        }
+        
+        .status-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .status-btn.pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .status-btn.processing {
+            background: #cce5ff;
+            color: #004085;
+        }
+        
+        .status-btn.shipping {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        
+        .status-btn.delivered {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-btn.failed {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .status-btn.cancelled {
+            background: #e2e3e5;
+            color: #383d41;
+        }
+        
+        .detailed-status-update {
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid #e9ecef;
+        }
+        
+        .detailed-status-update h3 {
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+            color: #333;
+        }
+        
+        /* Checkbox styling */
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .checkbox-label input[type="checkbox"] {
+            margin-right: 8px;
+            width: auto;
+        }
+        
+        .checkbox-label .checkmark {
+            display: none;
+        }
+        
+        /* Admin only styling */
+        .admin-only {
+            border-left: 3px solid #dc3545;
+            padding-left: 10px;
+        }
+        
+        .admin-only .form-text {
+            color: #dc3545;
+        }
+    </style>
+</body>
+</html> 

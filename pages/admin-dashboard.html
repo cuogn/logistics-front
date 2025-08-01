@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - NTT Express</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="../css/dashboard.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <a href="../index.html">
+                        NTT Express
+                    </a>
+                </div>
+                
+                <nav class="nav">
+                    <ul class="nav-list">
+                        <li><a href="admin-dashboard.html" class="nav-link active">Dashboard</a></li>
+                        <li><a href="admin-orders.html" class="nav-link">Quản Lý Đơn Hàng</a></li>
+                        <li><a href="admin-users.html" class="nav-link">Quản Lý Người Dùng</a></li>
+                        <li><a href="admin-stats.html" class="nav-link">Thống Kê</a></li>
+                        <li><a href="admin-settings.html" class="nav-link">Cài Đặt</a></li>
+                    </ul>
+                </nav>
+                
+                <div class="header-actions">
+                    <div class="user-menu">
+                        <span class="user-name" id="userName">Admin</span>
+                        <button class="btn btn-secondary" onclick="logout()">Đăng Xuất</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Page Header -->
+            <div class="page-header">
+                <h1>Admin Dashboard</h1>
+                <p>Quản lý hệ thống logistics</p>
+            </div>
+
+            <!-- Stats Cards -->
+            <!-- <div class="stats-grid" id="statsGrid">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i data-lucide="package"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number" id="totalOrders">
+                            <span class="loading-spinner" id="totalOrdersSpinner">⏳</span>
+                            <span class="stat-value">0</span>
+                        </div>
+                        <div class="stat-label">Tổng Đơn Hàng</div>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i data-lucide="users"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number" id="totalUsers">
+                            <span class="loading-spinner" id="totalUsersSpinner">⏳</span>
+                            <span class="stat-value"></span>
+                        </div>
+                        <div class="stat-label">Tổng Người Dùng</div>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i data-lucide="dollar-sign"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number" id="totalRevenue">
+                            <span class="loading-spinner" id="totalRevenueSpinner">⏳</span>
+                            <span class="stat-value">0 ₫</span>
+                        </div>
+                        <div class="stat-label">Tổng Doanh Thu</div>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i data-lucide="truck"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number" id="deliveredOrders">
+                            <span class="loading-spinner" id="deliveredOrdersSpinner">⏳</span>
+                            <span class="stat-value">0</span>
+                        </div>
+                        <div class="stat-label">Đơn Đã Giao</div>
+                    </div>
+                </div>
+            </div> -->
+
+            <!-- Quick Actions -->
+            <div class="quick-actions">
+                <h2>Thao Tác Nhanh</h2>
+                <div class="actions-grid">
+                    <a href="admin-orders.html" class="action-card">
+                        <i data-lucide="plus"></i>
+                        <span>Tạo Đơn Hàng Mới</span>
+                    </a>
+                    <a href="admin-users.html" class="action-card">
+                        <i data-lucide="user-plus"></i>
+                        <span>Thêm Người Dùng</span>
+                    </a>
+                    <a href="admin-stats.html" class="action-card">
+                        <i data-lucide="bar-chart-3"></i>
+                        <span>Xem Báo Cáo</span>
+                    </a>
+                    <a href="admin-settings.html" class="action-card">
+                        <i data-lucide="settings"></i>
+                        <span>Cài Đặt Hệ Thống</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Recent Orders -->
+            <div class="recent-orders">
+                <div class="section-header">
+                    <h2>Đơn Hàng Gần Đây</h2>
+                    <a href="admin-orders.html" class="btn btn-secondary">Xem Tất Cả</a>
+                </div>
+                <div class="table-container">
+                    <table class="table" id="recentOrdersTable">
+                        <thead>
+                            <tr>
+                                <th>Mã Đơn</th>
+                                <th>Người Gửi</th>
+                                <th>Người Nhận</th>
+                                <th>Trạng Thái</th>
+                                <th>Ngày Tạo</th>
+                                <th>Thao Tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recentOrdersBody">
+                            <tr>
+                                <td colspan="6" class="text-center">Đang tải...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Status Distribution -->
+            <div class="status-distribution">
+                <h2>Phân Bố Trạng Thái</h2>
+                <div class="status-grid" id="statusGrid">
+                    <!-- Status cards will be populated here -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="../js/lucide.min.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/script.js"></script>
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // Check authentication
+        auth.redirectIfNotAdmin();
+
+        // Load user info
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        document.getElementById('userName').textContent = user.full_name || 'Admin';
+
+        // Initialize stats with default values
+        function initializeStats() {
+            console.log('🚀 Initializing stats with default values...');
+            console.log('📊 Setting default values for all stats...');
+            
+            // Force show all stat values immediately
+            const statElements = ['totalOrders', 'totalUsers', 'totalRevenue', 'deliveredOrders'];
+            statElements.forEach(elementId => {
+                const element = document.getElementById(elementId);
+                if (element) {
+                    const statValue = element.querySelector('.stat-value');
+                    const spinner = element.querySelector('.loading-spinner');
+                    
+                    if (statValue && spinner) {
+                        console.log(`✅ Setting ${elementId} to default value`);
+                        statValue.style.display = 'inline';
+                        spinner.style.display = 'none';
+                    } else {
+                        console.error(`❌ Could not find elements for ${elementId}`);
+                    }
+                } else {
+                    console.error(`❌ Could not find element with id: ${elementId}`);
+                }
+            });
+            
+            updateStatValue('totalOrders', 0);
+            updateStatValue('totalRevenue', ui.formatCurrency(0));
+            updateStatValue('deliveredOrders', 0);
+            updateStatValue('totalUsers', 0);
+            
+            console.log('✅ Stats initialization complete');
+        }
+
+        // Load dashboard data
+        async function loadDashboardData() {
+            try {
+                console.log('🔄 Loading admin dashboard data...');
+                
+                // Show loading state
+                console.log('⏳ Showing loading state...');
+                showStatsLoading(true);
+                
+                // Load daily stats from statistics table
+                console.log('📊 Fetching daily stats...');
+                const statsResponse = await api.getDailyStats();
+                console.log('📊 Stats response:', statsResponse);
+                
+                if (statsResponse.success && statsResponse.data && statsResponse.data.totals) {
+                    const totals = statsResponse.data.totals;
+                    console.log('📈 Totals:', totals);
+                    
+                    // Ensure all values are numbers, not NaN
+                    const totalOrders = parseInt(totals.total_orders) || 0;
+                    const totalRevenue = parseFloat(totals.total_revenue) || 0;
+                    const deliveredOrders = parseInt(totals.delivered_orders) || 0;
+                    
+                    console.log('💰 Parsed values:', { totalOrders, totalRevenue, deliveredOrders });
+                    
+                    // Update stats with proper loading state handling
+                    updateStatValue('totalOrders', totalOrders);
+                    updateStatValue('totalRevenue', ui.formatCurrency(totalRevenue));
+                    updateStatValue('deliveredOrders', deliveredOrders);
+                    
+                    console.log('✅ Stats updated successfully');
+                } else {
+                    console.error('❌ Stats API failed or no data:', statsResponse);
+                    // Set default values if API fails
+                    updateStatValue('totalOrders', 0);
+                    updateStatValue('totalRevenue', ui.formatCurrency(0));
+                    updateStatValue('deliveredOrders', 0);
+                }
+
+                // Load user stats
+                console.log('👥 Fetching user stats...');
+                const userStatsResponse = await api.getUserStats();
+                console.log('👥 User stats response:', userStatsResponse);
+                
+                if (userStatsResponse.success && userStatsResponse.data) {
+                    const totalUsers = parseInt(userStatsResponse.data.total_users) || 0;
+                    updateStatValue('totalUsers', totalUsers);
+                    console.log('✅ User stats updated');
+                } else {
+                    updateStatValue('totalUsers', 0);
+                    console.log('⚠️ Using default user stats');
+                }
+
+                // Load recent orders
+                console.log('📦 Fetching recent orders...');
+                const ordersResponse = await api.getOrders({ limit: 5 });
+                console.log('📦 Orders response:', ordersResponse);
+                
+                if (ordersResponse.success) {
+                    displayRecentOrders(ordersResponse.data.orders);
+                    console.log('✅ Recent orders updated');
+                }
+
+                // Load status distribution
+                console.log('📊 Fetching status distribution...');
+                const statusResponse = await api.getStatusStats();
+                console.log('📊 Status response:', statusResponse);
+                
+                if (statusResponse.success) {
+                    displayStatusDistribution(statusResponse.data);
+                    console.log('✅ Status distribution updated');
+                }
+
+            } catch (error) {
+                console.error('❌ Admin dashboard load error:', error);
+                ui.showError('Không thể tải dữ liệu dashboard');
+                
+                // Set default values on error
+                updateStatValue('totalOrders', 0);
+                updateStatValue('totalRevenue', ui.formatCurrency(0));
+                updateStatValue('deliveredOrders', 0);
+                updateStatValue('totalUsers', 0);
+            } finally {
+                // Hide loading state
+                console.log('✅ Hiding loading state...');
+                showStatsLoading(false);
+                console.log('🎉 Dashboard data load complete!');
+            }
+        }
+        
+        function showStatsLoading(show) {
+            const spinnerIds = ['totalOrdersSpinner', 'totalUsersSpinner', 'totalRevenueSpinner', 'deliveredOrdersSpinner'];
+            const valueIds = ['totalOrders', 'totalUsers', 'totalRevenue', 'deliveredOrders'];
+            
+            spinnerIds.forEach((spinnerId, index) => {
+                const spinner = document.getElementById(spinnerId);
+                const valueElement = document.getElementById(valueIds[index]);
+                
+                if (spinner && valueElement) {
+                    const statValue = valueElement.querySelector('.stat-value');
+                    
+                    if (statValue) {
+                        if (show) {
+                            spinner.style.display = 'inline';
+                            statValue.style.display = 'none';
+                        } else {
+                            spinner.style.display = 'none';
+                            statValue.style.display = 'inline';
+                        }
+                    }
+                } else {
+                    console.warn(`⚠️ Could not find elements for ${spinnerId} or ${valueIds[index]}`);
+                }
+            });
+        }
+        
+        function updateStatValue(elementId, value) {
+            const element = document.getElementById(elementId);
+            if (!element) {
+                console.warn(`⚠️ Could not find element with id: ${elementId}`);
+                return;
+            }
+            
+            const statValue = element.querySelector('.stat-value');
+            const spinner = element.querySelector('.loading-spinner');
+            
+            if (statValue && spinner) {
+                statValue.textContent = value;
+                statValue.style.display = 'inline';
+                spinner.style.display = 'none';
+            } else {
+                console.warn(`⚠️ Could not find stat-value or loading-spinner in ${elementId}`);
+            }
+        }
+
+        function displayRecentOrders(orders) {
+            const tbody = document.getElementById('recentOrdersBody');
+            
+            if (orders.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center">Không có đơn hàng nào</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = orders.map(order => `
+                <tr>
+                    <td><strong>${order.order_code}</strong></td>
+                    <td>${order.sender_name}</td>
+                    <td>${order.receiver_name}</td>
+                    <td>${ui.getStatusBadge(order.current_status)}</td>
+                    <td>${ui.formatDateTime(order.created_at)}</td>
+                    <td>
+                        <a href="admin-order-detail.html?id=${order.id}" class="btn btn-sm btn-primary">Xem</a>
+                        <a href="admin-order-edit.html?id=${order.id}" class="btn btn-sm btn-secondary">Sửa</a>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function displayStatusDistribution(statusStats) {
+            const statusGrid = document.getElementById('statusGrid');
+            
+            statusGrid.innerHTML = statusStats.map(stat => `
+                <div class="status-card">
+                    <div class="status-icon ${stat.current_status}">
+                        <i data-lucide="${getStatusIcon(stat.current_status)}"></i>
+                    </div>
+                    <div class="status-content">
+                        <div class="status-number">${stat.count}</div>
+                        <div class="status-label">${getStatusText(stat.current_status)}</div>
+                        <div class="status-revenue">${ui.formatCurrency(stat.total_revenue || 0)}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function getStatusIcon(status) {
+            const iconMap = {
+                'pending': 'clock',
+                'processing': 'settings',
+                'shipping': 'truck',
+                'delivered': 'check-circle',
+                'failed': 'x-circle',
+                'cancelled': 'x'
+            };
+            return iconMap[status] || 'package';
+        }
+
+        function getStatusText(status) {
+            const textMap = {
+                'pending': 'Chờ xử lý',
+                'processing': 'Đang xử lý',
+                'shipping': 'Đang giao',
+                'delivered': 'Đã giao',
+                'failed': 'Thất bại',
+                'cancelled': 'Đã hủy'
+            };
+            return textMap[status] || status;
+        }
+
+        function logout() {
+            api.logout();
+        }
+
+        // Load dashboard data immediately when page loads
+        let dashboardLoaded = false;
+        
+        function startDashboard() {
+            if (dashboardLoaded) {
+                console.log('⚠️ Dashboard already loaded, skipping...');
+                return;
+            }
+            
+            console.log('🚀 Starting dashboard initialization...');
+            dashboardLoaded = true;
+            
+            // Initialize stats immediately
+            initializeStats();
+            // Then load real data
+            loadDashboardData();
+        }
+        
+        // Try to load data when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', startDashboard);
+        } else {
+            // DOM is already ready, load immediately
+            console.log('⚡ DOM already ready, starting dashboard immediately...');
+            startDashboard();
+        }
+    </script>
+</body>
+</html> 

@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Theo Dõi Giao Hàng - Staff</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="../css/dashboard.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        #map {
+            width: 100%;
+            height: 350px;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <a href="../index.html">NTT Express</a>
+                </div>
+                <nav class="nav">
+                    <ul class="nav-list">
+                        <li><a href="staff-dashboard.html" class="nav-link">Dashboard</a></li>
+                        <li><a href="staff-orders.html" class="nav-link">Quản Lý Đơn Hàng</a></li>
+                        <li><a href="staff-track.html" class="nav-link active">Theo Dõi Giao Hàng</a></li>
+                        <li><a href="staff-stats.html" class="nav-link">Thống Kê</a></li>
+                    </ul>
+                </nav>
+                <div class="header-actions">
+                    <div class="user-menu">
+                        <span class="user-name" id="userName">Staff</span>
+                        <button class="btn btn-secondary" onclick="logout()">Đăng Xuất</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+    <main class="main-content">
+        <div class="container">
+            <div class="page-header">
+                <h1>Theo Dõi Giao Hàng</h1>
+            </div>
+            <form id="trackForm" class="track-form">
+                <div class="form-row">
+                    <div class="form-group" style="flex:2;">
+                        <input type="text" id="orderCode" name="orderCode" class="form-input" placeholder="Nhập mã đơn hàng..." required>
+                    </div>
+                    <div class="form-group" style="flex:1;">
+                        <button type="submit" class="btn btn-primary btn-full">Tra cứu</button>
+                    </div>
+                </div>
+            </form>
+            <div id="orderDetail" style="margin-top:2rem;"></div>
+            <div id="map"></div>
+            <div class="tracking-section" style="display:none;">
+                <h2>Lịch Sử Trạng Thái</h2>
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Thời Gian</th>
+                                <th>Trạng Thái</th>
+                                <th>Vị Trí</th>
+                                <th>Mô Tả</th>
+                                <th>Người Thực Hiện</th>
+                            </tr>
+                        </thead>
+                        <tbody id="trackingBody">
+                            <tr><td colspan="5" class="text-center">Chưa có dữ liệu</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+    <script src="../js/lucide.min.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/script.js"></script>
+    <script>
+        lucide.createIcons();
+        auth.redirectIfNotStaff();
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        document.getElementById('userName').textContent = user.full_name || 'Staff';
+        let currentOrder = null;
+        document.getElementById('trackForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const orderCode = document.getElementById('orderCode').value.trim();
+            if (!orderCode) return;
+            await searchOrder(orderCode);
+        });
+        async function searchOrder(orderCode) {
+            const detailDiv = document.getElementById('orderDetail');
+            detailDiv.innerHTML = '<div class="loading">Đang tải...</div>';
+            document.querySelector('.tracking-section').style.display = 'none';
+            document.getElementById('map').innerHTML = '';
+            try {
+                const response = await api.searchOrder(orderCode);
+                if (response.success) {
+                    const { order, tracking } = response.data;
+                    currentOrder = order;
+                    detailDiv.innerHTML = `
+                        <div class="order-detail-card">
+                            <h2>Mã Đơn: <span>${order.order_code}</span></h2>
+                            <div class="order-info-grid">
+                                <div>
+                                    <h3>Người Gửi</h3>
+                                    <p><strong>${order.sender_name}</strong></p>
+                                    <p>${order.sender_phone}</p>
+                                    <p>${order.sender_address}</p>
+                                </div>
+                                <div>
+                                    <h3>Người Nhận</h3>
+                                    <p><strong>${order.receiver_name}</strong></p>
+                                    <p>${order.receiver_phone}</p>
+                                    <p>${order.receiver_address}</p>
+                                </div>
+                                <div>
+                                    <h3>Thông Tin Đơn Hàng</h3>
+                                    <p>Trạng thái: ${ui.getStatusBadge(order.current_status)}</p>
+                                    <p>Khối lượng: ${order.package_weight} kg</p>
+                                    <p>Kích thước: ${order.package_dimensions || '-'}</p>
+                                    <p>Phí vận chuyển: ${ui.formatCurrency(order.shipping_fee)}</p>
+                                    <p>Tổng tiền: ${ui.formatCurrency(order.total_amount)}</p>
+                                    <p>Ngày tạo: ${ui.formatDateTime(order.created_at)}</p>
+                                    <p>Ngày giao dự kiến: ${order.estimated_delivery_date ? ui.formatDate(order.estimated_delivery_date) : '-'}</p>
+                                    <p>Ngày giao thực tế: ${order.actual_delivery_date ? ui.formatDateTime(order.actual_delivery_date) : '-'}</p>
+                                </div>
+                            </div>
+                            <div class="order-desc">
+                                <h3>Mô tả hàng hóa</h3>
+                                <p>${order.package_description || '-'}</p>
+                            </div>
+                        </div>
+                    `;
+                    // Tracking
+                    const trackingBody = document.getElementById('trackingBody');
+                    if (tracking.length === 0) {
+                        trackingBody.innerHTML = '<tr><td colspan="5" class="text-center">Không có lịch sử trạng thái</td></tr>';
+                    } else {
+                        trackingBody.innerHTML = tracking.map(item => `
+                            <tr>
+                                <td>${ui.formatDateTime(item.created_at)}</td>
+                                <td>${ui.getStatusBadge(item.status)}</td>
+                                <td>${item.location || '-'}</td>
+                                <td>${item.description || '-'}</td>
+                                <td>${item.created_by_name || '-'}</td>
+                            </tr>
+                        `).join('');
+                    }
+                    document.querySelector('.tracking-section').style.display = 'block';
+                    // Google Maps
+                    if (order.sender_lat && order.sender_lng && order.receiver_lat && order.receiver_lng) {
+                        showRouteOnMap(order.sender_lat, order.sender_lng, order.receiver_lat, order.receiver_lng);
+                    }
+                } else {
+                    detailDiv.innerHTML = '<div class="alert alert-error">Không tìm thấy đơn hàng</div>';
+                }
+            } catch (error) {
+                detailDiv.innerHTML = '<div class="alert alert-error">Có lỗi xảy ra khi tải dữ liệu</div>';
+            }
+        }
+        function showRouteOnMap(senderLat, senderLng, receiverLat, receiverLng) {
+            const mapDiv = document.getElementById('map');
+            mapDiv.innerHTML = '';
+            // HERE Maps API Key
+            const API_KEY = '7GUpHwbsEgObqnGg4JG34CJvdbf89IU4iq-SDFe8vmE';
+            // Tạo platform
+            const platform = new H.service.Platform({ apikey: API_KEY });
+            const defaultLayers = platform.createDefaultLayers();
+            // Khởi tạo map
+            const map = new H.Map(mapDiv, defaultLayers.vector.normal.map, {
+                center: { lat: Number(senderLat), lng: Number(senderLng) },
+                zoom: 7,
+                pixelRatio: window.devicePixelRatio || 1
+            });
+            window.addEventListener('resize', () => map.getViewPort().resize());
+            const behavior = new H.mapevents.Behavior(new H.mapevents.MapEvents(map));
+            const ui = H.ui.UI.createDefault(map, defaultLayers);
+            // Gọi HERE Routing API
+            const router = platform.getRoutingService();
+            const routingParams = {
+                mode: 'fastest;car',
+                representation: 'display',
+                waypoint0: `${senderLat},${senderLng}`,
+                waypoint1: `${receiverLat},${receiverLng}`
+            };
+            router.calculateRoute(routingParams, function(result) {
+                if (result.response && result.response.route) {
+                    const route = result.response.route[0];
+                    const routeShape = route.shape;
+                    // Vẽ polyline
+                    const linestring = new H.geo.LineString();
+                    routeShape.forEach(function(point) {
+                        const parts = point.split(',');
+                        linestring.pushLatLngAlt(Number(parts[0]), Number(parts[1]));
+                    });
+                    const routeLine = new H.map.Polyline(linestring, {
+                        style: { strokeColor: '#007bff', lineWidth: 5 }
+                    });
+                    map.addObject(routeLine);
+                    // Marker điểm đầu
+                    const startMarker = new H.map.Marker({ lat: Number(senderLat), lng: Number(senderLng) });
+                    map.addObject(startMarker);
+                    // Marker điểm cuối
+                    const endMarker = new H.map.Marker({ lat: Number(receiverLat), lng: Number(receiverLng) });
+                    map.addObject(endMarker);
+                    // Fit bounds
+                    map.getViewModel().setLookAtData({ bounds: routeLine.getBoundingBox() });
+                    // Hiển thị thông tin quãng đường và thời gian
+                    const summary = route.summary;
+                    const distanceKm = (summary.distance / 1000).toFixed(2);
+                    const durationMin = Math.round(summary.travelTime / 60);
+                    let infoHtml = `<div class='here-route-info'>` +
+                        `<b>Quãng đường:</b> ${distanceKm} km<br>` +
+                        `<b>Thời gian dự kiến:</b> ${durationMin} phút` +
+                        `</div>`;
+                    mapDiv.insertAdjacentHTML('beforeend', infoHtml);
+                } else {
+                    mapDiv.insertAdjacentHTML('beforeend', "<div class='alert alert-error'>Không tìm thấy tuyến đường</div>");
+                }
+            }, function(error) {
+                mapDiv.insertAdjacentHTML('beforeend', "<div class='alert alert-error'>Lỗi tính toán tuyến đường</div>");
+            });
+        }
+        function logout() { api.logout(); }
+    </script>
+</body>
+</html> 

@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chi Tiết Đơn Hàng - LogiTrack</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- HERE Maps CSS -->
+    <link rel="stylesheet" type="text/css" href="https://js.api.here.com/v3/3.1/mapsjs-ui.css" />
+    <!-- HERE Maps JavaScript -->
+    <script type="text/javascript" src="https://js.api.here.com/v3/3.1/mapsjs-core.js"></script>
+    <script type="text/javascript" src="https://js.api.here.com/v3/3.1/mapsjs-service.js"></script>
+    <script type="text/javascript" src="https://js.api.here.com/v3/3.1/mapsjs-ui.js"></script>
+    <script type="text/javascript" src="https://js.api.here.com/v3/3.1/mapsjs-mapevents.js"></script>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <h1><i class="fas fa-truck"></i> LogiTrack</h1>
+                </div>
+                <nav class="nav">
+                    <ul>
+                        <li><a href="dashboard.html"><i class="fas fa-home"></i> Trang chủ</a></li>
+                        <li><a href="orders.html"><i class="fas fa-box"></i> Đơn hàng</a></li>
+                        <li><a href="vehicles.html"><i class="fas fa-truck"></i> Phương tiện</a></li>
+                        <li><a href="maps.html"><i class="fas fa-map"></i> Bản đồ</a></li>
+                        <li><a href="stats.html"><i class="fas fa-chart-bar"></i> Thống kê</a></li>
+                        <li><a href="settings.html"><i class="fas fa-cog"></i> Cài đặt</a></li>
+                        <li><a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Đăng xuất</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Back Button -->
+            <div class="back-button">
+                <a href="orders.html" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Quay lại
+                </a>
+            </div>
+
+            <!-- Order Details -->
+            <div class="order-details">
+                <div class="order-header">
+                    <h2><i class="fas fa-box"></i> Chi Tiết Đơn Hàng</h2>
+                    <div class="order-status" id="orderStatus">
+                        <!-- Status will be loaded here -->
+                    </div>
+                </div>
+
+                <div class="order-content">
+                    <div class="order-info">
+                        <div class="info-section">
+                            <h3><i class="fas fa-info-circle"></i> Thông tin đơn hàng</h3>
+                            <div class="info-grid">
+                                <div class="info-item">
+                                    <span class="label">Mã đơn hàng:</span>
+                                    <span class="value" id="orderCode">--</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="label">Ngày tạo:</span>
+                                    <span class="value" id="orderDate">--</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="label">Trạng thái:</span>
+                                    <span class="value" id="orderStatusText">--</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="label">Tổng tiền:</span>
+                                    <span class="value" id="orderTotal">--</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="info-section">
+                            <h3><i class="fas fa-user"></i> Thông tin người gửi</h3>
+                            <div class="info-grid">
+                                <div class="info-item">
+                                    <span class="label">Tên:</span>
+                                    <span class="value" id="senderName">--</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="label">Số điện thoại:</span>
+                                    <span class="value" id="senderPhone">--</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="label">Địa chỉ:</span>
+                                    <span class="value" id="senderAddress">--</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="info-section">
+                            <h3><i class="fas fa-user"></i> Thông tin người nhận</h3>
+                            <div class="info-grid">
+                                <div class="info-item">
+                                    <span class="label">Tên:</span>
+                                    <span class="value" id="receiverName">--</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="label">Số điện thoại:</span>
+                                    <span class="value" id="receiverPhone">--</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="label">Địa chỉ:</span>
+                                    <span class="value" id="receiverAddress">--</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="info-section">
+                            <h3><i class="fas fa-box"></i> Thông tin hàng hóa</h3>
+                            <div class="info-grid">
+                                <div class="info-item">
+                                    <span class="label">Loại hàng:</span>
+                                    <span class="value" id="packageType">--</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="label">Trọng lượng:</span>
+                                    <span class="value" id="packageWeight">--</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="label">Kích thước:</span>
+                                    <span class="value" id="packageDimensions">--</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="label">Giá trị:</span>
+                                    <span class="value" id="packageValue">--</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="info-section">
+                            <h3><i class="fas fa-truck"></i> Thông tin vận chuyển</h3>
+                            <div class="info-grid">
+                                <div class="info-item">
+                                    <span class="label">Phương tiện:</span>
+                                    <span class="value" id="vehicleInfo">--</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="label">Tài xế:</span>
+                                    <span class="value" id="driverInfo">--</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="label">Phí vận chuyển:</span>
+                                    <span class="value" id="shippingFee">--</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="label">Thời gian giao dự kiến:</span>
+                                    <span class="value" id="estimatedDelivery">--</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="order-map">
+                        <h3><i class="fas fa-map-marked-alt"></i> Tuyến đường</h3>
+                        <div id="map" class="map"></div>
+                        <div class="route-info">
+                            <div class="route-item">
+                                <span class="label">Khoảng cách:</span>
+                                <span class="value" id="routeDistance">--</span>
+                            </div>
+                            <div class="route-item">
+                                <span class="label">Thời gian:</span>
+                                <span class="value" id="routeDuration">--</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="../js/auth.js"></script>
+    <script src="../js/api.js"></script>
+    <script>
+        // Order Detail JavaScript
+        class OrderDetailManager {
+            constructor() {
+                this.orderId = this.getOrderIdFromUrl();
+                this.map = null;
+                this.platform = null;
+                this.init();
+            }
+
+            getOrderIdFromUrl() {
+                const urlParams = new URLSearchParams(window.location.search);
+                return urlParams.get('id');
+            }
+
+            async init() {
+                if (!checkAuth()) {
+                    window.location.href = 'login.html';
+                    return;
+                }
+
+                if (!this.orderId) {
+                    showNotification('Không tìm thấy ID đơn hàng', 'error');
+                    return;
+                }
+
+                this.initMap();
+                await this.loadOrderDetails();
+            }
+
+            initMap() {
+                try {
+                    // HERE Maps API Key
+                    const apiKey = '7GUpHwbsEgObqnGg4JG34CJvdbf89IU4iq-SDFe8vmE';
+                    
+                    // Khởi tạo platform
+                    this.platform = new H.service.Platform({
+                        apikey: apiKey
+                    });
+
+                    // Tạo default layers
+                    const defaultLayers = this.platform.createDefaultLayers();
+
+                    // Khởi tạo map
+                    this.map = new H.Map(document.getElementById('map'), 
+                        defaultLayers.vector.normal.map, {
+                        center: { lat: 21.0285, lng: 105.8542 }, // Hà Nội
+                        zoom: 10,
+                        pixelRatio: window.devicePixelRatio || 1
+                    });
+
+                    // Thêm resize listener
+                    window.addEventListener('resize', () => this.map.getViewPort().resize());
+
+                    // Tạo behavior cho map
+                    const behavior = new H.mapevents.Behavior(new H.mapevents.MapEvents(this.map));
+
+                    // Tạo UI
+                    const ui = H.ui.UI.createDefault(this.map, defaultLayers);
+
+                } catch (error) {
+                    console.error('Error initializing map:', error);
+                }
+            }
+
+            async loadOrderDetails() {
+                try {
+                    const response = await apiCall('GET', `/api/orders/${this.orderId}`);
+                    
+                    if (response.success) {
+                        const order = response.data.order;
+                        this.displayOrderDetails(order);
+                        await this.loadRouteInfo(order);
+                    } else {
+                        showNotification('Không thể tải thông tin đơn hàng', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error loading order details:', error);
+                    showNotification('Lỗi tải thông tin đơn hàng', 'error');
+                }
+            }
+
+            displayOrderDetails(order) {
+                // Cập nhật thông tin đơn hàng
+                document.getElementById('orderCode').textContent = order.order_code;
+                document.getElementById('orderDate').textContent = new Date(order.created_at).toLocaleString('vi-VN');
+                document.getElementById('orderStatusText').textContent = this.getStatusText(order.current_status);
+                document.getElementById('orderTotal').textContent = this.formatCurrency(order.total_amount);
+
+                // Cập nhật thông tin người gửi
+                document.getElementById('senderName').textContent = order.sender_name;
+                document.getElementById('senderPhone').textContent = order.sender_phone;
+                document.getElementById('senderAddress').textContent = order.sender_address;
+
+                // Cập nhật thông tin người nhận
+                document.getElementById('receiverName').textContent = order.receiver_name;
+                document.getElementById('receiverPhone').textContent = order.receiver_phone;
+                document.getElementById('receiverAddress').textContent = order.receiver_address;
+
+                // Cập nhật thông tin hàng hóa
+                document.getElementById('packageType').textContent = order.package_type;
+                document.getElementById('packageWeight').textContent = `${order.package_weight} kg`;
+                document.getElementById('packageDimensions').textContent = order.package_dimensions;
+                document.getElementById('packageValue').textContent = this.formatCurrency(order.package_value);
+
+                // Cập nhật thông tin vận chuyển
+                document.getElementById('shippingFee').textContent = this.formatCurrency(order.shipping_fee);
+                document.getElementById('estimatedDelivery').textContent = order.estimated_delivery_date ? 
+                    new Date(order.estimated_delivery_date).toLocaleString('vi-VN') : 'Chưa xác định';
+
+                // Cập nhật trạng thái
+                const statusElement = document.getElementById('orderStatus');
+                statusElement.className = `order-status status-${order.current_status}`;
+                statusElement.textContent = this.getStatusText(order.current_status);
+
+                // Cập nhật thông tin phương tiện và tài xế
+                if (order.vehicle) {
+                    document.getElementById('vehicleInfo').textContent = `${order.vehicle.vehicle_code} - ${order.vehicle.vehicle_type}`;
+                    document.getElementById('driverInfo').textContent = order.vehicle.driver_name;
+                } else {
+                    document.getElementById('vehicleInfo').textContent = 'Chưa phân công';
+                    document.getElementById('driverInfo').textContent = 'Chưa phân công';
+                }
+            }
+
+            async loadRouteInfo(order) {
+                if (!order.sender_lat || !order.sender_lng || !order.receiver_lat || !order.receiver_lng) {
+                    return;
+                }
+
+                try {
+                    const response = await apiCall('GET', `/api/maps/orders/${this.orderId}/route`);
+                    
+                    if (response.success) {
+                        this.displayRoute(response.data);
+                        this.updateRouteInfo(response.data);
+                    }
+                } catch (error) {
+                    console.error('Error loading route:', error);
+                }
+            }
+
+            displayRoute(routeData) {
+                if (!this.map) return;
+
+                try {
+                    // Tạo waypoints từ tọa độ
+                    const waypoints = [
+                        routeData.start_address,
+                        routeData.end_address
+                    ];
+
+                    // Tạo routing parameters
+                    const routingParameters = {
+                        mode: 'fastest;car',
+                        representation: 'display',
+                        waypoint0: waypoints[0],
+                        waypoint1: waypoints[1]
+                    };
+
+                    // Gọi HERE Routing API
+                    const router = this.platform.getRoutingService();
+                    router.calculateRoute(routingParameters, (result) => {
+                        if (result.response.route) {
+                            const route = result.response.route[0];
+                            const routeShape = route.shape;
+                            
+                            // Tạo polyline
+                            const polyline = new H.geo.LineString();
+                            routeShape.forEach(point => {
+                                const [lat, lng] = point.split(',');
+                                polyline.pushLatLngAlt(lat, lng);
+                            });
+
+                            // Tạo polyline object
+                            const routeLine = new H.map.Polyline(polyline, {
+                                style: {
+                                    strokeColor: '#007bff',
+                                    lineWidth: 4
+                                }
+                            });
+
+                            // Thêm route vào map
+                            this.map.addObject(routeLine);
+
+                            // Thêm markers
+                            this.addMarkers(route);
+                            
+                            // Fit map to route
+                            this.map.getViewModel().setLookAtData({
+                                bounds: routeLine.getBoundingBox()
+                            });
+                        }
+                    }, (error) => {
+                        console.error('Routing error:', error);
+                    });
+
+                } catch (error) {
+                    console.error('Error displaying route:', error);
+                }
+            }
+
+            addMarkers(route) {
+                try {
+                    // Marker điểm bắt đầu
+                    const startMarker = new H.map.Marker({
+                        lat: route.waypoint[0].mappedPosition.latitude,
+                        lng: route.waypoint[0].mappedPosition.longitude
+                    }, {
+                        icon: new H.map.Icon('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJDNi40OCAyIDIgNi40OCAyIDEyQzIgMTcuNTIgNi40OCAyMiAxMiAyMkMxNy41MiAyMiAyMiAxNy41MiAyMiAxMkMyMiA2LjQ4IDE3LjUyIDIgMTIgMloiIGZpbGw9IiMyOGE3NDUiLz4KPC9zdmc+')
+                    });
+                    
+                    // Marker điểm kết thúc
+                    const endMarker = new H.map.Marker({
+                        lat: route.waypoint[1].mappedPosition.latitude,
+                        lng: route.waypoint[1].mappedPosition.longitude
+                    }, {
+                        icon: new H.map.Icon('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJDNi40OCAyIDIgNi40OCAyIDEyQzIgMTcuNTIgNi40OCAyMiAxMiAyMkMxNy41MiAyMiAyMiAxNy41MiAyMiAxMkMyMiA2LjQ4IDE3LjUyIDIgMTIgMloiIGZpbGw9IiNkYzM1NCIvPgo8L3N2Zz4=')
+                    });
+                    
+                    this.map.addObject(startMarker);
+                    this.map.addObject(endMarker);
+                    
+                } catch (error) {
+                    console.error('Error adding markers:', error);
+                }
+            }
+
+            updateRouteInfo(routeData) {
+                document.getElementById('routeDistance').textContent = routeData.distance;
+                document.getElementById('routeDuration').textContent = routeData.duration;
+            }
+
+            getStatusText(status) {
+                const statusMap = {
+                    'pending': 'Chờ xử lý',
+                    'processing': 'Đang xử lý',
+                    'shipping': 'Đang giao',
+                    'delivered': 'Đã giao',
+                    'failed': 'Thất bại',
+                    'cancelled': 'Đã hủy'
+                };
+                return statusMap[status] || status;
+            }
+
+            formatCurrency(amount) {
+                return new Intl.NumberFormat('vi-VN', {
+                    style: 'currency',
+                    currency: 'VND'
+                }).format(amount);
+            }
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new OrderDetailManager();
+        });
+    </script>
+</body>
+</html> 

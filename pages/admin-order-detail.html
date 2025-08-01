@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chi Tiết Đơn Hàng - Admin</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="../css/dashboard.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <a href="../index.html">NTT Express</a>
+                </div>
+                <nav class="nav">
+                    <ul class="nav-list">
+                        <li><a href="admin-dashboard.html" class="nav-link">Dashboard</a></li>
+                        <li><a href="admin-orders.html" class="nav-link active">Quản Lý Đơn Hàng</a></li>
+                        <li><a href="admin-users.html" class="nav-link">Quản Lý Người Dùng</a></li>
+                        <li><a href="admin-stats.html" class="nav-link">Thống Kê</a></li>
+                        <li><a href="admin-settings.html" class="nav-link">Cài Đặt</a></li>
+                    </ul>
+                </nav>
+                <div class="header-actions">
+                    <div class="user-menu">
+                        <span class="user-name" id="userName">Admin</span>
+                        <button class="btn btn-secondary" onclick="logout()">Đăng Xuất</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <div class="page-header">
+                <h1>Chi Tiết Đơn Hàng</h1>
+                <a href="admin-orders.html" class="btn btn-secondary">Quay lại danh sách</a>
+            </div>
+
+            <div id="orderDetail">
+                <div class="loading">Đang tải...</div>
+            </div>
+
+            <div class="tracking-section">
+                <h2>Lịch Sử Trạng Thái</h2>
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Thời Gian</th>
+                                <th>Trạng Thái</th>
+                                <th>Vị Trí</th>
+                                <th>Mô Tả</th>
+                                <th>Người Thực Hiện</th>
+                            </tr>
+                        </thead>
+                        <tbody id="trackingBody">
+                            <tr><td colspan="5" class="text-center">Đang tải...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="../js/lucide.min.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/script.js"></script>
+    <script>
+        lucide.createIcons();
+        auth.redirectIfNotAdmin();
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        document.getElementById('userName').textContent = user.full_name || 'Admin';
+
+        // Lấy id từ query string
+        function getOrderId() {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('id');
+        }
+
+        async function loadOrderDetail() {
+            const orderId = getOrderId();
+            if (!orderId) return;
+            const detailDiv = document.getElementById('orderDetail');
+            try {
+                const response = await api.getOrder(orderId);
+                if (response.success) {
+                    const { order, tracking } = response.data;
+                    detailDiv.innerHTML = `
+                        <div class="order-detail-card">
+                            <h2>Mã Đơn: <span>${order.order_code}</span></h2>
+                            <div class="order-info-grid">
+                                <div>
+                                    <h3>Người Gửi</h3>
+                                    <p><strong>${order.sender_name}</strong></p>
+                                    <p>${order.sender_phone}</p>
+                                    <p>${order.sender_address}</p>
+                                </div>
+                                <div>
+                                    <h3>Người Nhận</h3>
+                                    <p><strong>${order.receiver_name}</strong></p>
+                                    <p>${order.receiver_phone}</p>
+                                    <p>${order.receiver_address}</p>
+                                </div>
+                                <div>
+                                    <h3>Thông Tin Đơn Hàng</h3>
+                                    <p>Trạng thái: ${ui.getStatusBadge(order.current_status)}</p>
+                                    <p>Khối lượng: ${order.package_weight} kg</p>
+                                    <p>Kích thước: ${order.package_dimensions || '-'}</p>
+                                    <p>Phí vận chuyển: ${ui.formatCurrency(order.shipping_fee)}</p>
+                                    <p>Tổng tiền: ${ui.formatCurrency(order.total_amount)}</p>
+                                    <p>Ngày tạo: ${ui.formatDateTime(order.created_at)}</p>
+                                    <p>Ngày giao dự kiến: ${order.estimated_delivery_date ? ui.formatDate(order.estimated_delivery_date) : '-'}</p>
+                                    <p>Ngày giao thực tế: ${order.actual_delivery_date ? ui.formatDateTime(order.actual_delivery_date) : '-'}</p>
+                                </div>
+                            </div>
+                            <div class="order-desc">
+                                <h3>Mô tả hàng hóa</h3>
+                                <p>${order.package_description || '-'}</p>
+                            </div>
+                        </div>
+                    `;
+                    // Tracking
+                    const trackingBody = document.getElementById('trackingBody');
+                    if (tracking.length === 0) {
+                        trackingBody.innerHTML = '<tr><td colspan="5" class="text-center">Không có lịch sử trạng thái</td></tr>';
+                    } else {
+                        trackingBody.innerHTML = tracking.map(item => `
+                            <tr>
+                                <td>${ui.formatDateTime(item.created_at)}</td>
+                                <td>${ui.getStatusBadge(item.status)}</td>
+                                <td>${item.location || '-'}</td>
+                                <td>${item.description || '-'}</td>
+                                <td>${item.created_by_name || '-'}</td>
+                            </tr>
+                        `).join('');
+                    }
+                } else {
+                    detailDiv.innerHTML = '<div class="alert alert-error">Không tìm thấy đơn hàng</div>';
+                }
+            } catch (error) {
+                detailDiv.innerHTML = '<div class="alert alert-error">Có lỗi xảy ra khi tải dữ liệu</div>';
+            }
+        }
+
+        function logout() { api.logout(); }
+        document.addEventListener('DOMContentLoaded', loadOrderDetail);
+    </script>
+    <style>
+        .order-detail-card {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        .order-detail-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+        }
+        .order-info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 2rem;
+            margin-bottom: 1.5rem;
+        }
+        .order-info-grid h3 {
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+        }
+        .order-desc {
+            margin-top: 1.5rem;
+        }
+        .order-desc h3 {
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</body>
+</html> 

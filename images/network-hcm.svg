@@ -1,0 +1,43 @@
+<svg width="300" height="200" viewBox="0 0 300 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="hcmGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#059669;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#10b981;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="300" height="200" fill="url(#hcmGradient)"/>
+  
+  <!-- Modern city skyline -->
+  <rect x="15" y="100" width="30" height="80" fill="white" opacity="0.9"/>
+  <rect x="55" y="80" width="40" height="100" fill="white" opacity="0.9"/>
+  <rect x="105" y="70" width="35" height="110" fill="white" opacity="0.9"/>
+  <rect x="150" y="60" width="50" height="120" fill="white" opacity="0.9"/>
+  <rect x="210" y="85" width="35" height="95" fill="white" opacity="0.9"/>
+  <rect x="255" y="95" width="30" height="85" fill="white" opacity="0.9"/>
+  
+  <!-- Windows -->
+  <rect x="20" y="105" width="6" height="6" fill="#059669"/>
+  <rect x="30" y="105" width="6" height="6" fill="#059669"/>
+  <rect x="20" y="115" width="6" height="6" fill="#059669"/>
+  <rect x="30" y="115" width="6" height="6" fill="#059669"/>
+  
+  <rect x="60" y="85" width="6" height="6" fill="#059669"/>
+  <rect x="70" y="85" width="6" height="6" fill="#059669"/>
+  <rect x="80" y="85" width="6" height="6" fill="#059669"/>
+  <rect x="60" y="95" width="6" height="6" fill="#059669"/>
+  <rect x="70" y="95" width="6" height="6" fill="#059669"/>
+  <rect x="80" y="95" width="6" height="6" fill="#059669"/>
+  
+  <!-- Logo/Icon -->
+  <circle cx="150" cy="45" r="25" fill="white" opacity="0.9"/>
+  <text x="150" y="53" text-anchor="middle" fill="#059669" font-family="Arial" font-size="12" font-weight="bold">HCM</text>
+  
+  <!-- Network dots -->
+  <circle cx="40" cy="35" r="3" fill="white" opacity="0.8"/>
+  <circle cx="260" cy="55" r="3" fill="white" opacity="0.8"/>
+  <circle cx="90" cy="25" r="3" fill="white" opacity="0.8"/>
+  <circle cx="230" cy="40" r="3" fill="white" opacity="0.8"/>
+  <circle cx="180" cy="30" r="3" fill="white" opacity="0.8"/>
+</svg> 

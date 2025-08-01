@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chỉnh Sửa Đơn Hàng - Staff</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="../css/dashboard.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <a href="../index.html">NTT Express</a>
+                </div>
+                <nav class="nav">
+                    <ul class="nav-list">
+                        <li><a href="staff-dashboard.html" class="nav-link">Dashboard</a></li>
+                        <li><a href="staff-orders.html" class="nav-link active">Quản Lý Đơn Hàng</a></li>
+                        <li><a href="staff-track.html" class="nav-link">Theo Dõi Giao Hàng</a></li>
+                        <li><a href="staff-stats.html" class="nav-link">Thống Kê</a></li>
+                    </ul>
+                </nav>
+                <div class="header-actions">
+                    <div class="user-menu">
+                        <span class="user-name" id="userName">Staff</span>
+                        <button class="btn btn-secondary" onclick="logout()">Đăng Xuất</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <div class="page-header">
+                <h1>Chỉnh Sửa Đơn Hàng</h1>
+                <a href="staff-orders.html" class="btn btn-secondary">Quay lại danh sách</a>
+            </div>
+
+            <form id="editOrderForm" class="order-edit-form">
+                <div class="order-edit-grid">
+                    <div class="form-group">
+                        <label for="sender_name">Tên Người Gửi *</label>
+                        <input type="text" id="sender_name" name="sender_name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="sender_phone">Số ĐT Người Gửi *</label>
+                        <input type="tel" id="sender_phone" name="sender_phone" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="sender_address">Địa Chỉ Người Gửi *</label>
+                        <input type="text" id="sender_address" name="sender_address" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="receiver_name">Tên Người Nhận *</label>
+                        <input type="text" id="receiver_name" name="receiver_name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="receiver_phone">Số ĐT Người Nhận *</label>
+                        <input type="tel" id="receiver_phone" name="receiver_phone" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="receiver_address">Địa Chỉ Người Nhận *</label>
+                        <input type="text" id="receiver_address" name="receiver_address" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="package_weight">Khối Lượng (kg) *</label>
+                        <input type="number" id="package_weight" name="package_weight" step="0.1" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="package_dimensions">Kích Thước</label>
+                        <input type="text" id="package_dimensions" name="package_dimensions">
+                    </div>
+                    <div class="form-group">
+                        <label for="package_description">Mô Tả Hàng Hóa</label>
+                        <input type="text" id="package_description" name="package_description">
+                    </div>
+                    <div class="form-group">
+                        <label for="shipping_fee">Phí Vận Chuyển (VNĐ) *</label>
+                        <input type="number" id="shipping_fee" name="shipping_fee" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="estimated_delivery_date">Ngày Giao Dự Kiến</label>
+                        <input type="date" id="estimated_delivery_date" name="estimated_delivery_date">
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Lưu Thay Đổi</button>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <script src="../js/lucide.min.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/script.js"></script>
+    <script>
+        lucide.createIcons();
+        auth.redirectIfNotStaff();
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        document.getElementById('userName').textContent = user.full_name || 'Staff';
+
+        function getOrderId() {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('id');
+        }
+
+        async function loadOrderData() {
+            const orderId = getOrderId();
+            if (!orderId) return;
+            try {
+                const response = await api.getOrder(orderId);
+                if (response.success) {
+                    const { order } = response.data;
+                    for (const key in order) {
+                        if (document.getElementById(key)) {
+                            document.getElementById(key).value = order[key] || '';
+                        }
+                    }
+                }
+            } catch (error) {
+                ui.showError('Không thể tải dữ liệu đơn hàng');
+            }
+        }
+
+        document.getElementById('editOrderForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const orderId = getOrderId();
+            if (!orderId) return;
+            const formData = new FormData(e.target);
+            const orderData = Object.fromEntries(formData.entries());
+            try {
+                const response = await api.updateOrder(orderId, orderData);
+                if (response.success) {
+                    ui.showSuccess('Cập nhật đơn hàng thành công!');
+                    setTimeout(() => window.location.href = `staff-order-detail.html?id=${orderId}`, 1000);
+                } else {
+                    ui.showError(response.message || 'Cập nhật thất bại');
+                }
+            } catch (error) {
+                ui.showError(error.message || 'Có lỗi xảy ra khi cập nhật');
+            }
+        });
+
+        function logout() { api.logout(); }
+        document.addEventListener('DOMContentLoaded', loadOrderData);
+    </script>
+    <style>
+        .order-edit-form {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            padding: 2rem;
+        }
+        .order-edit-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem;
+        }
+        .form-actions {
+            margin-top: 2rem;
+            text-align: right;
+        }
+    </style>
+</body>
+</html> 

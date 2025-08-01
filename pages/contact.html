@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liên Hệ - NTT Express</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="../css/contact.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <a href="../index.html">
+                        NTT Express
+                    </a>
+                </div>
+                
+                <nav class="nav">
+                    <ul class="nav-list">
+                        <li><a href="../index.html" class="nav-link">Trang Chủ</a></li>
+                        <li><a href="dashboard.html" class="nav-link">Bảng Điều Khiển</a></li>
+                        <li><a href="services.html" class="nav-link">Dịch Vụ</a></li>
+                        <li><a href="track.html" class="nav-link">Theo Dõi</a></li>
+                        <li><a href="about.html" class="nav-link">Giới Thiệu</a></li>
+                        <li><a href="contact.html" class="nav-link active">Liên Hệ</a></li>
+                        <li><a href="faq.html" class="nav-link">FAQ</a></li>
+                    </ul>
+                </nav>
+                
+                <div class="header-actions">
+                    <a href="login.html" class="btn btn-secondary">Đăng Nhập</a>
+                    <a href="register.html" class="btn btn-primary">Đăng Ký</a>
+                </div>
+                
+                <button class="mobile-menu-toggle" id="mobileMenuToggle">
+                    <i data-lucide="menu"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Contact Hero -->
+    <section class="contact-hero">
+        <div class="container">
+            <div class="hero-content">
+                <h1>Liên Hệ Với Chúng Tôi</h1>
+                <p>Sẵn sàng hỗ trợ và tư vấn cho mọi nhu cầu logistics của bạn</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Info -->
+    <section class="contact-info">
+        <div class="container">
+            <div class="info-grid">
+                <div class="info-card">
+                    <div class="info-icon">
+                        <i data-lucide="phone"></i>
+                    </div>
+                    <h3>Điện Thoại</h3>
+                    <p>Hotline: 1900-1234</p>
+                    <p>Hỗ trợ: 090-123-4567</p>
+                </div>
+                
+                <div class="info-card">
+                    <div class="info-icon">
+                        <i data-lucide="mail"></i>
+                    </div>
+                    <h3>Email</h3>
+                    <p>info@nttexpress.com</p>
+                    <p>support@nttexpress.com</p>
+                </div>
+                
+                <div class="info-card">
+                    <div class="info-icon">
+                        <i data-lucide="map-pin"></i>
+                    </div>
+                    <h3>Địa Chỉ</h3>
+                    <p>123 Đường ABC, Quận 1</p>
+                    <p>TP.HCM, Việt Nam</p>
+                </div>
+                
+                <div class="info-card">
+                    <div class="info-icon">
+                        <i data-lucide="clock"></i>
+                    </div>
+                    <h3>Giờ Làm Việc</h3>
+                    <p>Thứ 2 - Thứ 6: 8:00 - 18:00</p>
+                    <p>Thứ 7: 8:00 - 12:00</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Form -->
+    <section class="contact-form">
+        <div class="container">
+            <div class="form-content">
+                <div class="form-info">
+                    <h2>Gửi Tin Nhắn Cho Chúng Tôi</h2>
+                    <p>Điền thông tin bên dưới và chúng tôi sẽ liên hệ lại trong thời gian sớm nhất</p>
+                    
+                    <div class="contact-methods">
+                        <div class="method-item">
+                            <i data-lucide="message-circle"></i>
+                            <span>Phản hồi trong 24h</span>
+                        </div>
+                        <div class="method-item">
+                            <i data-lucide="shield"></i>
+                            <span>Thông tin bảo mật</span>
+                        </div>
+                        <div class="method-item">
+                            <i data-lucide="headphones"></i>
+                            <span>Hỗ trợ 24/7</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <form class="contact-form-main">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="firstName">Họ và Tên *</label>
+                            <input type="text" id="firstName" name="firstName" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="email">Email *</label>
+                            <input type="email" id="email" name="email" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="phone">Số Điện Thoại *</label>
+                            <input type="tel" id="phone" name="phone" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="company">Công Ty</label>
+                            <input type="text" id="company" name="company">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="subject">Chủ Đề *</label>
+                        <select id="subject" name="subject" required>
+                            <option value="">Chọn chủ đề</option>
+                            <option value="general">Thông tin chung</option>
+                            <option value="service">Tư vấn dịch vụ</option>
+                            <option value="pricing">Báo giá</option>
+                            <option value="support">Hỗ trợ kỹ thuật</option>
+                            <option value="complaint">Khiếu nại</option>
+                            <option value="other">Khác</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="message">Nội Dung Tin Nhắn *</label>
+                        <textarea id="message" name="message" rows="6" required placeholder="Mô tả chi tiết yêu cầu của bạn..."></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="privacy" required>
+                            <span class="checkmark"></span>
+                            Tôi đồng ý với <a href="#">Chính sách bảo mật</a> và <a href="#">Điều khoản sử dụng</a>
+                        </label>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary btn-large">Gửi Tin Nhắn</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Office Locations -->
+    <section class="office-locations">
+        <div class="container">
+            <div class="section-header">
+                <h2>Văn Phòng Đại Diện</h2>
+                <p>Mạng lưới văn phòng rộng khắp 63 tỉnh thành</p>
+            </div>
+            
+            <div class="locations-grid">
+                <div class="location-card">
+                    <div class="location-icon">
+                        <i data-lucide="map-pin"></i>
+                    </div>
+                    <h3>TP.HCM</h3>
+                    <p>123 Đường ABC, Quận 1</p>
+                    <p>Điện thoại: 028-123-4567</p>
+                </div>
+                
+                <div class="location-card">
+                    <div class="location-icon">
+                        <i data-lucide="map-pin"></i>
+                    </div>
+                    <h3>Hà Nội</h3>
+                    <p>456 Đường XYZ, Quận Ba Đình</p>
+                    <p>Điện thoại: 024-123-4567</p>
+                </div>
+                
+                <div class="location-card">
+                    <div class="location-icon">
+                        <i data-lucide="map-pin"></i>
+                    </div>
+                    <h3>Đà Nẵng</h3>
+                    <p>789 Đường DEF, Quận Hải Châu</p>
+                    <p>Điện thoại: 0236-123-4567</p>
+                </div>
+                
+                <div class="location-card">
+                    <div class="location-icon">
+                        <i data-lucide="map-pin"></i>
+                    </div>
+                    <h3>Cần Thơ</h3>
+                    <p>321 Đường GHI, Quận Ninh Kiều</p>
+                    <p>Điện thoại: 0292-123-4567</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script src="../js/lucide.min.js"></script>
+    <script src="../js/script.js"></script>
+</body>
+</html> 

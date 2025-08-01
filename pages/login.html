@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng Nhập - NTT Express</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="../css/auth.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="../js/lucide.min.js"></script>
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <div class="logo">
+                    <a href="../index.html">
+                        NTT Express
+                    </a>
+                </div>
+                <h1>Đăng Nhập</h1>
+                <p>Chào mừng trở lại! Vui lòng đăng nhập vào tài khoản của bạn.</p>
+            </div>
+
+            <form class="auth-form" id="loginForm">
+                <div class="form-group">
+                    <label for="username">Tên đăng nhập hoặc Email</label>
+                    <div class="input-group">
+                        <i data-lucide="user" class="input-icon"></i>
+                        <input type="text" id="username" name="username" placeholder="Nhập tên đăng nhập hoặc email" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Mật Khẩu</label>
+                    <div class="input-group">
+                        <i data-lucide="lock" class="input-icon"></i>
+                        <input type="password" id="password" name="password" placeholder="Nhập mật khẩu" required>
+                    </div>
+                </div>
+
+                <div class="form-options">
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="remember">
+                        Ghi nhớ đăng nhập
+                    </label>
+                    <a href="#" class="forgot-link">Quên mật khẩu?</a>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-full" id="loginBtn">
+                    <span class="btn-text">Đăng Nhập</span>
+                    <span class="btn-loading" style="display: none;">
+                        <i data-lucide="loader-2" class="animate-spin"></i>
+                        Đang đăng nhập...
+                    </span>
+                </button>
+            </form>
+
+            <div class="auth-footer">
+                <p>Chưa có tài khoản? <a href="register.html">Đăng ký ngay</a></p>
+            </div>
+
+            <!-- Demo accounts info -->
+            <div class="demo-accounts">
+                <h3>Tài khoản demo:</h3>
+                <div class="demo-account">
+                    <strong>Admin:</strong> admin / password
+                </div>
+                <div class="demo-account">
+                    <strong>Staff:</strong> staff1 / password
+                </div>
+                <div class="demo-account">
+                    <strong>Customer:</strong> customer1 / password
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script src="../js/script.js"></script>
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // Login form handling
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const loginBtn = document.getElementById('loginBtn');
+            const btnText = loginBtn.querySelector('.btn-text');
+            const btnLoading = loginBtn.querySelector('.btn-loading');
+            
+            // Show loading state
+            btnText.style.display = 'none';
+            btnLoading.style.display = 'inline-flex';
+            loginBtn.disabled = true;
+
+            try {
+                const username = document.getElementById('username').value;
+                const password = document.getElementById('password').value;
+
+                const response = await api.login(username, password);
+                
+                if (response.success) {
+                    // Store user info
+                    localStorage.setItem('user', JSON.stringify(response.data.user));
+                    
+                    ui.showSuccess('Đăng nhập thành công!');
+                    
+                    // Redirect based on user role
+                    setTimeout(() => {
+                        if (response.data.user.role === 'admin') {
+                            window.location.href = 'admin-dashboard.html';
+                        } else if (response.data.user.role === 'staff') {
+                            window.location.href = 'staff-dashboard.html';
+                        } else {
+                            window.location.href = '../index.html';
+                        }
+                    }, 1000);
+                } else {
+                    ui.showError(response.message || 'Đăng nhập thất bại');
+                }
+            } catch (error) {
+                ui.showError(error.message || 'Có lỗi xảy ra khi đăng nhập');
+            } finally {
+                // Reset button state
+                btnText.style.display = 'inline';
+                btnLoading.style.display = 'none';
+                loginBtn.disabled = false;
+            }
+        });
+
+        // Check if user is already logged in
+        if (auth.isLoggedIn()) {
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            if (user.role === 'admin') {
+                window.location.href = 'admin-dashboard.html';
+            } else if (user.role === 'staff') {
+                window.location.href = 'staff-dashboard.html';
+            } else {
+                window.location.href = '../index.html';
+            }
+        }
+    </script>
+</body>
+</html> 

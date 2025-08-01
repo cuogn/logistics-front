@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thống Kê - Admin</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="../css/dashboard.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <a href="../index.html">
+                        NTT Express
+                    </a>
+                </div>
+                
+                <nav class="nav">
+                    <ul class="nav-list">
+                        <li><a href="admin-dashboard.html" class="nav-link">Dashboard</a></li>
+                        <li><a href="admin-orders.html" class="nav-link">Quản Lý Đơn Hàng</a></li>
+                        <li><a href="admin-users.html" class="nav-link">Quản Lý Người Dùng</a></li>
+                        <li><a href="admin-stats.html" class="nav-link active">Thống Kê</a></li>
+                        <li><a href="admin-settings.html" class="nav-link">Cài Đặt</a></li>
+                    </ul>
+                </nav>
+                
+                <div class="header-actions">
+                    <div class="user-menu">
+                        <span class="user-name" id="userName">Admin</span>
+                        <button class="btn btn-secondary" onclick="logout()">Đăng Xuất</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Page Header -->
+            <div class="page-header">
+                <h1>Thống Kê & Báo Cáo</h1>
+                <div class="header-actions">
+                    <button class="btn btn-secondary" onclick="exportStats()">
+                        <i data-lucide="download"></i>
+                        Xuất Báo Cáo
+                    </button>
+                </div>
+            </div>
+
+            <!-- Date Filters -->
+            <div class="filters-section">
+                <div class="filters-grid">
+                    <div class="filter-group">
+                        <label for="dateFromFilter">Từ Ngày</label>
+                        <input type="date" id="dateFromFilter" class="form-input">
+                    </div>
+                    <div class="filter-group">
+                        <label for="dateToFilter">Đến Ngày</label>
+                        <input type="date" id="dateToFilter" class="form-input">
+                    </div>
+                    <div class="filter-group">
+                        <button class="btn btn-primary" onclick="loadStats()">
+                            <i data-lucide="refresh-cw"></i>
+                            Cập Nhật
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Overview Stats -->
+            <div class="stats-overview">
+                <h2>Tổng Quan</h2>
+                <div class="stats-grid" id="statsGrid">
+                    <!-- Loading state -->
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i data-lucide="package"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-number">Đang tải...</div>
+                            <div class="stat-label">Tổng Đơn Hàng</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i data-lucide="dollar-sign"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-number">Đang tải...</div>
+                            <div class="stat-label">Tổng Doanh Thu</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i data-lucide="check-circle"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-number">Đang tải...</div>
+                            <div class="stat-label">Đã Giao</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i data-lucide="clock"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-number">Đang tải...</div>
+                            <div class="stat-label">Chờ Xử Lý</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Section -->
+            <div class="charts-section">
+                <div class="chart-container">
+                    <h3>Thống Kê Theo Trạng Thái</h3>
+                    <canvas id="statusChart"></canvas>
+                </div>
+                
+                <div class="chart-container">
+                    <h3>Thống Kê Theo Thời Gian</h3>
+                    <canvas id="timeChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Detailed Stats -->
+            <div class="detailed-stats">
+                <div class="stats-tabs">
+                    <button class="tab-btn active" onclick="showTab('status')">Theo Trạng Thái</button>
+                    <button class="tab-btn" onclick="showTab('time')">Theo Thời Gian</button>
+                    <button class="tab-btn" onclick="showTab('customer')">Theo Khách Hàng</button>
+                    <button class="tab-btn" onclick="showTab('staff')">Theo Nhân Viên</button>
+                    <button class="tab-btn" onclick="showTab('performance')">Hiệu Suất Giao Hàng</button>
+                </div>
+
+                <div class="tab-content" id="statusTab">
+                    <div class="table-container">
+                        <table class="table" id="statusTable">
+                            <thead>
+                                <tr>
+                                    <th>Trạng Thái</th>
+                                    <th>Số Lượng</th>
+                                    <th>Tổng Doanh Thu</th>
+                                    <th>Doanh Thu Trung Bình</th>
+                                    <th>Đơn Hàng Đầu Tiên</th>
+                                    <th>Đơn Hàng Cuối</th>
+                                </tr>
+                            </thead>
+                            <tbody id="statusTableBody">
+                                <tr>
+                                    <td colspan="6" class="text-center">Đang tải...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="timeTab" style="display: none;">
+                    <div class="table-container">
+                        <table class="table" id="timeTable">
+                            <thead>
+                                <tr>
+                                    <th>Thời Gian</th>
+                                    <th>Tổng Đơn Hàng</th>
+                                    <th>Chờ Xử Lý</th>
+                                    <th>Đang Xử Lý</th>
+                                    <th>Đang Giao</th>
+                                    <th>Đã Giao</th>
+                                    <th>Thất Bại</th>
+                                    <th>Doanh Thu</th>
+                                </tr>
+                            </thead>
+                            <tbody id="timeTableBody">
+                                <tr>
+                                    <td colspan="8" class="text-center">Đang tải...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="customerTab" style="display: none;">
+                    <div class="table-container">
+                        <table class="table" id="customerTable">
+                            <thead>
+                                <tr>
+                                    <th>Khách Hàng</th>
+                                    <th>Tổng Đơn Hàng</th>
+                                    <th>Đã Giao</th>
+                                    <th>Thất Bại</th>
+                                    <th>Tổng Doanh Thu</th>
+                                    <th>Doanh Thu TB</th>
+                                    <th>Đơn Hàng Đầu</th>
+                                    <th>Đơn Hàng Cuối</th>
+                                </tr>
+                            </thead>
+                            <tbody id="customerTableBody">
+                                <tr>
+                                    <td colspan="8" class="text-center">Đang tải...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="staffTab" style="display: none;">
+                    <div class="table-container">
+                        <table class="table" id="staffTable">
+                            <thead>
+                                <tr>
+                                    <th>Nhân Viên</th>
+                                    <th>Tổng Đơn Hàng</th>
+                                    <th>Đã Giao</th>
+                                    <th>Thất Bại</th>
+                                    <th>Tổng Doanh Thu</th>
+                                    <th>Doanh Thu TB</th>
+                                    <th>Đơn Hàng Đầu</th>
+                                    <th>Đơn Hàng Cuối</th>
+                                </tr>
+                            </thead>
+                            <tbody id="staffTableBody">
+                                <tr>
+                                    <td colspan="8" class="text-center">Đang tải...</td>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="performanceTab" style="display: none;">
+                    <div class="performance-stats">
+                        <div class="performance-card">
+                            <h4>Thời Gian Giao Hàng Trung Bình</h4>
+                            <div class="performance-value" id="avgDeliveryTime">-</div>
+                        </div>
+                        <div class="performance-card">
+                            <h4>Tỷ Lệ Giao Hàng Đúng Hạn</h4>
+                            <div class="performance-value" id="onTimeDeliveryRate">-</div>
+                        </div>
+                        <div class="performance-card">
+                            <h4>Đơn Hàng Giao Thành Công</h4>
+                            <div class="performance-value" id="deliveredOrders">-</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="../js/lucide.min.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/script.js"></script>
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // Check authentication
+        auth.redirectIfNotAdmin();
+
+        // Load user info
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        document.getElementById('userName').textContent = user.full_name || 'Admin';
+
+        // Charts
+        let statusChart, timeChart;
+
+        // Load all statistics
+        async function loadStats() {
+            try {
+                const dateFrom = document.getElementById('dateFromFilter').value;
+                const dateTo = document.getElementById('dateToFilter').value;
+                const params = {};
+                
+                if (dateFrom) params.start_date = dateFrom;
+                if (dateTo) params.end_date = dateTo;
+
+                console.log('Loading stats with params:', params);
+
+                // Load daily stats from statistics table
+                const dailyResponse = await api.getDailyStats(params);
+                console.log('Daily response:', dailyResponse);
+                if (dailyResponse.success) {
+                    displayDailyStats(dailyResponse.data);
+                    updateDailyChart(dailyResponse.data.statistics);
+                } else {
+                    console.error('Daily stats failed:', dailyResponse);
+                    // Show specific error message
+                    if (dailyResponse.message) {
+                        ui.showError('Lỗi tải dữ liệu thống kê: ' + dailyResponse.message);
+                    } else {
+                        ui.showError('Không thể tải dữ liệu thống kê');
+                    }
+                    displayDailyStats({ totals: {} });
+                }
+
+                // Load status stats
+                const statusResponse = await api.getStatusStats(params);
+                console.log('Status response:', statusResponse);
+                if (statusResponse.success) {
+                    displayStatusStats(statusResponse.data);
+                    updateStatusChart(statusResponse.data);
+                } else {
+                    console.error('Status stats failed:', statusResponse);
+                    displayStatusStats([]);
+                }
+
+                // Load customer stats
+                const customerResponse = await api.getCustomerStats(params);
+                if (customerResponse.success) {
+                    displayCustomerStats(customerResponse.data);
+                } else {
+                    displayCustomerStats([]);
+                }
+
+                // Load staff stats
+                const staffResponse = await api.getStaffStats(params);
+                if (staffResponse.success) {
+                    displayStaffStats(staffResponse.data);
+                } else {
+                    displayStaffStats([]);
+                }
+
+                // Load performance stats
+                const performanceResponse = await api.getDeliveryPerformance(params);
+                if (performanceResponse.success) {
+                    displayPerformanceStats(performanceResponse.data);
+                } else {
+                    displayPerformanceStats({});
+                }
+
+            } catch (error) {
+                console.error('Error loading stats:', error);
+                // Show error only if it's a network error, not just empty data
+                if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+                    ui.showError('Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.');
+                } else {
+                    ui.showError('Không thể tải dữ liệu thống kê: ' + error.message);
+                }
+                // Display empty data when error occurs
+                displayDailyStats({ totals: {} });
+            }
+        }
+
+        function displayDailyStats(data) {
+            const statsGrid = document.getElementById('statsGrid');
+            const totals = data.totals || {};
+            
+            console.log('Daily stats data:', data); // Debug log
+            console.log('Totals:', totals); // Debug log
+            
+            // Ensure all values are numbers, not NaN
+            const totalOrders = parseInt(totals.total_orders) || 0;
+            const totalRevenue = parseFloat(totals.total_revenue) || 0;
+            const deliveredOrders = parseInt(totals.delivered_orders) || 0;
+            const pendingOrders = parseInt(totals.pending_orders) || 0;
+            
+            // Check if we have valid data
+            if (!data || Object.keys(totals).length === 0) {
+                statsGrid.innerHTML = `
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i data-lucide="package"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-number">0</div>
+                            <div class="stat-label">Tổng Đơn Hàng</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i data-lucide="dollar-sign"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-number">₫0</div>
+                            <div class="stat-label">Tổng Doanh Thu</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i data-lucide="check-circle"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-number">0</div>
+                            <div class="stat-label">Đã Giao</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i data-lucide="clock"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-number">0</div>
+                            <div class="stat-label">Chờ Xử Lý</div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                statsGrid.innerHTML = `
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i data-lucide="package"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-number">${totalOrders}</div>
+                            <div class="stat-label">Tổng Đơn Hàng</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i data-lucide="dollar-sign"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-number">${ui.formatCurrency(totalRevenue)}</div>
+                            <div class="stat-label">Tổng Doanh Thu</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i data-lucide="check-circle"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-number">${deliveredOrders}</div>
+                            <div class="stat-label">Đã Giao</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i data-lucide="clock"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-number">${pendingOrders}</div>
+                            <div class="stat-label">Chờ Xử Lý</div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Re-initialize Lucide icons after updating HTML
+            lucide.createIcons();
+        }
+
+        function displayStatusStats(stats) {
+            const tbody = document.getElementById('statusTableBody');
+            
+            if (stats.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center">Không có dữ liệu</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = stats.map(stat => `
+                <tr>
+                    <td>${getStatusText(stat.current_status)}</td>
+                    <td>${stat.count}</td>
+                    <td>${ui.formatCurrency(stat.total_revenue || 0)}</td>
+                    <td>${ui.formatCurrency(stat.avg_revenue || 0)}</td>
+                    <td>${stat.first_order ? ui.formatDateTime(stat.first_order) : '-'}</td>
+                    <td>${stat.last_order ? ui.formatDateTime(stat.last_order) : '-'}</td>
+                </tr>
+            `).join('');
+        }
+
+        function displayTimeStats(stats) {
+            const tbody = document.getElementById('timeTableBody');
+            
+            if (stats.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center">Không có dữ liệu</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = stats.map(stat => `
+                <tr>
+                    <td>${ui.formatDate(stat.period)}</td>
+                    <td>${stat.total_orders}</td>
+                    <td>${stat.pending_orders}</td>
+                    <td>${stat.processing_orders}</td>
+                    <td>${stat.shipping_orders}</td>
+                    <td>${stat.delivered_orders}</td>
+                    <td>${stat.failed_orders}</td>
+                    <td>${ui.formatCurrency(stat.total_revenue || 0)}</td>
+                </tr>
+            `).join('');
+        }
+
+        function displayCustomerStats(stats) {
+            const tbody = document.getElementById('customerTableBody');
+            
+            if (stats.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center">Không có dữ liệu</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = stats.map(stat => `
+                <tr>
+                    <td>${stat.customer_name}</td>
+                    <td>${stat.total_orders}</td>
+                    <td>${stat.delivered_orders}</td>
+                    <td>${stat.failed_orders}</td>
+                    <td>${ui.formatCurrency(stat.total_revenue || 0)}</td>
+                    <td>${ui.formatCurrency(stat.avg_revenue || 0)}</td>
+                    <td>${stat.first_order ? ui.formatDateTime(stat.first_order) : '-'}</td>
+                    <td>${stat.last_order ? ui.formatDateTime(stat.last_order) : '-'}</td>
+                </tr>
+            `).join('');
+        }
+
+        function displayStaffStats(stats) {
+            const tbody = document.getElementById('staffTableBody');
+            
+            if (stats.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center">Không có dữ liệu</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = stats.map(stat => `
+                <tr>
+                    <td>${stat.staff_name}</td>
+                    <td>${stat.total_orders}</td>
+                    <td>${stat.delivered_orders}</td>
+                    <td>${stat.failed_orders}</td>
+                    <td>${ui.formatCurrency(stat.total_revenue || 0)}</td>
+                    <td>${ui.formatCurrency(stat.avg_revenue || 0)}</td>
+                    <td>${stat.first_order ? ui.formatDateTime(stat.first_order) : '-'}</td>
+                    <td>${stat.last_order ? ui.formatDateTime(stat.last_order) : '-'}</td>
+                </tr>
+            `).join('');
+        }
+
+        function displayPerformanceStats(data) {
+            const deliveryTime = data.delivery_time;
+            const onTimeDelivery = data.on_time_delivery;
+
+            document.getElementById('avgDeliveryTime').textContent = 
+                deliveryTime.avg_delivery_hours ? `${Math.round(deliveryTime.avg_delivery_hours)} giờ` : '-';
+            
+            document.getElementById('onTimeDeliveryRate').textContent = 
+                onTimeDelivery.on_time_deliveries ? 
+                `${Math.round((onTimeDelivery.on_time_count / onTimeDelivery.on_time_deliveries) * 100)}%` : '-';
+            
+            document.getElementById('deliveredOrders').textContent = 
+                deliveryTime.total_delivered || 0;
+        }
+
+        function updateStatusChart(data) {
+            const ctx = document.getElementById('statusChart').getContext('2d');
+            
+            if (statusChart) {
+                statusChart.destroy();
+            }
+
+            statusChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: data.map(item => getStatusText(item.current_status)),
+                    datasets: [{
+                        data: data.map(item => item.count),
+                        backgroundColor: [
+                            '#FF6384',
+                            '#36A2EB',
+                            '#FFCE56',
+                            '#4BC0C0',
+                            '#9966FF',
+                            '#FF9F40'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateTimeChart(data) {
+            const ctx = document.getElementById('timeChart').getContext('2d');
+            
+            if (timeChart) {
+                timeChart.destroy();
+            }
+
+            timeChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.map(item => ui.formatDate(item.period)),
+                    datasets: [{
+                        label: 'Tổng Đơn Hàng',
+                        data: data.map(item => item.total_orders),
+                        borderColor: '#36A2EB',
+                        backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                        tension: 0.1
+                    }, {
+                        label: 'Đã Giao',
+                        data: data.map(item => item.delivered_orders),
+                        borderColor: '#4BC0C0',
+                        backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateDailyChart(statistics) {
+            const ctx = document.getElementById('timeChart').getContext('2d');
+            
+            if (timeChart) {
+                timeChart.destroy();
+            }
+
+            const labels = statistics.map(stat => ui.formatDate(stat.date));
+            const datasets = [
+                {
+                    label: 'Tổng đơn hàng',
+                    data: statistics.map(stat => stat.total_orders),
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    tension: 0.4
+                },
+                {
+                    label: 'Đã giao',
+                    data: statistics.map(stat => stat.delivered_orders),
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    tension: 0.4
+                }
+            ];
+
+            timeChart = new Chart(ctx, {
+                type: 'line',
+                data: { labels, datasets },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'top' },
+                        title: { display: true, text: 'Thống kê theo ngày' }
+                    },
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+        }
+
+        function getStatusText(status) {
+            const textMap = {
+                'pending': 'Chờ xử lý',
+                'processing': 'Đang xử lý',
+                'shipping': 'Đang giao',
+                'delivered': 'Đã giao',
+                'failed': 'Thất bại',
+                'cancelled': 'Đã hủy'
+            };
+            return textMap[status] || status;
+        }
+
+        function showTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.style.display = 'none';
+            });
+            
+            // Remove active class from all buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName + 'Tab').style.display = 'block';
+            
+            // Add active class to clicked button
+            event.target.classList.add('active');
+        }
+
+        async function exportStats() {
+            try {
+                const dateFrom = document.getElementById('dateFromFilter').value;
+                const dateTo = document.getElementById('dateToFilter').value;
+                const params = { type: 'orders' };
+                
+                if (dateFrom) params.start_date = dateFrom;
+                if (dateTo) params.end_date = dateTo;
+
+                // Tạo URL với params
+                const queryString = new URLSearchParams(params).toString();
+                const url = `${api.baseURL}/stats/export?${queryString}`;
+                
+                // Tạo download link
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `orders_${dateFrom || 'all'}_${dateTo || 'all'}.csv`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                
+                ui.showSuccess('Xuất báo cáo thành công!');
+            } catch (error) {
+                console.error('Export error:', error);
+                ui.showError('Có lỗi xảy ra khi xuất báo cáo');
+            }
+        }
+
+        async function testStats() {
+            try {
+                console.log('Testing stats endpoint...');
+                const response = await api.testStats();
+                console.log('Test response:', response);
+                
+                if (response.success) {
+                    ui.showSuccess(`Test thành công! Statistics: ${response.data.statistics_count}, Orders: ${response.data.orders_count}`);
+                } else {
+                    ui.showError('Test thất bại: ' + response.message);
+                }
+            } catch (error) {
+                console.error('Test error:', error);
+                ui.showError('Test lỗi: ' + error.message);
+            }
+        }
+
+        function logout() {
+            api.logout();
+        }
+
+        // Load data immediately
+        loadStats();
+    </script>
+</body>
+</html> 
