@@ -1,5 +1,5 @@
 // API Configuration
-const API_BASE_URL = 'https://099c45e47597.ngrok-free.app/api';
+const API_BASE_URL = 'http://localhost:3000/api';
 
 // API Service Class
 class ApiService {
@@ -25,11 +25,11 @@ class ApiService {
         const headers = {
             'Content-Type': 'application/json'
         };
-        
+
         if (this.token) {
             headers['Authorization'] = `Bearer ${this.token}`;
         }
-        
+
         return headers;
     }
 
@@ -164,20 +164,20 @@ class ApiService {
         }
 
         try {
-            const requestData = { 
-                status, 
-                description, 
-                location: location || null 
+            const requestData = {
+                status,
+                description,
+                location: location || null
             };
-            
+
             const response = await this.put(`/orders/${id}/status`, requestData);
-            
+
             // Log success
             console.log('Order status updated successfully:', response);
             return response;
         } catch (error) {
             console.error('Update order status error:', error);
-            
+
             // Xử lý các loại lỗi cụ thể
             if (error.status === 400) {
                 throw new Error(error.message || 'Dữ liệu không hợp lệ');
@@ -394,7 +394,7 @@ const ui = {
         errorDiv.className = 'alert alert-error';
         errorDiv.textContent = message;
         document.body.appendChild(errorDiv);
-        
+
         setTimeout(() => {
             errorDiv.remove();
         }, 5000);
@@ -405,7 +405,7 @@ const ui = {
         successDiv.className = 'alert alert-success';
         successDiv.textContent = message;
         document.body.appendChild(successDiv);
-        
+
         setTimeout(() => {
             successDiv.remove();
         }, 5000);
@@ -437,7 +437,7 @@ const ui = {
             'failed': { text: 'Thất bại', class: 'badge-danger' },
             'cancelled': { text: 'Đã hủy', class: 'badge-secondary' }
         };
-        
+
         const statusInfo = statusMap[status] || { text: status, class: 'badge-secondary' };
         return `<span class="badge ${statusInfo.class}">${statusInfo.text}</span>`;
     }
