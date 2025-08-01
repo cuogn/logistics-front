@@ -1,5 +1,5 @@
 // API Configuration
-const API_BASE_URL = 'http://192.168.137.1:3000/api';
+const API_BASE_URL = 'https://099c45e47597.ngrok-free.app/api';
 
 // API Service Class
 class ApiService {
