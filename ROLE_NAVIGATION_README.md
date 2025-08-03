@@ -4,7 +4,7 @@
 
 Đã cập nhật hệ thống để giải quyết hai vấn đề chính:
 
-1. **Role-based Navigation**: Cải thiện việc xử lý role customer
+1. **Role-based Navigation**: Cải thiện việc xử lý role customer (ẩn "Dashboard" link trong header)
 2. **Stats Loading**: Khắc phục vấn đề stats không hiển thị được data
 
 ## Các Thay Đổi
@@ -178,7 +178,7 @@ document.addEventListener("DOMContentLoaded", () => {
 3. **Customer Login**:
 
    - Vào dashboard.html
-   - Kiểm tra navigation chỉ có menu customer
+   - Kiểm tra navigation chỉ có menu customer (không có "Dashboard" link)
    - Kiểm tra không thể truy cập admin/staff pages
 
 4. **Role Access Control**:

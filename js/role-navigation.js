@@ -86,9 +86,6 @@ class RoleNavigationHandler {
     setupCustomerNavigation() {
         const nav = document.querySelector('.nav');
         
-        // Dashboard
-        this.showNavItem(nav, 'dashboard', 'dashboard.html', 'Dashboard');
-        
         // Track
         this.showNavItem(nav, 'track', 'track.html', 'Theo Dõi Đơn Hàng');
         
