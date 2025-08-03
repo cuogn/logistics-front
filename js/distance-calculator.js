@@ -9,9 +9,7 @@ class DistanceCalculator {
         this.point1 = null;
         this.point2 = null;
         this.currentStatus = 'ready';
-        this.routingService = null;
         this.geocodingService = null;
-        this.reverseGeocodingService = null;
         this.currentRoute = null;
         this.defaultPricePerKm = 5000; // Giá mặc định 5000 VND
         
@@ -90,22 +88,19 @@ class DistanceCalculator {
             const ui = H.ui.UI.createDefault(this.map, defaultLayers);
             console.log('Map UI created');
 
-            // Khởi tạo services
-            this.routingService = this.platform.getRoutingService();
+            // Khởi tạo services (chỉ giữ lại geocoding service nếu cần)
             this.geocodingService = this.platform.getGeocodingService();
             
             console.log('Services initialized:', {
-                routing: !!this.routingService,
-                geocoding: !!this.geocodingService,
-                reverseGeocoding: !!this.reverseGeocodingService
+                geocoding: !!this.geocodingService
             });
             
             console.log('Map initialized successfully');
 
             // Thêm click listener cho map
-            this.map.addEventListener('tap', (event) => {
+            this.map.addEventListener('tap', async (event) => {
                 console.log('Map clicked!', event);
-                this.handleMapClick(event);
+                await this.handleMapClick(event);
             });
             console.log('Map tap listener added');
 
@@ -117,7 +112,7 @@ class DistanceCalculator {
         }
     }
 
-    handleMapClick(event) {
+    async handleMapClick(event) {
         try {
             console.log('Handling map click...', event);
             
@@ -158,7 +153,7 @@ class DistanceCalculator {
                 this.updateInputs('B', position);
                 
                 // Tính khoảng cách
-                this.calculateDistance();
+                await this.calculateDistance();
                 
             } else {
                 // Đã có đủ 2 điểm, thông báo
@@ -251,7 +246,7 @@ class DistanceCalculator {
         }
     }
 
-    calculateDistance() {
+    async calculateDistance() {
         if (!this.point1 || !this.point2) {
             showNotification('Cần đủ 2 điểm để tính khoảng cách', 'warning');
             return;
@@ -260,41 +255,50 @@ class DistanceCalculator {
         try {
             showLoading();
             
-            // Tạo routing parameters
-            const routingParameters = {
+            // Tạo routing parameters cho HTTP API
+            const params = {
                 mode: 'fastest;car',
                 representation: 'display',
                 waypoint0: `${this.point1.lat},${this.point1.lng}`,
-                waypoint1: `${this.point2.lat},${this.point2.lng}`
+                waypoint1: `${this.point2.lat},${this.point2.lng}`,
+                apikey: '7GUpHwbsEgObqnGg4JG34CJvdbf89IU4iq-SDFe8vmE'
             };
 
-            console.log('Calculating route with parameters:', routingParameters);
+            console.log('Calculating route with parameters:', params);
 
-            // Gọi HERE Routing API
-            this.routingService.calculateRoute(routingParameters, (result) => {
-                hideLoading();
-                
-                if (result.response && result.response.route && result.response.route.length > 0) {
-                    const route = result.response.route[0];
-                    this.displayDistanceInfo(route);
-                    this.drawRoute(route);
-                    this.updateStatus('Hoàn thành - Có thể xóa hoặc đổi vị trí');
-                } else {
-                    console.error('No route found in response:', result);
-                    showNotification('Không thể tính toán tuyến đường', 'error');
-                    this.updateStatus('Lỗi tính toán');
-                }
-            }, (error) => {
-                hideLoading();
-                console.error('Routing error:', error);
-                showNotification('Lỗi tính toán tuyến đường', 'error');
+            // Gọi HERE Routing API trực tiếp qua HTTP
+            const response = await fetch(`https://route.ls.hereapi.com/routing/7.2/calculateroute.json?${new URLSearchParams(params)}`);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            const result = await response.json();
+            hideLoading();
+            
+            if (result.response && result.response.route && result.response.route.length > 0) {
+                const route = result.response.route[0];
+                this.displayDistanceInfo(route);
+                this.drawRoute(route);
+                this.updateStatus('Hoàn thành - Có thể xóa hoặc đổi vị trí');
+            } else {
+                console.error('No route found in response:', result);
+                showNotification('Không thể tính toán tuyến đường', 'error');
                 this.updateStatus('Lỗi tính toán');
-            });
+            }
 
         } catch (error) {
             hideLoading();
             console.error('Error calculating distance:', error);
-            showNotification('Lỗi tính toán khoảng cách', 'error');
+            
+            if (error.message.includes('429')) {
+                showNotification('API bị giới hạn. Vui lòng thử lại sau ít phút', 'warning');
+            } else if (error.message.includes('CORS') || error.message.includes('Access-Control-Allow-Origin')) {
+                showNotification('Lỗi CORS. Vui lòng chạy qua server hoặc HTTPS', 'error');
+            } else {
+                showNotification('Lỗi tính toán tuyến đường: ' + error.message, 'error');
+            }
+            this.updateStatus('Lỗi tính toán');
         }
     }
 
@@ -445,7 +449,7 @@ class DistanceCalculator {
         showNotification('🗑️ Đã xóa tất cả điểm', 'success');
     }
 
-    swapPoints() {
+    async swapPoints() {
         if (!this.point1 || !this.point2) {
             showNotification('Cần đủ 2 điểm để đổi vị trí', 'warning');
             return;
@@ -477,7 +481,7 @@ class DistanceCalculator {
         this.updateInputs('B', this.point2);
 
         // Tính lại khoảng cách
-        this.calculateDistance();
+        await this.calculateDistance();
 
         showNotification('🔄 Đã đổi vị trí 2 điểm', 'success');
     }
@@ -491,7 +495,7 @@ class DistanceCalculator {
         console.log('Getting directions...');
 
         // Tạo URL cho chỉ đường (sử dụng HERE Maps directions)
-        const url = `https://route.here.com/directions/v2/route?app_id=YOUR_APP_ID&app_code=YOUR_APP_CODE&waypoint0=${this.point1.lat},${this.point1.lng}&waypoint1=${this.point2.lat},${this.point2.lng}&mode=fastest;car`;
+        const url = `https://route.here.com/directions/v2/route?app_id=DSKU1SgywJuRuRg05B99&app_code=YOUR_APP_CODE&waypoint0=${this.point1.lat},${this.point1.lng}&waypoint1=${this.point2.lat},${this.point2.lng}&mode=fastest;car`;
         
         // Mở trong tab mới
         try {
@@ -571,9 +575,9 @@ class DistanceCalculator {
         // Swap button
         const swapBtn = document.getElementById('swapBtn');
         if (swapBtn) {
-            swapBtn.addEventListener('click', () => {
+            swapBtn.addEventListener('click', async () => {
                 console.log('Swap button clicked');
-                this.swapPoints();
+                await this.swapPoints();
             });
             console.log('Swap button listener added');
         } else {
@@ -708,6 +712,12 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error('Map container not found');
         showNotification('Lỗi: Không tìm thấy container bản đồ', 'error');
         return;
+    }
+    
+    // Kiểm tra xem có đang chạy trên HTTPS hoặc localhost không (để tránh CORS)
+    if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+        console.warn('Running on non-secure protocol. CORS issues may occur.');
+        showNotification('Cảnh báo: Nên chạy trên HTTPS hoặc localhost để tránh lỗi CORS', 'warning');
     }
     
     try {
