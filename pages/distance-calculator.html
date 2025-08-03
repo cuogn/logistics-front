@@ -137,6 +137,88 @@
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
         
+        .location-selection {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .location-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        
+        @media (max-width: 768px) {
+            .location-selection {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .location-inputs {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+            
+            .btn-group {
+                flex-direction: column;
+            }
+            
+            .btn-group .btn {
+                width: 100%;
+                margin-bottom: 8px;
+            }
+        }
+        
+        .select-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .select-group label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #666;
+            text-transform: uppercase;
+        }
+        
+        .location-select {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            background: #fff;
+            transition: all 0.3s ease;
+        }
+        
+        .location-select:disabled {
+            background: #f5f5f5;
+            color: #999;
+            cursor: not-allowed;
+        }
+        
+        .location-select:not(:disabled):hover {
+            border-color: #007bff;
+        }
+        
+        .location-select:not(:disabled):focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+        }
+        
+        .coordinates-display {
+            margin-top: 10px;
+            padding: 8px 12px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #666;
+            border-left: 3px solid #007bff;
+        }
+        
         .control-group {
             margin-bottom: 15px;
         }
@@ -391,9 +473,11 @@
             <div class="instructions">
                 <h3><i data-lucide="info"></i> Hướng Dẫn Sử Dụng</h3>
                 <ol>
-                    <li>Nhấp vào bản đồ để đặt điểm đầu tiên (điểm A)</li>
-                    <li>Nhấp vào bản đồ lần nữa để đặt điểm thứ hai (điểm B)</li>
-                    <li>Hệ thống sẽ tự động tính toán khoảng cách và thời gian di chuyển</li>
+                    <li>Chọn tỉnh/thành phố cho điểm A (điểm bắt đầu)</li>
+                    <li>Chọn quận/huyện, xã/phường, xóm/thôn cho điểm A</li>
+                    <li>Chọn tỉnh/thành phố cho điểm B (điểm kết thúc)</li>
+                    <li>Chọn quận/huyện, xã/phường, xóm/thôn cho điểm B</li>
+                    <li>Nhấn "Tính Khoảng Cách" để xem kết quả</li>
                     <li>Sử dụng các nút bên dưới để xóa, đổi vị trí hoặc lấy chỉ đường</li>
                 </ol>
                 <p style="margin-top: 10px; font-style: italic; color: #666;">
@@ -405,25 +489,78 @@
 
             <!-- Calculator Controls -->
             <div class="calculator-controls">
-                <div class="control-group">
-                    <label>Điểm A (Điểm bắt đầu):</label>
-                    <div class="input-group">
-                        <input type="text" id="pointALat" placeholder="Vĩ độ" readonly>
-                        <input type="text" id="pointALng" placeholder="Kinh độ" readonly>
-                        <input type="text" id="pointAAddress" placeholder="Địa chỉ" readonly>
+                <div class="location-selection">
+                    <div class="control-group">
+                        <label><i data-lucide="map-pin"></i> Điểm A (Điểm bắt đầu):</label>
+                        <div class="location-inputs">
+                            <div class="select-group">
+                                <label>Tỉnh/Thành phố:</label>
+                                <select id="pointAProvince" class="location-select">
+                                    <option value="">Chọn tỉnh/thành phố</option>
+                                </select>
+                            </div>
+                            <div class="select-group">
+                                <label>Quận/Huyện:</label>
+                                <select id="pointADistrict" class="location-select" disabled>
+                                    <option value="">Chọn quận/huyện</option>
+                                </select>
+                            </div>
+                            <div class="select-group">
+                                <label>Xã/Phường:</label>
+                                <select id="pointAWard" class="location-select" disabled>
+                                    <option value="">Chọn xã/phường</option>
+                                </select>
+                            </div>
+                            <div class="select-group">
+                                <label>Xóm/Thôn:</label>
+                                <select id="pointAVillage" class="location-select" disabled>
+                                    <option value="">Chọn xóm/thôn</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="coordinates-display">
+                            <span>Tọa độ: <span id="pointACoords">--</span></span>
+                        </div>
                     </div>
-                </div>
-                
-                <div class="control-group">
-                    <label>Điểm B (Điểm kết thúc):</label>
-                    <div class="input-group">
-                        <input type="text" id="pointBLat" placeholder="Vĩ độ" readonly>
-                        <input type="text" id="pointBLng" placeholder="Kinh độ" readonly>
-                        <input type="text" id="pointBAddress" placeholder="Địa chỉ" readonly>
+                    
+                    <div class="control-group">
+                        <label><i data-lucide="map-pin"></i> Điểm B (Điểm kết thúc):</label>
+                        <div class="location-inputs">
+                            <div class="select-group">
+                                <label>Tỉnh/Thành phố:</label>
+                                <select id="pointBProvince" class="location-select">
+                                    <option value="">Chọn tỉnh/thành phố</option>
+                                </select>
+                            </div>
+                            <div class="select-group">
+                                <label>Quận/Huyện:</label>
+                                <select id="pointBDistrict" class="location-select" disabled>
+                                    <option value="">Chọn quận/huyện</option>
+                                </select>
+                            </div>
+                            <div class="select-group">
+                                <label>Xã/Phường:</label>
+                                <select id="pointBWard" class="location-select" disabled>
+                                    <option value="">Chọn xã/phường</option>
+                                </select>
+                            </div>
+                            <div class="select-group">
+                                <label>Xóm/Thôn:</label>
+                                <select id="pointBVillage" class="location-select" disabled>
+                                    <option value="">Chọn xóm/thôn</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="coordinates-display">
+                            <span>Tọa độ: <span id="pointBCoords">--</span></span>
+                        </div>
                     </div>
                 </div>
                 
                 <div class="btn-group">
+                    <button id="calculateBtn" class="btn btn-primary">
+                        <i data-lucide="calculator"></i> Tính Khoảng Cách
+                    </button>
                     <button id="clearBtn" class="btn btn-secondary">
                         <i data-lucide="eraser"></i> Xóa Điểm
                     </button>
@@ -443,7 +580,7 @@
             <div class="map-container">
                 <div id="map"></div>
                 <div class="status-indicator" id="statusIndicator">
-                    Sẵn sàng - Nhấp để đặt điểm A
+                    Sẵn sàng - Chọn địa điểm từ dropdown
                 </div>
             </div>
 
@@ -544,6 +681,7 @@
     <script src="../js/auth.js"></script>
     <script src="../js/api.js"></script>
     <script src="../js/distance-calculator.js"></script>
+    <script src="../js/location-selector.js"></script>
     <script>
         // Initialize Lucide icons
         document.addEventListener('DOMContentLoaded', function() {

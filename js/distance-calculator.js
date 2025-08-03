@@ -133,6 +133,12 @@ class DistanceCalculator {
                 return;
             }
             
+            // Chỉ cho phép click trên map nếu không có location selector
+            if (window.locationSelector) {
+                showNotification('Vui lòng sử dụng dropdown để chọn địa điểm', 'info');
+                return;
+            }
+            
             if (!this.point1) {
                 // Đặt điểm A
                 console.log('Setting point A:', position);
