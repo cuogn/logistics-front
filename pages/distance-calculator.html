@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tính Khoảng Cách - NTT Express</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="../css/maps.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- HERE Maps CSS -->
+    <link rel="stylesheet" type="text/css" href="https://js.api.here.com/v3/3.1/mapsjs-ui.css" />
+    <!-- HERE Maps JavaScript -->
+    <script type="text/javascript" src="https://js.api.here.com/v3/3.1/mapsjs-core.js"></script>
+    <script type="text/javascript" src="https://js.api.here.com/v3/3.1/mapsjs-service.js"></script>
+    <script type="text/javascript" src="https://js.api.here.com/v3/3.1/mapsjs-ui.js"></script>
+    <script type="text/javascript" src="https://js.api.here.com/v3/3.1/mapsjs-mapevents.js"></script>
+    <style>
+        .distance-calculator {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .calculator-controls {
+            background: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .control-group {
+            margin-bottom: 15px;
+        }
+        
+        .control-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .input-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .input-group input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #0056b3;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #545b62;
+        }
+        
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #1e7e34;
+        }
+        
+        .btn-warning {
+            background: #ffc107;
+            color: #333;
+        }
+        
+        .btn-warning:hover {
+            background: #e0a800;
+        }
+        
+        .map-container {
+            position: relative;
+            height: 500px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .status-indicator {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .distance-info {
+            background: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .info-item {
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            border-left: 4px solid #007bff;
+        }
+        
+        .info-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .info-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: #333;
+        }
+        
+        .instructions {
+            background: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .instructions h3 {
+            color: #0056b3;
+            margin-bottom: 10px;
+        }
+        
+        .instructions ol {
+            margin: 0;
+            padding-left: 20px;
+        }
+        
+        .instructions li {
+            margin-bottom: 5px;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <h1><i class="fas fa-truck"></i> NTT Express</h1>
+                </div>
+                <nav class="nav">
+                    <ul>
+                        <li><a href="../index.html" class="nav-link">Trang Chủ</a></li>
+                        <li><a href="services.html" class="nav-link">Dịch Vụ</a></li>
+                        <li><a href="track.html" class="nav-link">Theo Dõi</a></li>
+                        <li><a href="maps.html" class="nav-link">Bản Đồ</a></li>
+                        <li><a href="distance-calculator.html" class="nav-link active">Tính Khoảng Cách</a></li>
+                        <li><a href="about.html" class="nav-link">Giới Thiệu</a></li>
+                        <li><a href="contact.html" class="nav-link">Liên Hệ</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="distance-calculator">
+            <!-- Page Header -->
+            <div class="page-header">
+                <h2><i class="fas fa-route"></i> Tính Khoảng Cách</h2>
+                <p>Chấm hai điểm trên bản đồ để tính khoảng cách và thời gian di chuyển</p>
+            </div>
+
+            <!-- Instructions -->
+            <div class="instructions">
+                <h3><i class="fas fa-info-circle"></i> Hướng Dẫn Sử Dụng</h3>
+                <ol>
+                    <li>Nhấp vào bản đồ để đặt điểm đầu tiên (điểm A)</li>
+                    <li>Nhấp vào bản đồ lần nữa để đặt điểm thứ hai (điểm B)</li>
+                    <li>Hệ thống sẽ tự động tính toán khoảng cách và thời gian di chuyển</li>
+                    <li>Sử dụng các nút bên dưới để xóa, đổi vị trí hoặc lấy chỉ đường</li>
+                </ol>
+            </div>
+
+            <!-- Calculator Controls -->
+            <div class="calculator-controls">
+                <div class="control-group">
+                    <label>Điểm A (Điểm bắt đầu):</label>
+                    <div class="input-group">
+                        <input type="text" id="pointALat" placeholder="Vĩ độ" readonly>
+                        <input type="text" id="pointALng" placeholder="Kinh độ" readonly>
+                        <input type="text" id="pointAAddress" placeholder="Địa chỉ" readonly>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <label>Điểm B (Điểm kết thúc):</label>
+                    <div class="input-group">
+                        <input type="text" id="pointBLat" placeholder="Vĩ độ" readonly>
+                        <input type="text" id="pointBLng" placeholder="Kinh độ" readonly>
+                        <input type="text" id="pointBAddress" placeholder="Địa chỉ" readonly>
+                    </div>
+                </div>
+                
+                <div class="btn-group">
+                    <button id="clearBtn" class="btn btn-secondary">
+                        <i class="fas fa-eraser"></i> Xóa Điểm
+                    </button>
+                    <button id="swapBtn" class="btn btn-warning">
+                        <i class="fas fa-exchange-alt"></i> Đổi Vị Trí
+                    </button>
+                    <button id="getDirectionsBtn" class="btn btn-success">
+                        <i class="fas fa-directions"></i> Lấy Chỉ Đường
+                    </button>
+                    <button id="resetBtn" class="btn btn-primary">
+                        <i class="fas fa-redo"></i> Làm Mới
+                    </button>
+                </div>
+            </div>
+
+            <!-- Map Container -->
+            <div class="map-container">
+                <div id="map"></div>
+                <div class="status-indicator" id="statusIndicator">
+                    Sẵn sàng - Nhấp để đặt điểm A
+                </div>
+            </div>
+
+            <!-- Distance Information -->
+            <div class="distance-info" id="distanceInfo" style="display: none;">
+                <h3><i class="fas fa-info-circle"></i> Thông Tin Khoảng Cách</h3>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-label">Khoảng Cách</div>
+                        <div class="info-value" id="distanceValue">--</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Thời Gian Di Chuyển</div>
+                        <div class="info-value" id="durationValue">--</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Phương Tiện</div>
+                        <div class="info-value" id="transportMode">Ô tô</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Tình Trạng Giao Thông</div>
+                        <div class="info-value" id="trafficStatus">Bình thường</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Loading Modal -->
+    <div id="loadingModal" class="modal">
+        <div class="modal-content">
+            <div class="loading-spinner"></div>
+            <p>Đang tính toán...</p>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="../js/auth.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/distance-calculator.js"></script>
+</body>
+</html> 
