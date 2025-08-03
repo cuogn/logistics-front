@@ -255,51 +255,59 @@ class DistanceCalculator {
         try {
             showLoading();
             
-            // Tạo routing parameters cho HTTP API
-            const params = {
-                mode: 'fastest;car',
-                representation: 'display',
-                waypoint0: `${this.point1.lat},${this.point1.lng}`,
-                waypoint1: `${this.point2.lat},${this.point2.lng}`,
-                apikey: '7GUpHwbsEgObqnGg4JG34CJvdbf89IU4iq-SDFe8vmE'
+            // Tính khoảng cách đơn giản bằng công thức Haversine (tạm thời)
+            const distance = this.calculateHaversineDistance(this.point1, this.point2);
+            const duration = this.estimateTravelTime(distance);
+            
+            console.log('Calculated distance:', distance, 'meters');
+            
+            // Tạo route object giả để hiển thị
+            const route = {
+                summary: {
+                    distance: distance,
+                    travelTime: duration
+                },
+                shape: [
+                    `${this.point1.lat},${this.point1.lng}`,
+                    `${this.point2.lat},${this.point2.lng}`
+                ]
             };
-
-            console.log('Calculating route with parameters:', params);
-
-            // Gọi HERE Routing API trực tiếp qua HTTP
-            const response = await fetch(`https://route.ls.hereapi.com/routing/7.2/calculateroute.json?${new URLSearchParams(params)}`);
             
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-            
-            const result = await response.json();
             hideLoading();
             
-            if (result.response && result.response.route && result.response.route.length > 0) {
-                const route = result.response.route[0];
-                this.displayDistanceInfo(route);
-                this.drawRoute(route);
-                this.updateStatus('Hoàn thành - Có thể xóa hoặc đổi vị trí');
-            } else {
-                console.error('No route found in response:', result);
-                showNotification('Không thể tính toán tuyến đường', 'error');
-                this.updateStatus('Lỗi tính toán');
-            }
+            this.displayDistanceInfo(route);
+            this.drawRoute(route);
+            this.updateStatus('Hoàn thành - Có thể xóa hoặc đổi vị trí');
 
         } catch (error) {
             hideLoading();
             console.error('Error calculating distance:', error);
-            
-            if (error.message.includes('429')) {
-                showNotification('API bị giới hạn. Vui lòng thử lại sau ít phút', 'warning');
-            } else if (error.message.includes('CORS') || error.message.includes('Access-Control-Allow-Origin')) {
-                showNotification('Lỗi CORS. Vui lòng chạy qua server hoặc HTTPS', 'error');
-            } else {
-                showNotification('Lỗi tính toán tuyến đường: ' + error.message, 'error');
-            }
+            showNotification('Lỗi tính toán khoảng cách: ' + error.message, 'error');
             this.updateStatus('Lỗi tính toán');
         }
+    }
+
+    // Tính khoảng cách bằng công thức Haversine
+    calculateHaversineDistance(point1, point2) {
+        const R = 6371000; // Bán kính Trái Đất (mét)
+        const lat1 = point1.lat * Math.PI / 180;
+        const lat2 = point2.lat * Math.PI / 180;
+        const deltaLat = (point2.lat - point1.lat) * Math.PI / 180;
+        const deltaLng = (point2.lng - point1.lng) * Math.PI / 180;
+
+        const a = Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2) +
+                  Math.cos(lat1) * Math.cos(lat2) *
+                  Math.sin(deltaLng / 2) * Math.sin(deltaLng / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+        return R * c; // Khoảng cách tính bằng mét
+    }
+
+    // Ước tính thời gian di chuyển (giả sử tốc độ trung bình 40 km/h)
+    estimateTravelTime(distanceInMeters) {
+        const averageSpeedKmh = 40; // 40 km/h
+        const averageSpeedMs = averageSpeedKmh * 1000 / 3600; // Chuyển sang m/s
+        return Math.round(distanceInMeters / averageSpeedMs); // Thời gian tính bằng giây
     }
 
     displayDistanceInfo(route) {
@@ -329,7 +337,7 @@ class DistanceCalculator {
             if (priceElement) priceElement.textContent = this.formatPrice(price);
             if (infoPanel) infoPanel.style.display = 'block';
             
-            showNotification(`✅ Khoảng cách: ${this.formatDistance(distance)}, Thời gian: ${this.formatDuration(duration)}, Giá: ${this.formatPrice(price)}`, 'success');
+            showNotification(`✅ Khoảng cách: ${this.formatDistance(distance)}, Thời gian: ${this.formatDuration(duration)}, Giá: ${this.formatPrice(price)} (Tính toán đơn giản)`, 'success');
             
         } catch (error) {
             console.error('Error displaying distance info:', error);
@@ -365,7 +373,7 @@ class DistanceCalculator {
             // Xóa route cũ nếu có
             this.clearRoute();
             
-            // Tạo polyline từ route shape
+            // Tạo polyline từ route shape (đường thẳng đơn giản)
             const polyline = new H.geo.LineString();
             if (route.shape && Array.isArray(route.shape)) {
                 route.shape.forEach(point => {
@@ -378,7 +386,8 @@ class DistanceCalculator {
             const routeLine = new H.map.Polyline(polyline, {
                 style: {
                     strokeColor: '#007bff',
-                    lineWidth: 4
+                    lineWidth: 4,
+                    lineDash: [10, 5] // Đường đứt nét để phân biệt
                 }
             });
 
