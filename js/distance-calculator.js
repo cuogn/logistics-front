@@ -1,6 +1,8 @@
 // Distance Calculator với HERE Maps API
 class DistanceCalculator {
     constructor() {
+        console.log('Creating DistanceCalculator instance...');
+        
         this.map = null;
         this.platform = null;
         this.markers = [];
@@ -10,28 +12,35 @@ class DistanceCalculator {
         this.routingService = null;
         this.geocodingService = null;
         this.reverseGeocodingService = null;
+        this.currentRoute = null;
+        this.defaultPricePerKm = 5000; // Giá mặc định 5000 VND
         
         this.init();
     }
 
     async init() {
         try {
+            console.log('Initializing Distance Calculator...');
+            
             // Khởi tạo HERE Maps
             this.initMap();
             
             // Setup event listeners
             this.setupEventListeners();
             
+            console.log('Distance Calculator initialized successfully');
             showNotification('✅ Bản đồ đã sẵn sàng! Nhấp để đặt điểm A', 'success');
             
         } catch (error) {
             console.error('Error initializing distance calculator:', error);
-            showNotification('Lỗi khởi tạo bản đồ', 'error');
+            showNotification('Lỗi khởi tạo bản đồ: ' + error.message, 'error');
         }
     }
 
     initMap() {
         try {
+            console.log('Initializing map...');
+            
             // HERE Maps API Key - sử dụng cùng key như trong maps.js
             const apiKey = '7GUpHwbsEgObqnGg4JG34CJvdbf89IU4iq-SDFe8vmE';
             
@@ -39,81 +48,140 @@ class DistanceCalculator {
             this.platform = new H.service.Platform({
                 apikey: apiKey
             });
+            
+            console.log('Platform initialized with API key');
 
             // Tạo default layers
             const defaultLayers = this.platform.createDefaultLayers();
+            console.log('Default layers created');
 
+            // Kiểm tra map container
+            const mapContainer = document.getElementById('map');
+            if (!mapContainer) {
+                throw new Error('Map container not found');
+            }
+            console.log('Map container found:', mapContainer);
+            
             // Khởi tạo map
-            this.map = new H.Map(document.getElementById('map'), 
+            this.map = new H.Map(mapContainer, 
                 defaultLayers.vector.normal.map, {
                 center: { lat: 21.0285, lng: 105.8542 }, // Hà Nội
                 zoom: 10,
                 pixelRatio: window.devicePixelRatio || 1
             });
+            
+            console.log('Map created successfully with center:', this.map.getCenter());
 
             // Thêm resize listener
-            window.addEventListener('resize', () => this.map.getViewPort().resize());
+            window.addEventListener('resize', () => {
+                try {
+                    this.map.getViewPort().resize();
+                } catch (error) {
+                    console.error('Error resizing map:', error);
+                }
+            });
+            console.log('Resize listener added');
 
             // Tạo behavior cho map
             const behavior = new H.mapevents.Behavior(new H.mapevents.MapEvents(this.map));
+            console.log('Map behavior created');
 
             // Tạo UI
             const ui = H.ui.UI.createDefault(this.map, defaultLayers);
+            console.log('Map UI created');
 
             // Khởi tạo services
             this.routingService = this.platform.getRoutingService();
             this.geocodingService = this.platform.getGeocodingService();
-            this.reverseGeocodingService = this.platform.getReverseGeocodingService();
+            
+            console.log('Services initialized:', {
+                routing: !!this.routingService,
+                geocoding: !!this.geocodingService,
+                reverseGeocoding: !!this.reverseGeocodingService
+            });
+            
+            console.log('Map initialized successfully');
 
             // Thêm click listener cho map
             this.map.addEventListener('tap', (event) => {
+                console.log('Map clicked!', event);
                 this.handleMapClick(event);
             });
+            console.log('Map tap listener added');
 
+            console.log('Map initialized successfully');
+            
         } catch (error) {
             console.error('Error initializing map:', error);
-            showNotification('Lỗi khởi tạo bản đồ', 'error');
+            showNotification('Lỗi khởi tạo bản đồ: ' + error.message, 'error');
         }
     }
 
     handleMapClick(event) {
-        const position = this.map.screenToGeo(event.currentPointer.viewportX, event.currentPointer.viewportY);
-        
-        if (!this.point1) {
-            // Đặt điểm A
-            this.point1 = position;
-            this.addMarker(position, 'A');
-            this.getAddressFromLatLng(position, 'A');
-            this.updateStatus('Nhấp để đặt điểm B');
-            this.updateInputs('A', position);
+        try {
+            console.log('Handling map click...', event);
             
-        } else if (!this.point2) {
-            // Đặt điểm B
-            this.point2 = position;
-            this.addMarker(position, 'B');
-            this.getAddressFromLatLng(position, 'B');
-            this.updateStatus('Đang tính toán khoảng cách...');
-            this.updateInputs('B', position);
+            // Lấy tọa độ từ event
+            let position;
+            if (event.currentPointer && event.currentPointer.viewportX !== undefined) {
+                position = this.map.screenToGeo(event.currentPointer.viewportX, event.currentPointer.viewportY);
+            } else {
+                // Fallback: lấy tọa độ từ map center nếu không có event pointer
+                position = this.map.getCenter();
+            }
+            console.log('Clicked position:', position);
             
-            // Tính khoảng cách
-            this.calculateDistance();
+            // Kiểm tra xem position có hợp lệ không
+            if (!position || !position.lat || !position.lng) {
+                console.error('Invalid position:', position);
+                showNotification('Lỗi: Không thể xác định vị trí', 'error');
+                return;
+            }
             
-        } else {
-            // Đã có đủ 2 điểm, thông báo
-            showNotification('Đã có đủ 2 điểm. Sử dụng nút "Xóa Điểm" để bắt đầu lại', 'info');
+            if (!this.point1) {
+                // Đặt điểm A
+                console.log('Setting point A:', position);
+                this.point1 = position;
+                this.addMarker(position, 'A');
+                this.getAddressFromLatLng(position, 'A');
+                this.updateStatus('Nhấp để đặt điểm B');
+                this.updateInputs('A', position);
+                showNotification('✅ Đã đặt điểm A', 'success');
+                
+            } else if (!this.point2) {
+                // Đặt điểm B
+                console.log('Setting point B:', position);
+                this.point2 = position;
+                this.addMarker(position, 'B');
+                this.getAddressFromLatLng(position, 'B');
+                this.updateStatus('Đang tính toán khoảng cách...');
+                this.updateInputs('B', position);
+                
+                // Tính khoảng cách
+                this.calculateDistance();
+                
+            } else {
+                // Đã có đủ 2 điểm, thông báo
+                showNotification('Đã có đủ 2 điểm. Sử dụng nút "Xóa Điểm" để bắt đầu lại', 'info');
+            }
+        } catch (error) {
+            console.error('Error in handleMapClick:', error);
+            showNotification('Lỗi khi xử lý click trên bản đồ', 'error');
         }
     }
 
     addMarker(position, pointNumber) {
         try {
-            // Tạo icon cho marker
-            const iconUrl = pointNumber === 'A' 
-                ? 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJDNi40OCAyIDIgNi40OCAyIDEyQzIgMTcuNTIgNi40OCAyMiAxMiAyMkMxNy41MiAyMiAyMiAxNy41MiAyMiAxMkMyMiA2LjQ4IDE3LjUyIDIgMTIgMloiIGZpbGw9IiMyOGE3NDUiLz4KPC9zdmc+'
-                : 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJDNi40OCAyIDIgNi40OCAyIDEyQzIgMTcuNTIgNi40OCAyMiAxMiAyMkMxNy41MiAyMiAyMiAxNy41MiAyMiAxMkMyMiA2LjQ4IDE3LjUyIDIgMTIgMloiIGZpbGw9IiNkYzM1NCIvPgo8L3N2Zz4=';
+            console.log('Adding marker for point', pointNumber, 'at position:', position);
             
-            const marker = new H.map.Marker(position, {
-                icon: new H.map.Icon(iconUrl)
-            });
+            // Kiểm tra position
+            if (!position || !position.lat || !position.lng) {
+                console.error('Invalid position for marker:', position);
+                return;
+            }
+            
+            // Tạo marker đơn giản
+            const marker = new H.map.Marker(position);
             
             // Thêm label cho marker
             const label = new H.map.DomMarker(position, {
@@ -124,8 +192,11 @@ class DistanceCalculator {
             this.map.addObject(label);
             this.markers.push(marker, label);
             
+            console.log('Marker added successfully for point', pointNumber);
+            
         } catch (error) {
             console.error('Error adding marker:', error);
+            showNotification('Lỗi khi thêm marker', 'error');
         }
     }
 
@@ -144,6 +215,8 @@ class DistanceCalculator {
             font-size: 12px;
             border: 2px solid white;
             box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            z-index: 1000;
+            pointer-events: none;
         `;
         label.textContent = pointNumber;
         return label;
@@ -151,6 +224,8 @@ class DistanceCalculator {
 
     async getAddressFromLatLng(position, pointNumber) {
         try {
+            console.log('Getting address for point', pointNumber, 'at position:', position);
+            
             const params = {
                 at: `${position.lat},${position.lng}`,
                 apiKey: '7GUpHwbsEgObqnGg4JG34CJvdbf89IU4iq-SDFe8vmE'
@@ -159,11 +234,15 @@ class DistanceCalculator {
             const response = await fetch(`https://revgeocode.search.hereapi.com/v1/revgeocode?${new URLSearchParams(params)}`);
             const data = await response.json();
             
+            console.log('Address API response:', data);
+            
             if (data.items && data.items.length > 0) {
                 const address = data.items[0].address.label;
                 this.updateAddressInput(pointNumber, address);
+                console.log('Address found:', address);
             } else {
                 this.updateAddressInput(pointNumber, 'Không tìm thấy địa chỉ');
+                console.log('No address found');
             }
             
         } catch (error) {
@@ -189,16 +268,19 @@ class DistanceCalculator {
                 waypoint1: `${this.point2.lat},${this.point2.lng}`
             };
 
+            console.log('Calculating route with parameters:', routingParameters);
+
             // Gọi HERE Routing API
             this.routingService.calculateRoute(routingParameters, (result) => {
                 hideLoading();
                 
-                if (result.response.route) {
+                if (result.response && result.response.route && result.response.route.length > 0) {
                     const route = result.response.route[0];
                     this.displayDistanceInfo(route);
                     this.drawRoute(route);
                     this.updateStatus('Hoàn thành - Có thể xóa hoặc đổi vị trí');
                 } else {
+                    console.error('No route found in response:', result);
                     showNotification('Không thể tính toán tuyến đường', 'error');
                     this.updateStatus('Lỗi tính toán');
                 }
@@ -218,36 +300,75 @@ class DistanceCalculator {
 
     displayDistanceInfo(route) {
         try {
+            console.log('Displaying distance info for route:', route);
+            
             const distance = route.summary.distance;
             const duration = route.summary.travelTime;
             
+            // Tính giá tiền
+            const price = this.calculatePrice(distance);
+            
+            console.log('Distance:', distance, 'Duration:', duration, 'Price:', price);
+            
             // Hiển thị thông tin
-            document.getElementById('distanceValue').textContent = this.formatDistance(distance);
-            document.getElementById('durationValue').textContent = this.formatDuration(duration);
-            document.getElementById('transportMode').textContent = 'Ô tô';
-            document.getElementById('trafficStatus').textContent = 'Bình thường';
+            const distanceElement = document.getElementById('distanceValue');
+            const durationElement = document.getElementById('durationValue');
+            const transportElement = document.getElementById('transportMode');
+            const trafficElement = document.getElementById('trafficStatus');
+            const priceElement = document.getElementById('priceValue');
+            const infoPanel = document.getElementById('distanceInfo');
             
-            // Hiển thị panel thông tin
-            document.getElementById('distanceInfo').style.display = 'block';
+            if (distanceElement) distanceElement.textContent = this.formatDistance(distance);
+            if (durationElement) durationElement.textContent = this.formatDuration(duration);
+            if (transportElement) transportElement.textContent = 'Ô tô';
+            if (trafficElement) trafficElement.textContent = 'Bình thường';
+            if (priceElement) priceElement.textContent = this.formatPrice(price);
+            if (infoPanel) infoPanel.style.display = 'block';
             
-            showNotification(`✅ Khoảng cách: ${this.formatDistance(distance)}, Thời gian: ${this.formatDuration(duration)}`, 'success');
+            showNotification(`✅ Khoảng cách: ${this.formatDistance(distance)}, Thời gian: ${this.formatDuration(duration)}, Giá: ${this.formatPrice(price)}`, 'success');
             
         } catch (error) {
             console.error('Error displaying distance info:', error);
+            showNotification('Lỗi hiển thị thông tin khoảng cách', 'error');
         }
+    }
+
+    calculatePrice(distanceInMeters) {
+        // Chuyển đổi từ mét sang km và nhân với giá mặc định
+        if (!distanceInMeters || isNaN(distanceInMeters)) {
+            return 0;
+        }
+        
+        const distanceInKm = distanceInMeters / 1000;
+        return distanceInKm * this.defaultPricePerKm;
+    }
+
+    formatPrice(price) {
+        if (!price || isNaN(price)) {
+            return '--';
+        }
+        
+        return new Intl.NumberFormat('vi-VN', {
+            style: 'currency',
+            currency: 'VND'
+        }).format(price);
     }
 
     drawRoute(route) {
         try {
+            console.log('Drawing route:', route);
+            
             // Xóa route cũ nếu có
             this.clearRoute();
             
             // Tạo polyline từ route shape
             const polyline = new H.geo.LineString();
-            route.shape.forEach(point => {
-                const [lat, lng] = point.split(',');
-                polyline.pushLatLngAlt(parseFloat(lat), parseFloat(lng));
-            });
+            if (route.shape && Array.isArray(route.shape)) {
+                route.shape.forEach(point => {
+                    const [lat, lng] = point.split(',');
+                    polyline.pushLatLngAlt(parseFloat(lat), parseFloat(lng));
+                });
+            }
 
             // Tạo polyline object
             const routeLine = new H.map.Polyline(polyline, {
@@ -262,25 +383,44 @@ class DistanceCalculator {
             this.currentRoute = routeLine;
 
             // Fit map to route
-            this.map.getViewModel().setLookAtData({
-                bounds: routeLine.getBoundingBox()
-            });
+            try {
+                this.map.getViewModel().setLookAtData({
+                    bounds: routeLine.getBoundingBox()
+                });
+            } catch (error) {
+                console.error('Error fitting map to route:', error);
+            }
+            
+            console.log('Route drawn successfully');
             
         } catch (error) {
             console.error('Error drawing route:', error);
+            showNotification('Lỗi vẽ tuyến đường', 'error');
         }
     }
 
     clearRoute() {
         if (this.currentRoute) {
-            this.map.removeObject(this.currentRoute);
+            try {
+                this.map.removeObject(this.currentRoute);
+            } catch (error) {
+                console.error('Error removing route:', error);
+            }
             this.currentRoute = null;
         }
     }
 
     clearPoints() {
+        console.log('Clearing all points...');
+        
         // Xóa markers
-        this.markers.forEach(marker => this.map.removeObject(marker));
+        this.markers.forEach(marker => {
+            try {
+                this.map.removeObject(marker);
+            } catch (error) {
+                console.error('Error removing marker:', error);
+            }
+        });
         this.markers = [];
         
         // Xóa route
@@ -297,7 +437,10 @@ class DistanceCalculator {
         this.updateStatus('Sẵn sàng - Nhấp để đặt điểm A');
         
         // Ẩn thông tin khoảng cách
-        document.getElementById('distanceInfo').style.display = 'none';
+        const infoPanel = document.getElementById('distanceInfo');
+        if (infoPanel) {
+            infoPanel.style.display = 'none';
+        }
         
         showNotification('🗑️ Đã xóa tất cả điểm', 'success');
     }
@@ -308,13 +451,21 @@ class DistanceCalculator {
             return;
         }
 
+        console.log('Swapping points...');
+
         // Đổi vị trí
         const temp = this.point1;
         this.point1 = this.point2;
         this.point2 = temp;
 
         // Xóa markers cũ
-        this.markers.forEach(marker => this.map.removeObject(marker));
+        this.markers.forEach(marker => {
+            try {
+                this.map.removeObject(marker);
+            } catch (error) {
+                console.error('Error removing marker during swap:', error);
+            }
+        });
         this.markers = [];
 
         // Thêm lại markers với vị trí mới
@@ -337,83 +488,143 @@ class DistanceCalculator {
             return;
         }
 
-        // Tạo URL cho chỉ đường
+        console.log('Getting directions...');
+
+        // Tạo URL cho chỉ đường (sử dụng HERE Maps directions)
         const url = `https://route.here.com/directions/v2/route?app_id=YOUR_APP_ID&app_code=YOUR_APP_CODE&waypoint0=${this.point1.lat},${this.point1.lng}&waypoint1=${this.point2.lat},${this.point2.lng}&mode=fastest;car`;
         
         // Mở trong tab mới
-        window.open(url, '_blank');
-        
-        showNotification('🌐 Đã mở chỉ đường trong tab mới', 'success');
+        try {
+            window.open(url, '_blank');
+            showNotification('🌐 Đã mở chỉ đường trong tab mới', 'success');
+        } catch (error) {
+            console.error('Error opening directions:', error);
+            showNotification('Lỗi mở chỉ đường', 'error');
+        }
     }
 
     reset() {
+        console.log('Resetting distance calculator...');
         this.clearPoints();
         this.updateStatus('Sẵn sàng - Nhấp để đặt điểm A');
+        showNotification('🔄 Đã làm mới ứng dụng', 'success');
     }
 
     updateStatus(message) {
-        document.getElementById('statusIndicator').textContent = message;
+        const statusElement = document.getElementById('statusIndicator');
+        if (statusElement) {
+            statusElement.textContent = message;
+        }
     }
 
     updateInputs(point, position) {
         if (point === 'A') {
-            document.getElementById('pointALat').value = position.lat.toFixed(6);
-            document.getElementById('pointALng').value = position.lng.toFixed(6);
+            const latElement = document.getElementById('pointALat');
+            const lngElement = document.getElementById('pointALng');
+            if (latElement) latElement.value = position.lat.toFixed(6);
+            if (lngElement) lngElement.value = position.lng.toFixed(6);
         } else if (point === 'B') {
-            document.getElementById('pointBLat').value = position.lat.toFixed(6);
-            document.getElementById('pointBLng').value = position.lng.toFixed(6);
+            const latElement = document.getElementById('pointBLat');
+            const lngElement = document.getElementById('pointBLng');
+            if (latElement) latElement.value = position.lat.toFixed(6);
+            if (lngElement) lngElement.value = position.lng.toFixed(6);
         }
     }
 
     updateAddressInput(point, address) {
         if (point === 'A') {
-            document.getElementById('pointAAddress').value = address;
+            const addressElement = document.getElementById('pointAAddress');
+            if (addressElement) addressElement.value = address;
         } else if (point === 'B') {
-            document.getElementById('pointBAddress').value = address;
+            const addressElement = document.getElementById('pointBAddress');
+            if (addressElement) addressElement.value = address;
         }
     }
 
     resetInputs() {
-        document.getElementById('pointALat').value = '';
-        document.getElementById('pointALng').value = '';
-        document.getElementById('pointAAddress').value = '';
-        document.getElementById('pointBLat').value = '';
-        document.getElementById('pointBLng').value = '';
-        document.getElementById('pointBAddress').value = '';
+        const elements = [
+            'pointALat', 'pointALng', 'pointAAddress',
+            'pointBLat', 'pointBLng', 'pointBAddress'
+        ];
+        
+        elements.forEach(id => {
+            const element = document.getElementById(id);
+            if (element) element.value = '';
+        });
     }
 
     setupEventListeners() {
+        console.log('Setting up event listeners...');
+        
         // Clear button
-        document.getElementById('clearBtn').addEventListener('click', () => {
-            this.clearPoints();
-        });
+        const clearBtn = document.getElementById('clearBtn');
+        if (clearBtn) {
+            clearBtn.addEventListener('click', () => {
+                console.log('Clear button clicked');
+                this.clearPoints();
+            });
+            console.log('Clear button listener added');
+        } else {
+            console.warn('Clear button not found');
+        }
 
         // Swap button
-        document.getElementById('swapBtn').addEventListener('click', () => {
-            this.swapPoints();
-        });
+        const swapBtn = document.getElementById('swapBtn');
+        if (swapBtn) {
+            swapBtn.addEventListener('click', () => {
+                console.log('Swap button clicked');
+                this.swapPoints();
+            });
+            console.log('Swap button listener added');
+        } else {
+            console.warn('Swap button not found');
+        }
 
         // Get directions button
-        document.getElementById('getDirectionsBtn').addEventListener('click', () => {
-            this.getDirections();
-        });
+        const getDirectionsBtn = document.getElementById('getDirectionsBtn');
+        if (getDirectionsBtn) {
+            getDirectionsBtn.addEventListener('click', () => {
+                console.log('Get directions button clicked');
+                this.getDirections();
+            });
+            console.log('Get directions button listener added');
+        } else {
+            console.warn('Get directions button not found');
+        }
 
         // Reset button
-        document.getElementById('resetBtn').addEventListener('click', () => {
-            this.reset();
-        });
+        const resetBtn = document.getElementById('resetBtn');
+        if (resetBtn) {
+            resetBtn.addEventListener('click', () => {
+                console.log('Reset button clicked');
+                this.reset();
+            });
+            console.log('Reset button listener added');
+        } else {
+            console.warn('Reset button not found');
+        }
+        
+        console.log('Event listeners setup completed');
     }
 
     // Utility functions
     formatDistance(meters) {
+        if (!meters || isNaN(meters)) {
+            return '--';
+        }
+        
         if (meters < 1000) {
-            return `${meters}m`;
+            return `${Math.round(meters)}m`;
         } else {
             return `${(meters / 1000).toFixed(1)}km`;
         }
     }
 
     formatDuration(seconds) {
+        if (!seconds || isNaN(seconds)) {
+            return '--';
+        }
+        
         const hours = Math.floor(seconds / 3600);
         const minutes = Math.floor((seconds % 3600) / 60);
         
@@ -429,7 +640,7 @@ class DistanceCalculator {
 function showLoading() {
     const modal = document.getElementById('loadingModal');
     if (modal) {
-        modal.style.display = 'block';
+        modal.style.display = 'flex';
     }
 }
 
@@ -455,6 +666,9 @@ function showNotification(message, type = 'info') {
     notification.style.borderRadius = '5px';
     notification.style.color = 'white';
     notification.style.fontWeight = 'bold';
+    notification.style.fontSize = '14px';
+    notification.style.minWidth = '300px';
+    notification.style.boxShadow = '0 4px 12px rgba(0,0,0,0.3)';
     
     if (type === 'error') {
         notification.style.backgroundColor = '#dc3545';
@@ -479,5 +693,27 @@ function showNotification(message, type = 'info') {
 
 // Initialize distance calculator when page loads
 document.addEventListener('DOMContentLoaded', () => {
-    new DistanceCalculator();
+    console.log('DOM Content Loaded - Initializing Distance Calculator');
+    
+    // Kiểm tra xem HERE Maps API đã load chưa
+    if (typeof H === 'undefined') {
+        console.error('HERE Maps API not loaded');
+        showNotification('Lỗi: HERE Maps API chưa được tải', 'error');
+        return;
+    }
+    
+    // Kiểm tra xem map container có tồn tại không
+    const mapContainer = document.getElementById('map');
+    if (!mapContainer) {
+        console.error('Map container not found');
+        showNotification('Lỗi: Không tìm thấy container bản đồ', 'error');
+        return;
+    }
+    
+    try {
+        new DistanceCalculator();
+    } catch (error) {
+        console.error('Error creating DistanceCalculator instance:', error);
+        showNotification('Lỗi khởi tạo ứng dụng: ' + error.message, 'error');
+    }
 }); 
