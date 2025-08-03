@@ -473,10 +473,8 @@
             <div class="instructions">
                 <h3><i data-lucide="info"></i> Hướng Dẫn Sử Dụng</h3>
                 <ol>
-                    <li>Chọn tỉnh/thành phố cho điểm A (điểm bắt đầu)</li>
-                    <li>Chọn quận/huyện, xã/phường, xóm/thôn cho điểm A</li>
-                    <li>Chọn tỉnh/thành phố cho điểm B (điểm kết thúc)</li>
-                    <li>Chọn quận/huyện, xã/phường, xóm/thôn cho điểm B</li>
+                    <li><strong>Cách 1 - Chọn từ dropdown:</strong> Chọn tỉnh/thành phố → quận/huyện → xã/phường cho điểm A và B</li>
+                    <li><strong>Cách 2 - Click trên bản đồ:</strong> Nhấp trực tiếp trên bản đồ để đặt điểm A và B</li>
                     <li>Nhấn "Tính Khoảng Cách" để xem kết quả</li>
                     <li>Sử dụng các nút bên dưới để xóa, đổi vị trí hoặc lấy chỉ đường</li>
                 </ol>
@@ -511,12 +509,7 @@
                                     <option value="">Chọn xã/phường</option>
                                 </select>
                             </div>
-                            <div class="select-group">
-                                <label>Xóm/Thôn:</label>
-                                <select id="pointAVillage" class="location-select" disabled>
-                                    <option value="">Chọn xóm/thôn</option>
-                                </select>
-                            </div>
+                            
                         </div>
                         <div class="coordinates-display">
                             <span>Tọa độ: <span id="pointACoords">--</span></span>
@@ -544,12 +537,7 @@
                                     <option value="">Chọn xã/phường</option>
                                 </select>
                             </div>
-                            <div class="select-group">
-                                <label>Xóm/Thôn:</label>
-                                <select id="pointBVillage" class="location-select" disabled>
-                                    <option value="">Chọn xóm/thôn</option>
-                                </select>
-                            </div>
+                            
                         </div>
                         <div class="coordinates-display">
                             <span>Tọa độ: <span id="pointBCoords">--</span></span>
@@ -580,7 +568,7 @@
             <div class="map-container">
                 <div id="map"></div>
                 <div class="status-indicator" id="statusIndicator">
-                    Sẵn sàng - Chọn địa điểm từ dropdown
+                    Sẵn sàng - Chọn địa điểm từ dropdown hoặc click trên bản đồ
                 </div>
             </div>
 

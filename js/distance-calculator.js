@@ -133,11 +133,8 @@ class DistanceCalculator {
                 return;
             }
             
-            // Chỉ cho phép click trên map nếu không có location selector
-            if (window.locationSelector) {
-                showNotification('Vui lòng sử dụng dropdown để chọn địa điểm', 'info');
-                return;
-            }
+            // Cho phép click trên map để chọn điểm
+            // Có thể sử dụng cả dropdown và click trên map
             
             if (!this.point1) {
                 // Đặt điểm A
