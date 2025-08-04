@@ -307,6 +307,10 @@
 
         function displayDailyStats(data) {
             const statsGrid = document.getElementById('statsGrid');
+            if (!statsGrid) {
+                console.error('statsGrid element not found');
+                return;
+            }
             const totals = data.totals || {};
             
             console.log('Daily stats data:', data); // Debug log

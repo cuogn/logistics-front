@@ -163,8 +163,17 @@
                     
                     // Fill form fields
                     for (const key in order) {
-                        if (document.getElementById(key)) {
-                            document.getElementById(key).value = order[key] || '';
+                        const element = document.getElementById(key);
+                        if (element) {
+                            if (element.type === 'date' && order[key]) {
+                                // Convert date format for input type="date"
+                                const date = new Date(order[key]);
+                                if (!isNaN(date.getTime())) {
+                                    element.value = date.toISOString().split('T')[0];
+                                }
+                            } else {
+                                element.value = order[key] || '';
+                            }
                         }
                     }
                     
