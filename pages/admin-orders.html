@@ -188,7 +188,7 @@
             <!-- Page Header -->
             <div class="page-header">
                 <h1>Quản Lý Đơn Hàng</h1>
-                <button class="btn btn-primary" onclick="openCreateOrderModal()">
+                <button class="btn btn-primary" onclick="window.location.href='admin-create-order.html'">
                     <i data-lucide="plus"></i>
                     Tạo Đơn Hàng Mới
                 </button>
@@ -642,7 +642,7 @@
                         <div class="text-muted">${order.receiver_phone}</div>
                     </td>
                     <td>${order.package_weight} kg</td>
-                    <td>${api.formatCurrency(order.shipping_fee)}</td>
+                    <td>${ui.formatCurrency(order.shipping_fee)}</td>
                     <td>${api.getStatusBadge(order.current_status)}</td>
                     <td>${api.formatDate(order.created_at)}</td>
                     <td>
@@ -734,7 +734,6 @@
         // Modal functions
         function openCreateOrderModal() {
             document.getElementById('createOrderModal').style.display = 'flex';
-            document.getElementById('distanceInfo').classList.remove('show');
             // Reset form
             document.getElementById('createOrderForm').reset();
             // Clear all error states
@@ -745,7 +744,6 @@
         function closeCreateOrderModal() {
             document.getElementById('createOrderModal').style.display = 'none';
             document.getElementById('createOrderForm').reset();
-            document.getElementById('distanceInfo').classList.remove('show');
         }
 
         // Create order form handling with improved validation

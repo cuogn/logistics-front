@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tạo Đơn Hàng Mới - Admin</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="../css/dashboard.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .create-order-page {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1e40af;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .form-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+        
+        .form-section {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-label {
+            display: block;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+        
+        .form-input, .form-select, textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+        
+        .form-input:focus, .form-select:focus, textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        .form-error {
+            color: #dc2626;
+            font-size: 12px;
+            margin-top: 4px;
+            display: none;
+        }
+        
+        .form-error.show {
+            display: block;
+        }
+        
+        .input-error {
+            border-color: #dc2626 !important;
+        }
+        
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+        }
+        
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+        
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+        
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #059669;
+        }
+        
+        .btn-outline {
+            background: transparent;
+            color: #3b82f6;
+            border: 2px solid #3b82f6;
+        }
+        
+        .btn-outline:hover {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid #e5e7eb;
+        }
+        
+        .alert {
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .alert-success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+        
+        .alert-error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+        
+        .alert-info {
+            background: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+        
+        .distance-section {
+            background: #f0f9ff;
+            border: 1px solid #0ea5e9;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+        
+        .distance-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .distance-title {
+            font-weight: 600;
+            color: #0c4a6e;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .distance-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .distance-item {
+            background: white;
+            padding: 1rem;
+            border-radius: 6px;
+            border: 1px solid #e0f2fe;
+        }
+        
+        .distance-label {
+            font-size: 12px;
+            color: #0369a1;
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+        
+        .distance-value {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #0c4a6e;
+        }
+        
+        @media (max-width: 768px) {
+            .form-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <a href="../index.html">
+                        NTT Express
+                    </a>
+                </div>
+                
+                <nav class="nav">
+                    <ul class="nav-list">
+                        <li><a href="admin-dashboard.html" class="nav-link">Dashboard</a></li>
+                        <li><a href="admin-orders.html" class="nav-link">Quản Lý Đơn Hàng</a></li>
+                        <li><a href="admin-users.html" class="nav-link">Quản Lý Người Dùng</a></li>
+                        <li><a href="admin-stats.html" class="nav-link">Thống Kê</a></li>
+                        <li><a href="admin-settings.html" class="nav-link">Cài Đặt</a></li>
+                    </ul>
+                </nav>
+                
+                <div class="header-actions">
+                    <div class="user-menu">
+                        <span class="user-name" id="userName">Admin</span>
+                        <button class="btn btn-secondary" onclick="logout()">Đăng Xuất</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="create-order-page">
+            <!-- Page Header -->
+            <div class="page-header">
+                <h1 class="page-title">
+                    <i data-lucide="plus-circle"></i>
+                    Tạo Đơn Hàng Mới
+                </h1>
+                <div class="header-actions">
+                    <a href="admin-orders.html" class="btn btn-outline">
+                        <i data-lucide="arrow-left"></i>
+                        Quay Lại
+                    </a>
+                </div>
+            </div>
+
+            <!-- Alert Messages -->
+            <div id="alertContainer"></div>
+
+            <!-- Form Container -->
+            <form id="createOrderForm">
+                <div class="form-container">
+                    <!-- Sender Information -->
+                    <div class="form-section">
+                        <h2 class="section-title">
+                            <i data-lucide="user"></i>
+                            Thông Tin Người Gửi
+                        </h2>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="senderName" class="form-label">Tên Người Gửi *</label>
+                                <input type="text" id="senderName" name="sender_name" class="form-input" required>
+                                <div class="form-error" id="senderNameError"></div>
+                            </div>
+                            <div class="form-group">
+                                <label for="senderPhone" class="form-label">Số Điện Thoại *</label>
+                                <input type="tel" id="senderPhone" name="sender_phone" class="form-input" required pattern="[0-9]{10,11}" maxlength="11">
+                                <div class="form-error" id="senderPhoneError">Số điện thoại phải có 10-11 chữ số</div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="senderAddress" class="form-label">Địa Chỉ Người Gửi *</label>
+                            <textarea id="senderAddress" name="sender_address" class="form-input" rows="3" required></textarea>
+                            <div class="form-error" id="senderAddressError"></div>
+                        </div>
+                    </div>
+
+                    <!-- Receiver Information -->
+                    <div class="form-section">
+                        <h2 class="section-title">
+                            <i data-lucide="user-check"></i>
+                            Thông Tin Người Nhận
+                        </h2>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="receiverName" class="form-label">Tên Người Nhận *</label>
+                                <input type="text" id="receiverName" name="receiver_name" class="form-input" required>
+                                <div class="form-error" id="receiverNameError"></div>
+                            </div>
+                            <div class="form-group">
+                                <label for="receiverPhone" class="form-label">Số Điện Thoại *</label>
+                                <input type="tel" id="receiverPhone" name="receiver_phone" class="form-input" required pattern="[0-9]{10,11}" maxlength="11">
+                                <div class="form-error" id="receiverPhoneError">Số điện thoại phải có 10-11 chữ số</div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="receiverAddress" class="form-label">Địa Chỉ Người Nhận *</label>
+                            <textarea id="receiverAddress" name="receiver_address" class="form-input" rows="3" required></textarea>
+                            <div class="form-error" id="receiverAddressError"></div>
+                        </div>
+                    </div>
+
+                    <!-- Distance Calculation -->
+                    <div class="form-section">
+                        <h2 class="section-title">
+                            <i data-lucide="map-pin"></i>
+                            Tính Khoảng Cách & Phí Vận Chuyển
+                        </h2>
+                        
+                        <div class="distance-section">
+                            <div class="distance-header">
+                                <h3 class="distance-title">
+                                    <i data-lucide="route"></i>
+                                    Thông Tin Khoảng Cách
+                                </h3>
+                                <button type="button" class="btn btn-primary" onclick="calculateDistanceAndFee()">
+                                    <i data-lucide="calculator"></i>
+                                    Tính Toán
+                                </button>
+                            </div>
+                            
+                            <div class="distance-details" id="distanceDetails" style="display: none;">
+                                <div class="distance-item">
+                                    <div class="distance-label">Khoảng Cách</div>
+                                    <div class="distance-value" id="distanceText">-</div>
+                                </div>
+                                <div class="distance-item">
+                                    <div class="distance-label">Thời Gian Dự Kiến</div>
+                                    <div class="distance-value" id="durationText">-</div>
+                                </div>
+                                <div class="distance-item">
+                                    <div class="distance-label">Phí Vận Chuyển</div>
+                                    <div class="distance-value" id="calculatedFee">-</div>
+                                </div>
+                                <div class="distance-item">
+                                    <div class="distance-label">Phí Theo Kg</div>
+                                    <div class="distance-value" id="weightFee">-</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Package Information -->
+                    <div class="form-section">
+                        <h2 class="section-title">
+                            <i data-lucide="package"></i>
+                            Thông Tin Hàng Hóa
+                        </h2>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="packageWeight" class="form-label">Trọng Lượng (kg) *</label>
+                                <input type="number" id="packageWeight" name="package_weight" class="form-input" step="0.1" min="0.1" required>
+                                <div class="form-error" id="packageWeightError">Trọng lượng phải là số dương</div>
+                            </div>
+                            <div class="form-group">
+                                <label for="shippingFee" class="form-label">Phí Vận Chuyển (VNĐ) *</label>
+                                <input type="number" id="shippingFee" name="shipping_fee" class="form-input" min="0" required>
+                                <div class="form-error" id="shippingFeeError">Phí vận chuyển phải là số dương</div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="packageDimensions" class="form-label">Kích Thước</label>
+                            <input type="text" id="packageDimensions" name="package_dimensions" class="form-input" placeholder="Dài x Rộng x Cao (cm)">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="packageDescription" class="form-label">Mô Tả Hàng Hóa</label>
+                            <textarea id="packageDescription" name="package_description" class="form-input" rows="3" placeholder="Mô tả chi tiết về hàng hóa..."></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="estimatedDeliveryDate" class="form-label">Ngày Giao Dự Kiến</label>
+                            <input type="date" id="estimatedDeliveryDate" name="estimated_delivery_date" class="form-input">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="goBack()">
+                        <i data-lucide="x"></i>
+                        Hủy
+                    </button>
+                    <button type="submit" class="btn btn-success" id="submitOrderBtn">
+                        <span class="btn-text">
+                            <i data-lucide="check"></i>
+                            Tạo Đơn Hàng
+                        </span>
+                        <span class="btn-loading" style="display: none;">
+                            <i data-lucide="loader-2" class="animate-spin"></i>
+                            Đang tạo...
+                        </span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <script src="../js/lucide.min.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/script.js"></script>
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // Check authentication
+        auth.redirectIfNotAdmin();
+
+        // Load user info
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        document.getElementById('userName').textContent = user.full_name || 'Admin';
+
+        // Input validation functions
+        function validatePhoneNumber(input) {
+            const phone = input.value.replace(/\D/g, '');
+            if (phone.length < 10 || phone.length > 11) {
+                showFieldError(input.id, 'Số điện thoại phải có 10-11 chữ số');
+                return false;
+            }
+            input.value = phone;
+            hideFieldError(input.id);
+            return true;
+        }
+
+        function validateWeight(input) {
+            const weight = parseFloat(input.value);
+            if (isNaN(weight) || weight <= 0) {
+                showFieldError(input.id, 'Trọng lượng phải là số dương');
+                return false;
+            }
+            hideFieldError(input.id);
+            return true;
+        }
+
+        function validateShippingFee(input) {
+            const fee = parseFloat(input.value);
+            if (isNaN(fee) || fee < 0) {
+                showFieldError(input.id, 'Phí vận chuyển phải là số dương');
+                return false;
+            }
+            hideFieldError(input.id);
+            return true;
+        }
+
+        function showFieldError(fieldId, message) {
+            const errorElement = document.getElementById(fieldId + 'Error');
+            const inputElement = document.getElementById(fieldId);
+            if (errorElement) {
+                errorElement.textContent = message;
+                errorElement.classList.add('show');
+            }
+            if (inputElement) {
+                inputElement.classList.add('input-error');
+            }
+        }
+
+        function hideFieldError(fieldId) {
+            const errorElement = document.getElementById(fieldId + 'Error');
+            const inputElement = document.getElementById(fieldId);
+            if (errorElement) {
+                errorElement.classList.remove('show');
+            }
+            if (inputElement) {
+                inputElement.classList.remove('input-error');
+            }
+        }
+
+        // Alert functions
+        function showAlert(message, type = 'info') {
+            const alertContainer = document.getElementById('alertContainer');
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.innerHTML = `
+                <i data-lucide="${type === 'success' ? 'check-circle' : type === 'error' ? 'x-circle' : 'info'}"></i>
+                ${message}
+            `;
+            alertContainer.appendChild(alertDiv);
+            lucide.createIcons();
+
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 5000);
+        }
+
+        // Distance calculation function
+        async function calculateDistanceAndFee() {
+            const senderAddress = document.getElementById('senderAddress').value.trim();
+            const receiverAddress = document.getElementById('receiverAddress').value.trim();
+            
+            if (!senderAddress || !receiverAddress) {
+                showAlert('Vui lòng nhập địa chỉ người gửi và người nhận', 'error');
+                return;
+            }
+
+            try {
+                // Use the API to get directions
+                const response = await api.getDirections(senderAddress, receiverAddress);
+                
+                if (response.success && response.data) {
+                    const distance = response.data.distance_meters; // in meters
+                    const duration = response.data.duration_seconds; // in seconds
+                    
+                    // Calculate shipping fee (5000 VND per km + base fee)
+                    const distanceKm = distance / 1000;
+                    const baseFee = 10000; // 10,000 VND base fee
+                    const distanceFee = Math.ceil(distanceKm * 5000); // 5,000 VND per km
+                    const totalFee = baseFee + distanceFee;
+                    
+                    // Display results
+                    document.getElementById('distanceText').textContent = `${(distanceKm).toFixed(1)} km`;
+                    document.getElementById('durationText').textContent = formatDuration(duration);
+                    document.getElementById('calculatedFee').textContent = formatCurrency(totalFee);
+                    
+                    const weight = parseFloat(document.getElementById('packageWeight').value) || 0;
+                    const weightFee = weight * 1000; // 1000 VND per kg
+                    document.getElementById('weightFee').textContent = formatCurrency(weightFee);
+                    
+                    document.getElementById('distanceDetails').style.display = 'grid';
+                    
+                    // Auto-fill shipping fee
+                    document.getElementById('shippingFee').value = totalFee;
+                    
+                    showAlert('Tính toán hoàn tất!', 'success');
+                } else {
+                    showAlert('Không thể tính toán khoảng cách. Vui lòng kiểm tra lại địa chỉ.', 'error');
+                }
+            } catch (error) {
+                console.error('Distance calculation error:', error);
+                
+                // Fallback: Use estimated distance based on address length
+                const estimatedDistance = estimateDistanceFromAddresses(senderAddress, receiverAddress);
+                const baseFee = 10000;
+                const distanceFee = Math.ceil(estimatedDistance * 5000);
+                const totalFee = baseFee + distanceFee;
+                
+                document.getElementById('distanceText').textContent = `~${estimatedDistance.toFixed(1)} km (ước tính)`;
+                document.getElementById('durationText').textContent = '~30 phút (ước tính)';
+                document.getElementById('calculatedFee').textContent = formatCurrency(totalFee);
+                
+                const weight = parseFloat(document.getElementById('packageWeight').value) || 0;
+                const weightFee = weight * 1000;
+                document.getElementById('weightFee').textContent = formatCurrency(weightFee);
+                
+                document.getElementById('distanceDetails').style.display = 'grid';
+                document.getElementById('shippingFee').value = totalFee;
+                
+                showAlert('Đã tính toán ước tính (API không khả dụng)', 'info');
+            }
+        }
+
+        // Fallback distance estimation
+        function estimateDistanceFromAddresses(address1, address2) {
+            const complexity1 = address1.split(',').length;
+            const complexity2 = address2.split(',').length;
+            const baseDistance = 5 + (complexity1 + complexity2) * 2;
+            return baseDistance + Math.random() * 10;
+        }
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('vi-VN', {
+                style: 'currency',
+                currency: 'VND'
+            }).format(amount);
+        }
+
+        function formatDuration(seconds) {
+            const minutes = Math.round(seconds / 60);
+            if (minutes < 60) {
+                return `${minutes} phút`;
+            } else {
+                const hours = Math.floor(minutes / 60);
+                const remainingMinutes = minutes % 60;
+                return `${hours} giờ ${remainingMinutes} phút`;
+            }
+        }
+
+        // Form submission
+        document.getElementById('createOrderForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // Validate all required fields
+            let isValid = true;
+            
+            // Validate phone numbers
+            if (!validatePhoneNumber(document.getElementById('senderPhone'))) isValid = false;
+            if (!validatePhoneNumber(document.getElementById('receiverPhone'))) isValid = false;
+            
+            // Validate weight
+            if (!validateWeight(document.getElementById('packageWeight'))) isValid = false;
+            
+            // Validate shipping fee
+            if (!validateShippingFee(document.getElementById('shippingFee'))) isValid = false;
+            
+            // Validate required text fields
+            const requiredFields = ['senderName', 'senderAddress', 'receiverName', 'receiverAddress'];
+            requiredFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (!field.value.trim()) {
+                    showFieldError(fieldId, 'Trường này là bắt buộc');
+                    isValid = false;
+                } else {
+                    hideFieldError(fieldId);
+                }
+            });
+            
+            if (!isValid) {
+                showAlert('Vui lòng kiểm tra lại thông tin nhập', 'error');
+                return;
+            }
+            
+            // Show loading state
+            const submitBtn = document.getElementById('submitOrderBtn');
+            const btnText = submitBtn.querySelector('.btn-text');
+            const btnLoading = submitBtn.querySelector('.btn-loading');
+            
+            btnText.style.display = 'none';
+            btnLoading.style.display = 'inline-flex';
+            submitBtn.disabled = true;
+            
+            const formData = new FormData(e.target);
+            const orderData = Object.fromEntries(formData.entries());
+            
+            try {
+                const response = await api.createOrder(orderData);
+                
+                if (response.success) {
+                    showAlert('Tạo đơn hàng thành công!', 'success');
+                    setTimeout(() => {
+                        window.location.href = 'admin-orders.html';
+                    }, 2000);
+                } else {
+                    showAlert(response.message || 'Tạo đơn hàng thất bại', 'error');
+                }
+            } catch (error) {
+                console.error('Create order error:', error);
+                if (error.status === 400) {
+                    showAlert(error.message || 'Dữ liệu không hợp lệ', 'error');
+                } else if (error.status === 500) {
+                    showAlert('Lỗi máy chủ. Vui lòng thử lại sau.', 'error');
+                } else {
+                    showAlert(error.message || 'Có lỗi xảy ra khi tạo đơn hàng', 'error');
+                }
+            } finally {
+                // Hide loading state
+                btnText.style.display = 'inline';
+                btnLoading.style.display = 'none';
+                submitBtn.disabled = false;
+            }
+        });
+
+        // Add input validation listeners
+        document.getElementById('senderPhone').addEventListener('input', function() {
+            this.value = this.value.replace(/\D/g, '');
+        });
+
+        document.getElementById('receiverPhone').addEventListener('input', function() {
+            this.value = this.value.replace(/\D/g, '');
+        });
+
+        document.getElementById('packageWeight').addEventListener('input', function() {
+            if (this.value && !validateWeight(this)) {
+                // Don't clear the field, just show error
+            }
+        });
+
+        document.getElementById('shippingFee').addEventListener('input', function() {
+            if (this.value && !validateShippingFee(this)) {
+                // Don't clear the field, just show error
+            }
+        });
+
+        // Navigation functions
+        function goBack() {
+            if (confirm('Bạn có chắc chắn muốn hủy? Dữ liệu đã nhập sẽ bị mất.')) {
+                window.location.href = 'admin-orders.html';
+            }
+        }
+
+        function logout() {
+            api.logout();
+        }
+    </script>
+</body>
+</html> 
