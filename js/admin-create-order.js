@@ -296,17 +296,44 @@ function setupFormValidation() {
             // Lấy các trường còn lại
             const formData = new FormData(e.target);
             const orderData = Object.fromEntries(formData.entries());
-            orderData.sender_address = senderAddress;
-            orderData.receiver_address = receiverAddress;
-            orderData.sender_lat = senderLat;
-            orderData.sender_lng = senderLng;
-            orderData.receiver_lat = receiverLat;
-            orderData.receiver_lng = receiverLng;
-            orderData.shipping_fee = calculatedFee;
             
-            console.log('Submitting order data:', orderData);
+            // Đảm bảo các trường bắt buộc có giá trị
+            if (!orderData.sender_name || !orderData.receiver_name || !orderData.sender_phone || !orderData.receiver_phone) {
+                alert('Vui lòng điền đầy đủ thông tin người gửi và người nhận');
+                return;
+            }
             
-            const response = await api.createOrder(orderData);
+            if (!senderAddress || !receiverAddress) {
+                alert('Vui lòng chọn địa chỉ người gửi và người nhận');
+                return;
+            }
+            
+            if (!orderData.package_weight || parseFloat(orderData.package_weight) <= 0) {
+                alert('Vui lòng nhập trọng lượng gói hàng hợp lệ');
+                return;
+            }
+            
+            // Chuẩn bị dữ liệu gửi lên
+            const finalOrderData = {
+                sender_name: orderData.sender_name,
+                sender_phone: orderData.sender_phone,
+                sender_address: senderAddress,
+                receiver_name: orderData.receiver_name,
+                receiver_phone: orderData.receiver_phone,
+                receiver_address: receiverAddress,
+                package_weight: parseFloat(orderData.package_weight),
+                package_description: orderData.package_description || '',
+                shipping_fee: calculatedFee || 0,
+                sender_lat: senderLat,
+                sender_lng: senderLng,
+                receiver_lat: receiverLat,
+                receiver_lng: receiverLng,
+                status: 'pending'
+            };
+            
+            console.log('Submitting order data:', finalOrderData);
+            
+            const response = await api.createOrder(finalOrderData);
             if (response.success) {
                 alert('Tạo đơn hàng thành công!');
                 window.location.href = 'admin-orders.html';

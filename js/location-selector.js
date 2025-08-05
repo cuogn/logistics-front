@@ -243,9 +243,24 @@ class LocationSelector {
         const pointACoords = this.getSelectedCoordinates('pointA');
         const pointBCoords = this.getSelectedCoordinates('pointB');
 
+        console.log('Checking coordinates - Point A:', pointACoords, 'Point B:', pointBCoords);
+
         if (!pointACoords || !pointBCoords) {
+            console.log('Missing coordinates - Point A:', !!pointACoords, 'Point B:', !!pointBCoords);
             showNotification('Vui lòng chọn đầy đủ địa điểm cho cả hai điểm', 'warning');
             return;
+        }
+
+        // Kiểm tra thêm nếu có distanceCalculator
+        if (window.distanceCalculator) {
+            console.log('DistanceCalculator state - Point1:', window.distanceCalculator.point1, 'Point2:', window.distanceCalculator.point2);
+            
+            // Đồng bộ với distanceCalculator
+            if (!window.distanceCalculator.point1 || !window.distanceCalculator.point2) {
+                window.distanceCalculator.point1 = pointACoords;
+                window.distanceCalculator.point2 = pointBCoords;
+                console.log('Synced coordinates with distanceCalculator');
+            }
         }
 
         // Tính khoảng cách bằng Haversine
@@ -253,13 +268,15 @@ class LocationSelector {
         const duration = this.estimateTravelTime(distance);
         const price = this.calculatePrice(distance);
 
+        console.log('Calculated - Distance:', distance, 'Duration:', duration, 'Price:', price);
+
         // Hiển thị kết quả
         this.displayResults(distance, duration, price);
         
         // Cập nhật map và hiển thị markers
         this.updateMap(pointACoords, pointBCoords);
         
-        showNotification(`✅ Khoảng cách: ${this.formatDistance(distance)}, Giá: ${this.formatPrice(price)}`, 'success');
+        showNotification(`✅ Khoảng cách: ${this.formatDistance(distance)}`, 'success');
     }
 
     getSelectedCoordinates(prefix) {
@@ -366,6 +383,8 @@ class LocationSelector {
     }
 
     updateMap(pointA, pointB) {
+        console.log('Updating map with coordinates:', pointA, pointB);
+        
         // Cập nhật map nếu có
         if (window.distanceCalculator) {
             // Xóa markers cũ
@@ -377,24 +396,23 @@ class LocationSelector {
             window.distanceCalculator.addMarker(pointA, 'A');
             window.distanceCalculator.addMarker(pointB, 'B');
             
-            // Tính khoảng cách
-            window.distanceCalculator.calculateDistance();
-            
             // Cập nhật địa chỉ
             const pointAAddress = this.getSelectedAddress('pointA');
             const pointBAddress = this.getSelectedAddress('pointB');
             
             if (pointAAddress) {
                 window.distanceCalculator.point1Address = pointAAddress;
-                const senderAddress = document.getElementById('senderAddress');
-                if (senderAddress) senderAddress.value = pointAAddress;
+                window.distanceCalculator.updateAddressInput('A', pointAAddress);
             }
             
             if (pointBAddress) {
                 window.distanceCalculator.point2Address = pointBAddress;
-                const receiverAddress = document.getElementById('receiverAddress');
-                if (receiverAddress) receiverAddress.value = pointBAddress;
+                window.distanceCalculator.updateAddressInput('B', pointBAddress);
             }
+            
+            console.log('Map updated successfully');
+        } else {
+            console.warn('DistanceCalculator not found');
         }
     }
 

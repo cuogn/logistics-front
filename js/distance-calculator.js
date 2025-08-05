@@ -250,7 +250,10 @@ class DistanceCalculator {
     }
 
     async calculateDistance() {
+        console.log('calculateDistance called - Point1:', this.point1, 'Point2:', this.point2);
+        
         if (!this.point1 || !this.point2) {
+            console.log('Missing points - Point1:', !!this.point1, 'Point2:', !!this.point2);
             showNotification('Cần đủ 2 điểm để tính khoảng cách', 'warning');
             return;
         }
@@ -559,12 +562,40 @@ class DistanceCalculator {
     }
 
     updateAddressInput(point, address) {
+        console.log(`Updating address for point ${point}:`, address);
+        
         if (point === 'A') {
             const addressElement = document.getElementById('pointAAddress');
-            if (addressElement) addressElement.value = address;
+            if (addressElement) {
+                addressElement.value = address;
+                console.log('Updated pointAAddress:', address);
+            }
+            
+            // Cập nhật vào senderAddress
+            const senderAddress = document.getElementById('senderAddress');
+            if (senderAddress) {
+                senderAddress.value = address;
+                console.log('Updated senderAddress:', address);
+            }
+            
+            this.point1Address = address;
+            console.log('Updated this.point1Address:', address);
         } else if (point === 'B') {
             const addressElement = document.getElementById('pointBAddress');
-            if (addressElement) addressElement.value = address;
+            if (addressElement) {
+                addressElement.value = address;
+                console.log('Updated pointBAddress:', address);
+            }
+            
+            // Cập nhật vào receiverAddress
+            const receiverAddress = document.getElementById('receiverAddress');
+            if (receiverAddress) {
+                receiverAddress.value = address;
+                console.log('Updated receiverAddress:', address);
+            }
+            
+            this.point2Address = address;
+            console.log('Updated this.point2Address:', address);
         }
     }
 
