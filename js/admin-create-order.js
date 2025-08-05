@@ -6,7 +6,47 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeDistanceCalculator();
     setupDropdownListeners();
     setupFormValidation();
+    setupPriceListener();
 });
+
+function setupPriceListener() {
+    // Lắng nghe sự thay đổi của priceValue để cập nhật shippingFee
+    const priceValue = document.getElementById('priceValue');
+    const shippingFee = document.getElementById('shippingFee');
+    
+    if (priceValue && shippingFee) {
+        // Tạo observer để theo dõi thay đổi nội dung
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.type === 'childList' || mutation.type === 'characterData') {
+                    const priceText = priceValue.textContent;
+                    const priceNumber = extractPriceFromText(priceText);
+                    if (priceNumber > 0) {
+                        shippingFee.value = priceNumber;
+                        calculatedFee = priceNumber;
+                    }
+                }
+            });
+        });
+        
+        observer.observe(priceValue, {
+            childList: true,
+            characterData: true,
+            subtree: true
+        });
+    }
+}
+
+function extractPriceFromText(text) {
+    // Trích xuất số từ text như "493.415 ₫" hoặc "493,415 ₫"
+    const match = text.match(/[\d,\.]+/);
+    if (match) {
+        // Loại bỏ dấu phẩy và chuyển thành số
+        const cleanNumber = match[0].replace(/,/g, '');
+        return parseFloat(cleanNumber);
+    }
+    return 0;
+}
 
 function initializeDistanceCalculator() {
     try {
@@ -15,26 +55,32 @@ function initializeDistanceCalculator() {
         // Override displayDistanceInfo để cập nhật phí vận chuyển ngay lập tức
         if (distanceCalculator && distanceCalculator.displayDistanceInfo) {
             distanceCalculator.displayDistanceInfo = function(route) {
-                if (route && route.distance) {
-                    document.getElementById('distanceValue').textContent = this.formatDistance(route.distance);
-                    document.getElementById('durationValue').textContent = this.formatDuration(route.duration);
-                    calculatedFee = this.calculatePrice(route.distance);
+                if (route && route.summary && route.summary.distance) {
+                    const distance = route.summary.distance;
+                    const duration = route.summary.travelTime;
+                    
+                    document.getElementById('distanceValue').textContent = this.formatDistance(distance);
+                    document.getElementById('durationValue').textContent = this.formatDuration(duration);
+                    
+                    calculatedFee = this.calculatePrice(distance);
                     document.getElementById('priceValue').textContent = formatCurrency(calculatedFee);
                     
                     // Cập nhật phí vận chuyển ngay lập tức
-                    document.getElementById('shippingFee').value = calculatedFee;
+                    const shippingFee = document.getElementById('shippingFee');
+                    if (shippingFee) {
+                        shippingFee.value = calculatedFee;
+                    }
                     
-                    const weight = parseFloat(document.getElementById('packageWeight').value) || 0;
-                    const weightFee = weight * 1000;
-                    // Không cần weightFee vì không có element này trong HTML
                     document.getElementById('distanceInfo').style.display = 'block';
                     
                     // Cập nhật địa chỉ nếu có
                     if (this.point1Address) {
-                        document.getElementById('senderAddress').value = this.point1Address;
+                        const senderAddress = document.getElementById('senderAddress');
+                        if (senderAddress) senderAddress.value = this.point1Address;
                     }
                     if (this.point2Address) {
-                        document.getElementById('receiverAddress').value = this.point2Address;
+                        const receiverAddress = document.getElementById('receiverAddress');
+                        if (receiverAddress) receiverAddress.value = this.point2Address;
                     }
                 }
             };
@@ -43,10 +89,12 @@ function initializeDistanceCalculator() {
         // Override updateInputs để cập nhật địa chỉ ngay lập tức
         if (distanceCalculator && distanceCalculator.updateInputs) {
             distanceCalculator.updateInputs = function(point, position) {
-                if (point === 1 && this.point1Address) {
-                    document.getElementById('senderAddress').value = this.point1Address;
-                } else if (point === 2 && this.point2Address) {
-                    document.getElementById('receiverAddress').value = this.point2Address;
+                if (point === 'A' && this.point1Address) {
+                    const senderAddress = document.getElementById('senderAddress');
+                    if (senderAddress) senderAddress.value = this.point1Address;
+                } else if (point === 'B' && this.point2Address) {
+                    const receiverAddress = document.getElementById('receiverAddress');
+                    if (receiverAddress) receiverAddress.value = this.point2Address;
                 }
             };
         }
@@ -59,9 +107,11 @@ function initializeDistanceCalculator() {
                 
                 // Cập nhật địa chỉ ngay lập tức
                 if (point === 1 && this.point1Address) {
-                    document.getElementById('senderAddress').value = this.point1Address;
+                    const senderAddress = document.getElementById('senderAddress');
+                    if (senderAddress) senderAddress.value = this.point1Address;
                 } else if (point === 2 && this.point2Address) {
-                    document.getElementById('receiverAddress').value = this.point2Address;
+                    const receiverAddress = document.getElementById('receiverAddress');
+                    if (receiverAddress) receiverAddress.value = this.point2Address;
                 }
             };
         }
@@ -74,9 +124,11 @@ function initializeDistanceCalculator() {
                 
                 // Cập nhật địa chỉ ngay lập tức
                 if (point === 1 && this.point1Address) {
-                    document.getElementById('senderAddress').value = this.point1Address;
+                    const senderAddress = document.getElementById('senderAddress');
+                    if (senderAddress) senderAddress.value = this.point1Address;
                 } else if (point === 2 && this.point2Address) {
-                    document.getElementById('receiverAddress').value = this.point2Address;
+                    const receiverAddress = document.getElementById('receiverAddress');
+                    if (receiverAddress) receiverAddress.value = this.point2Address;
                 }
             };
         }
@@ -166,9 +218,17 @@ function updateAddressFromDropdown(point) {
 
 // Setup form validation
 function setupFormValidation() {
+    let isSubmitting = false; // Flag để tránh duplicate submit
+    
     // Form submit
     document.getElementById('createOrderForm').addEventListener('submit', async function(e) {
         e.preventDefault();
+        
+        // Kiểm tra nếu đang submit thì không cho submit nữa
+        if (isSubmitting) {
+            console.log('Form is already submitting, ignoring duplicate submit');
+            return;
+        }
         
         // Validate trọng lượng
         const weight = parseFloat(document.getElementById('packageWeight').value);
@@ -206,28 +266,46 @@ function setupFormValidation() {
             return;
         }
         
-        // Lấy thông tin điểm A/B từ distanceCalculator
-        const senderAddress = distanceCalculator.point1Address || document.getElementById('senderAddress').value;
-        const receiverAddress = distanceCalculator.point2Address || document.getElementById('receiverAddress').value;
+        // Set submitting flag
+        isSubmitting = true;
         
-        // Lấy lat/lng nếu có
-        const senderLat = distanceCalculator.point1 ? distanceCalculator.point1.lat : null;
-        const senderLng = distanceCalculator.point1 ? distanceCalculator.point1.lng : null;
-        const receiverLat = distanceCalculator.point2 ? distanceCalculator.point2.lat : null;
-        const receiverLng = distanceCalculator.point2 ? distanceCalculator.point2.lng : null;
+        // Disable submit button và hiển thị loading
+        const submitBtn = document.getElementById('submitOrderBtn');
+        const btnText = submitBtn.querySelector('.btn-text');
+        const btnLoading = submitBtn.querySelector('.btn-loading');
         
-        // Lấy các trường còn lại
-        const formData = new FormData(e.target);
-        const orderData = Object.fromEntries(formData.entries());
-        orderData.sender_address = senderAddress;
-        orderData.receiver_address = receiverAddress;
-        orderData.sender_lat = senderLat;
-        orderData.sender_lng = senderLng;
-        orderData.receiver_lat = receiverLat;
-        orderData.receiver_lng = receiverLng;
-        orderData.shipping_fee = calculatedFee;
+        if (submitBtn && btnText && btnLoading) {
+            submitBtn.disabled = true;
+            btnText.style.display = 'none';
+            btnLoading.style.display = 'inline-flex';
+        }
         
         try {
+            // Lấy thông tin điểm A/B từ distanceCalculator
+            const senderAddress = distanceCalculator && distanceCalculator.point1Address ? 
+                distanceCalculator.point1Address : document.getElementById('senderAddress').value;
+            const receiverAddress = distanceCalculator && distanceCalculator.point2Address ? 
+                distanceCalculator.point2Address : document.getElementById('receiverAddress').value;
+            
+            // Lấy lat/lng nếu có
+            const senderLat = distanceCalculator && distanceCalculator.point1 ? distanceCalculator.point1.lat : null;
+            const senderLng = distanceCalculator && distanceCalculator.point1 ? distanceCalculator.point1.lng : null;
+            const receiverLat = distanceCalculator && distanceCalculator.point2 ? distanceCalculator.point2.lat : null;
+            const receiverLng = distanceCalculator && distanceCalculator.point2 ? distanceCalculator.point2.lng : null;
+            
+            // Lấy các trường còn lại
+            const formData = new FormData(e.target);
+            const orderData = Object.fromEntries(formData.entries());
+            orderData.sender_address = senderAddress;
+            orderData.receiver_address = receiverAddress;
+            orderData.sender_lat = senderLat;
+            orderData.sender_lng = senderLng;
+            orderData.receiver_lat = receiverLat;
+            orderData.receiver_lng = receiverLng;
+            orderData.shipping_fee = calculatedFee;
+            
+            console.log('Submitting order data:', orderData);
+            
             const response = await api.createOrder(orderData);
             if (response.success) {
                 alert('Tạo đơn hàng thành công!');
@@ -236,7 +314,17 @@ function setupFormValidation() {
                 alert(response.message || 'Tạo đơn hàng thất bại');
             }
         } catch (error) {
+            console.error('Error creating order:', error);
             alert(error.message || 'Có lỗi xảy ra khi tạo đơn hàng');
+        } finally {
+            // Reset submitting flag và enable button
+            isSubmitting = false;
+            
+            if (submitBtn && btnText && btnLoading) {
+                submitBtn.disabled = false;
+                btnText.style.display = 'inline-flex';
+                btnLoading.style.display = 'none';
+            }
         }
     });
 

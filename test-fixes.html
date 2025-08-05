@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Fixes - NTT Express</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            background: #f5f5f5;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .test-item {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border-left: 4px solid #007bff;
+        }
+        .status {
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+        .status.passed {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status.failed {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .status.pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test Fixes - NTT Express</h1>
+    
+    <div class="test-section">
+        <h2>Vấn đề đã được sửa:</h2>
+        
+        <div class="test-item">
+            <h3>1. Địa điểm từ dropdown hiển thị trên map</h3>
+            <p><strong>Vấn đề:</strong> Khi chọn địa điểm từ dropdown, các địa điểm không hiển thị markers trên map</p>
+            <p><strong>Giải pháp:</strong> Đã sửa hàm updateMap() trong location-selector.js để thêm markers khi chọn từ dropdown</p>
+            <div class="status passed">✅ Đã sửa</div>
+        </div>
+        
+        <div class="test-item">
+            <h3>2. Phí vận chuyển không được lấy từ priceValue</h3>
+            <p><strong>Vấn đề:</strong> Phí vận chuyển không được tự động cập nhật từ &lt;div id="priceValue"&gt;</p>
+            <p><strong>Giải pháp:</strong> Đã thêm MutationObserver để theo dõi thay đổi của priceValue và cập nhật shippingFee</p>
+            <div class="status passed">✅ Đã sửa</div>
+        </div>
+        
+        <div class="test-item">
+            <h3>3. Duplicate đơn hàng khi tạo mới</h3>
+            <p><strong>Vấn đề:</strong> Khi tạo đơn hàng mới, bị duplicate thành 2 đơn hàng giống hệt nhau</p>
+            <p><strong>Giải pháp:</strong> Đã thêm flag isSubmitting và disable button trong quá trình submit để tránh duplicate</p>
+            <div class="status passed">✅ Đã sửa</div>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Các cải tiến bổ sung:</h2>
+        
+        <div class="test-item">
+            <h3>1. Cải thiện UX</h3>
+            <ul>
+                <li>Thêm loading state khi submit form</li>
+                <li>Disable button trong quá trình xử lý</li>
+                <li>Thêm validation tốt hơn</li>
+            </ul>
+            <div class="status passed">✅ Đã thêm</div>
+        </div>
+        
+        <div class="test-item">
+            <h3>2. Cải thiện tính năng map</h3>
+            <ul>
+                <li>Markers hiển thị đúng khi chọn từ dropdown</li>
+                <li>Cập nhật địa chỉ tự động</li>
+                <li>Phí vận chuyển được cập nhật real-time</li>
+            </ul>
+            <div class="status passed">✅ Đã thêm</div>
+        </div>
+        
+        <div class="test-item">
+            <h3>3. Cải thiện error handling</h3>
+            <ul>
+                <li>Thêm try-catch blocks</li>
+                <li>Logging tốt hơn</li>
+                <li>User feedback rõ ràng hơn</li>
+            </ul>
+            <div class="status passed">✅ Đã thêm</div>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Hướng dẫn test:</h2>
+        
+        <div class="test-item">
+            <h3>Test 1: Distance Calculator</h3>
+            <ol>
+                <li>Mở trang distance-calculator.html</li>
+                <li>Chọn địa điểm từ dropdown cho điểm A và B</li>
+                <li>Nhấn "Tính Khoảng Cách"</li>
+                <li>Kiểm tra xem markers có hiển thị trên map không</li>
+                <li>Kiểm tra xem phí vận chuyển có được tính đúng không</li>
+            </ol>
+        </div>
+        
+        <div class="test-item">
+            <h3>Test 2: Admin Create Order</h3>
+            <ol>
+                <li>Mở trang admin-create-order.html</li>
+                <li>Chọn địa điểm từ dropdown hoặc click trên map</li>
+                <li>Kiểm tra xem địa chỉ có được tự động điền không</li>
+                <li>Kiểm tra xem phí vận chuyển có được cập nhật không</li>
+                <li>Điền thông tin đơn hàng và submit</li>
+                <li>Kiểm tra xem có bị duplicate không</li>
+            </ol>
+        </div>
+        
+        <div class="test-item">
+            <h3>Test 3: Form Validation</h3>
+            <ol>
+                <li>Thử submit form mà không điền thông tin</li>
+                <li>Kiểm tra xem validation có hoạt động không</li>
+                <li>Thử submit nhiều lần liên tiếp</li>
+                <li>Kiểm tra xem có bị duplicate không</li>
+            </ol>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Files đã được sửa:</h2>
+        <ul>
+            <li><strong>logistics-front/js/location-selector.js</strong> - Sửa hàm updateMap để hiển thị markers</li>
+            <li><strong>logistics-front/js/admin-create-order.js</strong> - Thêm MutationObserver và fix duplicate submit</li>
+            <li><strong>logistics-front/js/distance-calculator.js</strong> - Cải thiện displayDistanceInfo</li>
+            <li><strong>logistics-front/pages/admin-create-order.html</strong> - Loại bỏ code trùng lặp</li>
+        </ul>
+    </div>
+</body>
+</html> 

@@ -340,6 +340,17 @@ class DistanceCalculator {
             if (priceElement) priceElement.textContent = this.formatPrice(price);
             if (infoPanel) infoPanel.style.display = 'block';
             
+            // Cập nhật phí vận chuyển trong form nếu có
+            const shippingFee = document.getElementById('shippingFee');
+            if (shippingFee) {
+                shippingFee.value = price;
+            }
+            
+            // Cập nhật biến global nếu có
+            if (typeof calculatedFee !== 'undefined') {
+                calculatedFee = price;
+            }
+            
             showNotification(`✅ Khoảng cách: ${this.formatDistance(distance)}, Thời gian: ${this.formatDuration(duration)}, Giá: ${this.formatPrice(price)} (Tính toán đơn giản)`, 'success');
             
         } catch (error) {
@@ -571,6 +582,18 @@ class DistanceCalculator {
 
     setupEventListeners() {
         console.log('Setting up event listeners...');
+        
+        // Calculate button
+        const calculateBtn = document.getElementById('calculateBtn');
+        if (calculateBtn) {
+            calculateBtn.addEventListener('click', async () => {
+                console.log('Calculate button clicked');
+                await this.calculateDistance();
+            });
+            console.log('Calculate button listener added');
+        } else {
+            console.warn('Calculate button not found');
+        }
         
         // Clear button
         const clearBtn = document.getElementById('clearBtn');

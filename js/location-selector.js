@@ -256,7 +256,7 @@ class LocationSelector {
         // Hiển thị kết quả
         this.displayResults(distance, duration, price);
         
-        // Cập nhật map
+        // Cập nhật map và hiển thị markers
         this.updateMap(pointACoords, pointBCoords);
         
         showNotification(`✅ Khoảng cách: ${this.formatDistance(distance)}, Giá: ${this.formatPrice(price)}`, 'success');
@@ -352,15 +352,70 @@ class LocationSelector {
         if (durationElement) durationElement.textContent = this.formatDuration(duration);
         if (priceElement) priceElement.textContent = this.formatPrice(price);
         if (infoPanel) infoPanel.style.display = 'block';
+        
+        // Cập nhật phí vận chuyển trong form nếu có
+        const shippingFee = document.getElementById('shippingFee');
+        if (shippingFee) {
+            shippingFee.value = price;
+        }
+        
+        // Cập nhật biến global nếu có
+        if (typeof calculatedFee !== 'undefined') {
+            calculatedFee = price;
+        }
     }
 
     updateMap(pointA, pointB) {
         // Cập nhật map nếu có
         if (window.distanceCalculator) {
+            // Xóa markers cũ
+            window.distanceCalculator.clearPoints();
+            
+            // Thêm markers mới
             window.distanceCalculator.point1 = pointA;
             window.distanceCalculator.point2 = pointB;
+            window.distanceCalculator.addMarker(pointA, 'A');
+            window.distanceCalculator.addMarker(pointB, 'B');
+            
+            // Tính khoảng cách
             window.distanceCalculator.calculateDistance();
+            
+            // Cập nhật địa chỉ
+            const pointAAddress = this.getSelectedAddress('pointA');
+            const pointBAddress = this.getSelectedAddress('pointB');
+            
+            if (pointAAddress) {
+                window.distanceCalculator.point1Address = pointAAddress;
+                const senderAddress = document.getElementById('senderAddress');
+                if (senderAddress) senderAddress.value = pointAAddress;
+            }
+            
+            if (pointBAddress) {
+                window.distanceCalculator.point2Address = pointBAddress;
+                const receiverAddress = document.getElementById('receiverAddress');
+                if (receiverAddress) receiverAddress.value = pointBAddress;
+            }
         }
+    }
+
+    getSelectedAddress(prefix) {
+        const provinceId = document.getElementById(prefix + 'Province').value;
+        const districtId = document.getElementById(prefix + 'District').value;
+        const wardId = document.getElementById(prefix + 'Ward').value;
+
+        if (provinceId && districtId && wardId) {
+            const province = this.provinces.find(p => p.id === provinceId);
+            const districts = this.districts[provinceId] || [];
+            const district = districts.find(d => d.id === districtId);
+            const wards = this.wards[districtId] || [];
+            const ward = wards.find(w => w.id === wardId);
+
+            if (province && district && ward) {
+                return `${ward.name}, ${district.name}, ${province.name}`;
+            }
+        }
+
+        return null;
     }
 
     clearAll() {
