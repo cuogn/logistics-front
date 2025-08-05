@@ -140,7 +140,38 @@ class ApiService {
     }
 
     async createOrder(orderData) {
-        return this.post('/orders', orderData);
+        // Validation dữ liệu trước khi gửi
+        if (!orderData.sender_name || !orderData.receiver_name) {
+            throw new Error('Tên người gửi và người nhận không được để trống');
+        }
+        
+        if (!orderData.sender_phone || !orderData.receiver_phone) {
+            throw new Error('Số điện thoại người gửi và người nhận không được để trống');
+        }
+        
+        if (!orderData.sender_address || !orderData.receiver_address) {
+            throw new Error('Địa chỉ người gửi và người nhận không được để trống');
+        }
+        
+        if (!orderData.package_weight || parseFloat(orderData.package_weight) <= 0) {
+            throw new Error('Trọng lượng gói hàng phải lớn hơn 0');
+        }
+        
+        // Đảm bảo shipping_fee là số nguyên
+        if (orderData.shipping_fee !== undefined) {
+            orderData.shipping_fee = Math.round(parseFloat(orderData.shipping_fee));
+        }
+        
+        console.log('Creating order with data:', orderData);
+        
+        try {
+            const response = await this.post('/orders', orderData);
+            console.log('Order created successfully:', response);
+            return response;
+        } catch (error) {
+            console.error('Create order error:', error);
+            throw error;
+        }
     }
 
     async updateOrder(id, orderData) {

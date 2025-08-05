@@ -20,32 +20,44 @@ function setupPriceListener() {
             mutations.forEach(function(mutation) {
                 if (mutation.type === 'childList' || mutation.type === 'characterData') {
                     const priceText = priceValue.textContent;
-                    const priceNumber = extractPriceFromText(priceText);
-                    if (priceNumber > 0) {
-                        shippingFee.value = priceNumber;
-                        calculatedFee = priceNumber;
+                    const extractedPrice = extractPriceFromText(priceText);
+                    
+                    if (extractedPrice > 0) {
+                        shippingFee.value = extractedPrice;
+                        calculatedFee = extractedPrice; // Cập nhật biến global
+                        console.log('Updated shipping fee:', extractedPrice);
                     }
                 }
             });
         });
         
+        // Bắt đầu theo dõi
         observer.observe(priceValue, {
             childList: true,
             characterData: true,
             subtree: true
         });
+        
+        console.log('Price listener setup completed');
+    } else {
+        console.warn('Price elements not found');
     }
 }
 
 function extractPriceFromText(text) {
-    // Trích xuất số từ text như "493.415 ₫" hoặc "493,415 ₫"
-    const match = text.match(/[\d,\.]+/);
-    if (match) {
-        // Loại bỏ dấu phẩy và chuyển thành số
-        const cleanNumber = match[0].replace(/,/g, '');
-        return parseFloat(cleanNumber);
-    }
-    return 0;
+    if (!text) return 0;
+    
+    // Loại bỏ ký tự đặc biệt và chữ
+    const cleanText = text.replace(/[^\d.,]/g, '');
+    
+    // Xử lý format tiền tệ Việt Nam (có dấu phẩy ngăn cách hàng nghìn)
+    const priceString = cleanText.replace(/\./g, '').replace(',', '.');
+    
+    const price = parseFloat(priceString);
+    
+    console.log('Extracting price from text:', text, '->', price);
+    
+    return isNaN(price) ? 0 : price;
 }
 
 function initializeDistanceCalculator() {
@@ -313,7 +325,7 @@ function setupFormValidation() {
                 return;
             }
             
-            // Chuẩn bị dữ liệu gửi lên
+            // Chuẩn bị dữ liệu gửi lên - chỉ gửi các trường có giá trị
             const finalOrderData = {
                 sender_name: orderData.sender_name,
                 sender_phone: orderData.sender_phone,
@@ -323,13 +335,20 @@ function setupFormValidation() {
                 receiver_address: receiverAddress,
                 package_weight: parseFloat(orderData.package_weight),
                 package_description: orderData.package_description || '',
-                shipping_fee: calculatedFee || 0,
-                sender_lat: senderLat,
-                sender_lng: senderLng,
-                receiver_lat: receiverLat,
-                receiver_lng: receiverLng,
+                shipping_fee: Math.round(calculatedFee || 0), // Làm tròn thành số nguyên
                 status: 'pending'
             };
+            
+            // Chỉ thêm lat/lng nếu có giá trị
+            if (senderLat && senderLng) {
+                finalOrderData.sender_lat = senderLat;
+                finalOrderData.sender_lng = senderLng;
+            }
+            
+            if (receiverLat && receiverLng) {
+                finalOrderData.receiver_lat = receiverLat;
+                finalOrderData.receiver_lng = receiverLng;
+            }
             
             console.log('Submitting order data:', finalOrderData);
             
