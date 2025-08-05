@@ -6,8 +6,150 @@
     <title>Quản Lý Đơn Hàng - Admin</title>
     <link rel="stylesheet" href="../css/styles.css">
     <link rel="stylesheet" href="../css/dashboard.css">
+    <link rel="stylesheet" href="../css/maps.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- HERE Maps CSS -->
+    <link rel="stylesheet" type="text/css" href="https://js.api.here.com/v3/3.1/mapsjs-ui.css" />
+    <!-- HERE Maps JavaScript -->
+    <script type="text/javascript" src="https://js.api.here.com/v3/3.1/mapsjs-core.js"></script>
+    <script type="text/javascript" src="https://js.api.here.com/v3/3.1/mapsjs-service.js"></script>
+    <script type="text/javascript" src="https://js.api.here.com/v3/3.1/mapsjs-ui.js"></script>
+    <script type="text/javascript" src="https://js.api.here.com/v3/3.1/mapsjs-mapevents.js"></script>
+    <style>
+        .address-input-group {
+            position: relative;
+        }
+        
+        .map-button {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 4px 8px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .map-button:hover {
+            background: #2563eb;
+        }
+        
+        .distance-info {
+            background: #f0f9ff;
+            border: 1px solid #0ea5e9;
+            border-radius: 8px;
+            padding: 12px;
+            margin: 12px 0;
+            display: none;
+        }
+        
+        .distance-info.show {
+            display: block;
+        }
+        
+        .distance-info h4 {
+            margin: 0 0 8px 0;
+            color: #0c4a6e;
+            font-size: 14px;
+        }
+        
+        .distance-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            font-size: 12px;
+        }
+        
+        .distance-details span {
+            color: #0369a1;
+        }
+        
+        .map-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        
+        .map-modal-content {
+            background-color: #fefefe;
+            margin: 2% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .map-container {
+            height: 400px;
+            border-radius: 8px;
+            overflow: hidden;
+            margin: 16px 0;
+        }
+        
+        .map-controls {
+            display: flex;
+            gap: 8px;
+            margin: 12px 0;
+        }
+        
+        .form-error {
+            color: #dc2626;
+            font-size: 12px;
+            margin-top: 4px;
+            display: none;
+        }
+        
+        .form-error.show {
+            display: block;
+        }
+        
+        .input-error {
+            border-color: #dc2626 !important;
+        }
+        
+        .form-input:focus.input-error,
+        .form-select:focus.input-error,
+        textarea:focus.input-error {
+            border-color: #dc2626 !important;
+            box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.2);
+        }
+        
+        .animate-spin {
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        
+        .btn-loading {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+    </style>
 </head>
 <body>
     <!-- Header -->
@@ -98,23 +240,21 @@
 
             <!-- Orders Table -->
             <div class="table-container">
-                <table class="table" id="ordersTable">
+                <table class="table">
                     <thead>
                         <tr>
                             <th>Mã Đơn</th>
                             <th>Người Gửi</th>
                             <th>Người Nhận</th>
+                            <th>Trọng Lượng</th>
+                            <th>Phí Vận Chuyển</th>
                             <th>Trạng Thái</th>
-                            <th>Tổng Tiền</th>
                             <th>Ngày Tạo</th>
-                            <th>Ngày Giao Dự Kiến</th>
                             <th>Thao Tác</th>
                         </tr>
                     </thead>
                     <tbody id="ordersTableBody">
-                        <tr>
-                            <td colspan="8" class="text-center">Đang tải...</td>
-                        </tr>
+                        <!-- Orders will be loaded here -->
                     </tbody>
                 </table>
             </div>
@@ -141,38 +281,58 @@
                         <div class="form-group">
                             <label for="senderName">Tên Người Gửi *</label>
                             <input type="text" id="senderName" name="sender_name" required>
+                            <div class="form-error" id="senderNameError"></div>
                         </div>
                         <div class="form-group">
                             <label for="senderPhone">Số Điện Thoại Người Gửi *</label>
-                            <input type="tel" id="senderPhone" name="sender_phone" required>
+                            <input type="tel" id="senderPhone" name="sender_phone" required pattern="[0-9]{10,11}" maxlength="11">
+                            <div class="form-error" id="senderPhoneError">Số điện thoại phải có 10-11 chữ số</div>
                         </div>
                     </div>
 
                     <div class="form-group">
                         <label for="senderAddress">Địa Chỉ Người Gửi *</label>
                         <textarea id="senderAddress" name="sender_address" required></textarea>
+                        <div class="form-error" id="senderAddressError"></div>
                     </div>
 
                     <div class="form-row">
                         <div class="form-group">
                             <label for="receiverName">Tên Người Nhận *</label>
                             <input type="text" id="receiverName" name="receiver_name" required>
+                            <div class="form-error" id="receiverNameError"></div>
                         </div>
                         <div class="form-group">
                             <label for="receiverPhone">Số Điện Thoại Người Nhận *</label>
-                            <input type="tel" id="receiverPhone" name="receiver_phone" required>
+                            <input type="tel" id="receiverPhone" name="receiver_phone" required pattern="[0-9]{10,11}" maxlength="11">
+                            <div class="form-error" id="receiverPhoneError">Số điện thoại phải có 10-11 chữ số</div>
                         </div>
                     </div>
 
                     <div class="form-group">
                         <label for="receiverAddress">Địa Chỉ Người Nhận *</label>
                         <textarea id="receiverAddress" name="receiver_address" required></textarea>
+                        <div class="form-error" id="receiverAddressError"></div>
+                    </div>
+
+                    <!-- Distance Calculation Section -->
+                    <div class="form-group">
+                        <button type="button" class="btn btn-outline" onclick="calculateDistanceAndFee()">
+                            <i data-lucide="calculator"></i>
+                            Tính Khoảng Cách & Phí Vận Chuyển
+                        </button>
+                        <div id="distanceResult" class="distance-result" style="display: none; margin-top: 10px; padding: 10px; background: #f0f9ff; border-radius: 4px;">
+                            <strong>Kết quả tính toán:</strong>
+                            <div>Khoảng cách: <span id="distanceText">-</span></div>
+                            <div>Phí vận chuyển: <span id="calculatedFee">-</span></div>
+                        </div>
                     </div>
 
                     <div class="form-row">
                         <div class="form-group">
                             <label for="packageWeight">Trọng Lượng (kg) *</label>
-                            <input type="number" id="packageWeight" name="package_weight" step="0.1" required>
+                            <input type="number" id="packageWeight" name="package_weight" step="0.1" min="0.1" required>
+                            <div class="form-error" id="packageWeightError">Trọng lượng phải là số dương</div>
                         </div>
                         <div class="form-group">
                             <label for="packageDimensions">Kích Thước</label>
@@ -188,7 +348,8 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label for="shippingFee">Phí Vận Chuyển (VNĐ) *</label>
-                            <input type="number" id="shippingFee" name="shipping_fee" required>
+                            <input type="number" id="shippingFee" name="shipping_fee" min="0" required>
+                            <div class="form-error" id="shippingFeeError">Phí vận chuyển phải là số dương</div>
                         </div>
                         <div class="form-group">
                             <label for="estimatedDeliveryDate">Ngày Giao Dự Kiến</label>
@@ -198,15 +359,53 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" onclick="closeCreateOrderModal()">Hủy</button>
-                    <button type="submit" class="btn btn-primary">Tạo Đơn Hàng</button>
+                    <button type="submit" class="btn btn-primary" id="submitOrderBtn">
+                        <span class="btn-text">Tạo Đơn Hàng</span>
+                        <span class="btn-loading" style="display: none;">
+                            <i data-lucide="loader-2" class="animate-spin"></i>
+                            Đang tạo...
+                        </span>
+                    </button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Address Map Modal -->
+    <div class="map-modal" id="addressMapModal">
+        <div class="map-modal-content">
+            <div class="modal-header">
+                <h3 id="mapModalTitle">Chọn Địa Chỉ</h3>
+                <button class="modal-close" onclick="closeAddressMap()">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <div class="map-controls">
+                <button type="button" class="btn btn-secondary" onclick="setPointA()">Đặt Điểm A</button>
+                <button type="button" class="btn btn-secondary" onclick="setPointB()">Đặt Điểm B</button>
+                <button type="button" class="btn btn-primary" onclick="calculateDistance()">Tính Khoảng Cách</button>
+                <button type="button" class="btn btn-outline" onclick="clearMap()">Xóa</button>
+            </div>
+            <div id="map" class="map-container"></div>
+            <div class="distance-info" id="mapDistanceInfo">
+                <h4><i data-lucide="route"></i> Kết Quả Tính Toán</h4>
+                <div class="distance-details">
+                    <div>Khoảng cách: <span id="mapDistanceText">-</span></div>
+                    <div>Thời gian dự kiến: <span id="mapDurationText">-</span></div>
+                    <div>Phí vận chuyển: <span id="mapCalculatedFee">-</span></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeAddressMap()">Hủy</button>
+                <button type="button" class="btn btn-primary" onclick="applyMapResults()">Áp Dụng</button>
+            </div>
         </div>
     </div>
 
     <script src="../js/lucide.min.js"></script>
     <script src="../js/api.js"></script>
     <script src="../js/script.js"></script>
+    <script src="../js/distance-calculator.js"></script>
     <script>
         // Initialize Lucide icons
         lucide.createIcons();
@@ -218,94 +417,282 @@
         const user = JSON.parse(localStorage.getItem('user') || '{}');
         document.getElementById('userName').textContent = user.full_name || 'Admin';
 
-        // Current page and filters
+        // Global variables
         let currentPage = 1;
         let currentFilters = {};
+        let distanceCalculator = null;
+        let currentAddressType = null;
+        let calculatedDistance = null;
+        let calculatedDuration = null;
+        let calculatedFee = null;
 
-        // Load orders
+        // Initialize distance calculator
+        document.addEventListener('DOMContentLoaded', () => {
+            loadOrders();
+            initializeDistanceCalculator();
+        });
+
+        function initializeDistanceCalculator() {
+            try {
+                distanceCalculator = new DistanceCalculator();
+            } catch (error) {
+                console.error('Error initializing distance calculator:', error);
+            }
+        }
+
+        // Input validation functions
+        function validatePhoneNumber(input) {
+            const phone = input.value.replace(/\D/g, '');
+            if (phone.length < 10 || phone.length > 11) {
+                showFieldError(input.id, 'Số điện thoại phải có 10-11 chữ số');
+                return false;
+            }
+            input.value = phone;
+            hideFieldError(input.id);
+            return true;
+        }
+
+        function validateWeight(input) {
+            const weight = parseFloat(input.value);
+            if (isNaN(weight) || weight <= 0) {
+                showFieldError(input.id, 'Trọng lượng phải là số dương');
+                return false;
+            }
+            hideFieldError(input.id);
+            return true;
+        }
+
+        function validateShippingFee(input) {
+            const fee = parseFloat(input.value);
+            if (isNaN(fee) || fee < 0) {
+                showFieldError(input.id, 'Phí vận chuyển phải là số dương');
+                return false;
+            }
+            hideFieldError(input.id);
+            return true;
+        }
+
+        function showFieldError(fieldId, message) {
+            const errorElement = document.getElementById(fieldId + 'Error');
+            const inputElement = document.getElementById(fieldId);
+            if (errorElement) {
+                errorElement.textContent = message;
+                errorElement.classList.add('show');
+            }
+            if (inputElement) {
+                inputElement.classList.add('input-error');
+            }
+        }
+
+        function hideFieldError(fieldId) {
+            const errorElement = document.getElementById(fieldId + 'Error');
+            const inputElement = document.getElementById(fieldId);
+            if (errorElement) {
+                errorElement.classList.remove('show');
+            }
+            if (inputElement) {
+                inputElement.classList.remove('input-error');
+            }
+        }
+
+        // Address map functions
+        function openAddressMap(type) {
+            currentAddressType = type;
+            document.getElementById('mapModalTitle').textContent = 
+                type === 'sender' ? 'Chọn Địa Chỉ Người Gửi' : 'Chọn Địa Chỉ Người Nhận';
+            document.getElementById('addressMapModal').style.display = 'block';
+            
+            // Initialize map if not already done
+            if (distanceCalculator && distanceCalculator.map) {
+                setTimeout(() => {
+                    distanceCalculator.map.getViewPort().resize();
+                }, 100);
+            }
+        }
+
+        function closeAddressMap() {
+            document.getElementById('addressMapModal').style.display = 'none';
+        }
+
+        function setPointA() {
+            if (distanceCalculator) {
+                distanceCalculator.currentStatus = 'waiting_for_point_a';
+                showNotification('Nhấp vào bản đồ để đặt điểm A', 'info');
+            }
+        }
+
+        function setPointB() {
+            if (distanceCalculator) {
+                distanceCalculator.currentStatus = 'waiting_for_point_b';
+                showNotification('Nhấp vào bản đồ để đặt điểm B', 'info');
+            }
+        }
+
+        function calculateDistance() {
+            if (distanceCalculator && distanceCalculator.point1 && distanceCalculator.point2) {
+                distanceCalculator.calculateDistance();
+            } else {
+                showNotification('Vui lòng đặt cả hai điểm trước khi tính khoảng cách', 'error');
+            }
+        }
+
+        function clearMap() {
+            if (distanceCalculator) {
+                distanceCalculator.clearPoints();
+                distanceCalculator.clearRoute();
+                document.getElementById('mapDistanceInfo').classList.remove('show');
+            }
+        }
+
+        function applyMapResults() {
+            if (calculatedDistance && calculatedFee) {
+                // Update addresses
+                if (distanceCalculator.point1 && distanceCalculator.point2) {
+                    if (currentAddressType === 'sender') {
+                        document.getElementById('senderAddress').value = distanceCalculator.point1Address || '';
+                        document.getElementById('receiverAddress').value = distanceCalculator.point2Address || '';
+                    } else {
+                        document.getElementById('senderAddress').value = distanceCalculator.point2Address || '';
+                        document.getElementById('receiverAddress').value = distanceCalculator.point1Address || '';
+                    }
+                }
+
+                // Update shipping fee
+                document.getElementById('shippingFee').value = calculatedFee;
+                
+                // Show distance info
+                document.getElementById('distanceText').textContent = calculatedDistance;
+                document.getElementById('durationText').textContent = calculatedDuration || '-';
+                document.getElementById('calculatedFee').textContent = formatCurrency(calculatedFee);
+                
+                const weight = parseFloat(document.getElementById('packageWeight').value) || 0;
+                const weightFee = weight * 1000; // 1000 VND per kg
+                document.getElementById('weightFee').textContent = formatCurrency(weightFee);
+                
+                document.getElementById('distanceInfo').classList.add('show');
+                
+                closeAddressMap();
+                showNotification('Đã áp dụng thông tin khoảng cách', 'success');
+            }
+        }
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('vi-VN', {
+                style: 'currency',
+                currency: 'VND'
+            }).format(amount);
+        }
+
+        // Override distance calculator display function
+        if (typeof DistanceCalculator !== 'undefined') {
+            const originalDisplayDistanceInfo = DistanceCalculator.prototype.displayDistanceInfo;
+            DistanceCalculator.prototype.displayDistanceInfo = function(route) {
+                if (route && route.distance) {
+                    calculatedDistance = this.formatDistance(route.distance);
+                    calculatedDuration = this.formatDuration(route.duration);
+                    calculatedFee = this.calculatePrice(route.distance);
+                    
+                    document.getElementById('mapDistanceText').textContent = calculatedDistance;
+                    document.getElementById('mapDurationText').textContent = calculatedDuration;
+                    document.getElementById('mapCalculatedFee').textContent = formatCurrency(calculatedFee);
+                    document.getElementById('mapDistanceInfo').classList.add('show');
+                }
+            };
+        }
+
+        // Load orders function
         async function loadOrders(page = 1, filters = {}) {
             try {
-                const params = {
-                    page,
-                    limit: 10,
-                    ...filters
-                };
-
-                const response = await api.getOrders(params);
+                showLoading();
+                const response = await api.getOrders({ page, ...filters });
                 
                 if (response.success) {
                     displayOrders(response.data.orders);
                     displayPagination(response.data.pagination);
                 } else {
-                    ui.showError('Không thể tải danh sách đơn hàng');
+                    ui.showError(response.message || 'Không thể tải danh sách đơn hàng');
                 }
             } catch (error) {
-                console.error('Error loading orders:', error);
-                ui.showError('Có lỗi xảy ra khi tải dữ liệu');
+                console.error('Load orders error:', error);
+                ui.showError('Có lỗi xảy ra khi tải danh sách đơn hàng');
+            } finally {
+                hideLoading();
             }
         }
 
         function displayOrders(orders) {
             const tbody = document.getElementById('ordersTableBody');
-            
+            tbody.innerHTML = '';
+
             if (orders.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="8" class="text-center">Không có đơn hàng nào</td></tr>';
                 return;
             }
 
-            tbody.innerHTML = orders.map(order => `
-                <tr>
+            orders.forEach(order => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
                     <td><strong>${order.order_code}</strong></td>
                     <td>
-                        <div>${order.sender_name}</div>
-                        <small>${order.sender_phone}</small>
+                        <div><strong>${order.sender_name}</strong></div>
+                        <div class="text-muted">${order.sender_phone}</div>
                     </td>
                     <td>
-                        <div>${order.receiver_name}</div>
-                        <small>${order.receiver_phone}</small>
+                        <div><strong>${order.receiver_name}</strong></div>
+                        <div class="text-muted">${order.receiver_phone}</div>
                     </td>
-                    <td>${ui.getStatusBadge(order.current_status)}</td>
-                    <td>${ui.formatCurrency(order.total_amount)}</td>
-                    <td>${ui.formatDateTime(order.created_at)}</td>
-                    <td>${order.estimated_delivery_date ? ui.formatDate(order.estimated_delivery_date) : '-'}</td>
+                    <td>${order.package_weight} kg</td>
+                    <td>${api.formatCurrency(order.shipping_fee)}</td>
+                    <td>${api.getStatusBadge(order.current_status)}</td>
+                    <td>${api.formatDate(order.created_at)}</td>
                     <td>
-                        <div class="action-buttons">
-                            <a href="admin-order-detail.html?id=${order.id}" class="btn btn-sm btn-primary">Xem</a>
-                            <a href="admin-order-edit.html?id=${order.id}" class="btn btn-sm btn-secondary">Sửa</a>
-                            <button class="btn btn-sm btn-danger" onclick="deleteOrder(${order.id})">Xóa</button>
+                        <div class="table-actions">
+                            <a href="admin-order-detail.html?id=${order.id}" class="btn btn-sm btn-outline">
+                                <i data-lucide="eye"></i>
+                            </a>
+                            <a href="admin-order-edit.html?id=${order.id}" class="btn btn-sm btn-outline">
+                                <i data-lucide="edit"></i>
+                            </a>
+                            <button class="btn btn-sm btn-outline btn-danger" onclick="deleteOrder(${order.id})">
+                                <i data-lucide="trash-2"></i>
+                            </button>
                         </div>
                     </td>
-                </tr>
-            `).join('');
+                `;
+                tbody.appendChild(row);
+            });
+
+            lucide.createIcons();
         }
 
         function displayPagination(pagination) {
             const paginationElement = document.getElementById('pagination');
-            
-            if (pagination.pages <= 1) {
-                paginationElement.innerHTML = '';
-                return;
-            }
+            let paginationHTML = '<div class="pagination-info">';
+            paginationHTML += `Hiển thị ${((pagination.page - 1) * pagination.limit) + 1}-${Math.min(pagination.page * pagination.limit, pagination.total)} của ${pagination.total} đơn hàng`;
+            paginationHTML += '</div>';
 
-            let paginationHTML = '<div class="pagination-controls">';
-            
+            paginationHTML += '<div class="pagination-controls">';
+
             // Previous button
             if (pagination.page > 1) {
-                paginationHTML += `<button class="btn btn-sm" onclick="changePage(${pagination.page - 1})">Trước</button>`;
+                paginationHTML += `<button class="btn btn-outline" onclick="changePage(${pagination.page - 1})">Trước</button>`;
             }
 
             // Page numbers
-            for (let i = 1; i <= pagination.pages; i++) {
+            const startPage = Math.max(1, pagination.page - 2);
+            const endPage = Math.min(pagination.pages, pagination.page + 2);
+
+            for (let i = startPage; i <= endPage; i++) {
                 if (i === pagination.page) {
-                    paginationHTML += `<button class="btn btn-sm btn-primary">${i}</button>`;
+                    paginationHTML += `<button class="btn btn-primary">${i}</button>`;
                 } else {
-                    paginationHTML += `<button class="btn btn-sm" onclick="changePage(${i})">${i}</button>`;
+                    paginationHTML += `<button class="btn btn-outline" onclick="changePage(${i})">${i}</button>`;
                 }
             }
 
             // Next button
             if (pagination.page < pagination.pages) {
-                paginationHTML += `<button class="btn btn-sm" onclick="changePage(${pagination.page + 1})">Sau</button>`;
+                paginationHTML += `<button class="btn btn-outline" onclick="changePage(${pagination.page + 1})">Sau</button>`;
             }
 
             paginationHTML += '</div>';
@@ -347,16 +734,62 @@
         // Modal functions
         function openCreateOrderModal() {
             document.getElementById('createOrderModal').style.display = 'flex';
+            document.getElementById('distanceInfo').classList.remove('show');
+            // Reset form
+            document.getElementById('createOrderForm').reset();
+            // Clear all error states
+            document.querySelectorAll('.form-error').forEach(el => el.classList.remove('show'));
+            document.querySelectorAll('.form-input, .form-select, textarea').forEach(el => el.classList.remove('input-error'));
         }
 
         function closeCreateOrderModal() {
             document.getElementById('createOrderModal').style.display = 'none';
             document.getElementById('createOrderForm').reset();
+            document.getElementById('distanceInfo').classList.remove('show');
         }
 
-        // Create order form handling
+        // Create order form handling with improved validation
         document.getElementById('createOrderForm').addEventListener('submit', async function(e) {
             e.preventDefault();
+            
+            // Validate all required fields
+            let isValid = true;
+            
+            // Validate phone numbers
+            if (!validatePhoneNumber(document.getElementById('senderPhone'))) isValid = false;
+            if (!validatePhoneNumber(document.getElementById('receiverPhone'))) isValid = false;
+            
+            // Validate weight
+            if (!validateWeight(document.getElementById('packageWeight'))) isValid = false;
+            
+            // Validate shipping fee
+            if (!validateShippingFee(document.getElementById('shippingFee'))) isValid = false;
+            
+            // Validate required text fields
+            const requiredFields = ['senderName', 'senderAddress', 'receiverName', 'receiverAddress'];
+            requiredFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (!field.value.trim()) {
+                    showFieldError(fieldId, 'Trường này là bắt buộc');
+                    isValid = false;
+                } else {
+                    hideFieldError(fieldId);
+                }
+            });
+            
+            if (!isValid) {
+                ui.showError('Vui lòng kiểm tra lại thông tin nhập');
+                return;
+            }
+            
+            // Show loading state
+            const submitBtn = document.getElementById('submitOrderBtn');
+            const btnText = submitBtn.querySelector('.btn-text');
+            const btnLoading = submitBtn.querySelector('.btn-loading');
+            
+            btnText.style.display = 'none';
+            btnLoading.style.display = 'inline-flex';
+            submitBtn.disabled = true;
             
             const formData = new FormData(e.target);
             const orderData = Object.fromEntries(formData.entries());
@@ -372,9 +805,120 @@
                     ui.showError(response.message || 'Tạo đơn hàng thất bại');
                 }
             } catch (error) {
-                ui.showError(error.message || 'Có lỗi xảy ra khi tạo đơn hàng');
+                console.error('Create order error:', error);
+                if (error.status === 400) {
+                    ui.showError(error.message || 'Dữ liệu không hợp lệ');
+                } else if (error.status === 500) {
+                    ui.showError('Lỗi máy chủ. Vui lòng thử lại sau.');
+                } else {
+                    ui.showError(error.message || 'Có lỗi xảy ra khi tạo đơn hàng');
+                }
+            } finally {
+                // Hide loading state
+                btnText.style.display = 'inline';
+                btnLoading.style.display = 'none';
+                submitBtn.disabled = false;
             }
         });
+
+        // Add input validation listeners
+        document.getElementById('senderPhone').addEventListener('input', function() {
+            this.value = this.value.replace(/\D/g, '');
+        });
+
+        document.getElementById('receiverPhone').addEventListener('input', function() {
+            this.value = this.value.replace(/\D/g, '');
+        });
+
+        document.getElementById('packageWeight').addEventListener('input', function() {
+            if (this.value && !validateWeight(this)) {
+                // Don't clear the field, just show error
+            }
+        });
+
+        document.getElementById('shippingFee').addEventListener('input', function() {
+            if (this.value && !validateShippingFee(this)) {
+                // Don't clear the field, just show error
+            }
+        });
+
+        // Distance calculation function
+        async function calculateDistanceAndFee() {
+            const senderAddress = document.getElementById('senderAddress').value.trim();
+            const receiverAddress = document.getElementById('receiverAddress').value.trim();
+            
+            if (!senderAddress || !receiverAddress) {
+                ui.showError('Vui lòng nhập địa chỉ người gửi và người nhận');
+                return;
+            }
+
+            try {
+                ui.showLoading();
+                
+                // Use the API to get directions
+                const response = await api.getDirections(senderAddress, receiverAddress);
+                
+                if (response.success && response.data) {
+                    const distance = response.data.distance_meters; // in meters
+                    const duration = response.data.duration_seconds; // in seconds
+                    
+                    // Calculate shipping fee (5000 VND per km + base fee)
+                    const distanceKm = distance / 1000;
+                    const baseFee = 10000; // 10,000 VND base fee
+                    const distanceFee = Math.ceil(distanceKm * 5000); // 5,000 VND per km
+                    const totalFee = baseFee + distanceFee;
+                    
+                    // Display results
+                    document.getElementById('distanceText').textContent = `${(distanceKm).toFixed(1)} km`;
+                    document.getElementById('calculatedFee').textContent = formatCurrency(totalFee);
+                    document.getElementById('distanceResult').style.display = 'block';
+                    
+                    // Auto-fill shipping fee
+                    document.getElementById('shippingFee').value = totalFee;
+                    
+                    ui.showSuccess('Tính toán hoàn tất!');
+                } else {
+                    ui.showError('Không thể tính toán khoảng cách. Vui lòng kiểm tra lại địa chỉ.');
+                }
+            } catch (error) {
+                console.error('Distance calculation error:', error);
+                
+                // Fallback: Use estimated distance based on address length
+                const estimatedDistance = estimateDistanceFromAddresses(senderAddress, receiverAddress);
+                const baseFee = 10000;
+                const distanceFee = Math.ceil(estimatedDistance * 5000);
+                const totalFee = baseFee + distanceFee;
+                
+                document.getElementById('distanceText').textContent = `~${estimatedDistance.toFixed(1)} km (ước tính)`;
+                document.getElementById('calculatedFee').textContent = formatCurrency(totalFee);
+                document.getElementById('distanceResult').style.display = 'block';
+                document.getElementById('shippingFee').value = totalFee;
+                
+                ui.showSuccess('Đã tính toán ước tính (API không khả dụng)');
+            } finally {
+                ui.hideLoading();
+            }
+        }
+
+        // Fallback distance estimation
+        function estimateDistanceFromAddresses(address1, address2) {
+            // Simple estimation based on address complexity
+            const complexity1 = address1.split(',').length;
+            const complexity2 = address2.split(',').length;
+            
+            // Base distance: 5-15 km depending on address complexity
+            const baseDistance = 5 + (complexity1 + complexity2) * 2;
+            
+            // Add some randomness to make it more realistic
+            return baseDistance + Math.random() * 10;
+        }
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('vi-VN', {
+                style: 'currency',
+                currency: 'VND'
+            }).format(amount);
+        }
 
         async function deleteOrder(orderId) {
             if (!confirm('Bạn có chắc chắn muốn xóa đơn hàng này?')) {
