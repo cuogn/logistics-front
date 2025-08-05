@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Final Fix - NTT Express</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            background: #f5f5f5;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .test-form {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .test-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .test-button:hover {
+            background: #0056b3;
+        }
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .status {
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+        .status.success { background: #d4edda; color: #155724; }
+        .status.error { background: #f8d7da; color: #721c24; }
+        .status.warning { background: #fff3cd; color: #856404; }
+        .status.info { background: #d1ecf1; color: #0c5460; }
+    </style>
+</head>
+<body>
+    <h1>Test Final Fix - NTT Express</h1>
+    
+    <div class="test-section">
+        <h2>Test Data Preparation</h2>
+        <div class="test-form">
+            <div class="form-group">
+                <label>Sender Name:</label>
+                <input type="text" id="senderName" value="Test Sender">
+            </div>
+            <div class="form-group">
+                <label>Sender Phone:</label>
+                <input type="text" id="senderPhone" value="0123456789">
+            </div>
+            <div class="form-group">
+                <label>Sender Address:</label>
+                <input type="text" id="senderAddress" value="Test Address 1">
+            </div>
+            <div class="form-group">
+                <label>Receiver Name:</label>
+                <input type="text" id="receiverName" value="Test Receiver">
+            </div>
+            <div class="form-group">
+                <label>Receiver Phone:</label>
+                <input type="text" id="receiverPhone" value="0987654321">
+            </div>
+            <div class="form-group">
+                <label>Receiver Address:</label>
+                <input type="text" id="receiverAddress" value="Test Address 2">
+            </div>
+            <div class="form-group">
+                <label>Package Weight (kg):</label>
+                <input type="number" id="packageWeight" value="1.5" step="0.1">
+            </div>
+            <div class="form-group">
+                <label>Package Description:</label>
+                <textarea id="packageDescription" rows="3">Test package description</textarea>
+            </div>
+            <div class="form-group">
+                <label>Shipping Fee:</label>
+                <input type="number" id="shippingFee" value="251.819">
+            </div>
+            
+            <button class="test-button" onclick="testDataPreparation()">Test Data Preparation</button>
+            <button class="test-button" onclick="testNullRemoval()">Test Null Removal</button>
+            <button class="test-button" onclick="testShippingFee()">Test Shipping Fee</button>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>Debug Log</h2>
+        <div id="debugLog" class="log">
+            <p>Debug log sẽ hiển thị ở đây...</p>
+        </div>
+        <button class="test-button" onclick="clearLog()">Clear Log</button>
+    </div>
+
+    <script>
+        function log(message, type = 'info') {
+            const logElement = document.getElementById('debugLog');
+            const timestamp = new Date().toLocaleTimeString();
+            const statusClass = type === 'error' ? 'error' : type === 'success' ? 'success' : type === 'warning' ? 'warning' : 'info';
+            logElement.innerHTML += `<div class="status ${statusClass}">[${timestamp}] ${message}</div>`;
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+
+        function clearLog() {
+            document.getElementById('debugLog').innerHTML = '<p>Debug log cleared...</p>';
+        }
+
+        function getFormData() {
+            return {
+                sender_name: document.getElementById('senderName').value,
+                sender_phone: document.getElementById('senderPhone').value,
+                sender_address: document.getElementById('senderAddress').value,
+                receiver_name: document.getElementById('receiverName').value,
+                receiver_phone: document.getElementById('receiverPhone').value,
+                receiver_address: document.getElementById('receiverAddress').value,
+                package_weight: parseFloat(document.getElementById('packageWeight').value),
+                package_description: document.getElementById('packageDescription').value,
+                shipping_fee: parseFloat(document.getElementById('shippingFee').value),
+                status: 'pending'
+            };
+        }
+
+        function testDataPreparation() {
+            log('Testing data preparation...');
+            
+            const orderData = getFormData();
+            
+            // Simulate the data preparation logic
+            const finalOrderData = {
+                sender_name: orderData.sender_name,
+                sender_phone: orderData.sender_phone,
+                sender_address: orderData.sender_address,
+                receiver_name: orderData.receiver_name,
+                receiver_phone: orderData.receiver_phone,
+                receiver_address: orderData.receiver_address,
+                package_weight: parseFloat(orderData.package_weight),
+                package_description: orderData.package_description || '',
+                shipping_fee: Math.round(parseFloat(orderData.shipping_fee || 0)), // Đảm bảo là số nguyên
+                status: 'pending'
+            };
+            
+            log('Original shipping_fee: ' + orderData.shipping_fee, 'info');
+            log('Rounded shipping_fee: ' + finalOrderData.shipping_fee, 'success');
+            log('Final order data: ' + JSON.stringify(finalOrderData, null, 2), 'info');
+            
+            // Check data types
+            log('Data type checks:', 'info');
+            log('- shipping_fee type: ' + typeof finalOrderData.shipping_fee, 'info');
+            log('- package_weight type: ' + typeof finalOrderData.package_weight, 'info');
+            log('- sender_name type: ' + typeof finalOrderData.sender_name, 'info');
+        }
+
+        function testNullRemoval() {
+            log('Testing null removal...');
+            
+            const testData = {
+                sender_name: 'Test',
+                sender_phone: '0123456789',
+                sender_address: 'Test Address',
+                receiver_name: 'Test Receiver',
+                receiver_phone: '0987654321',
+                receiver_address: 'Test Address 2',
+                package_weight: 1.5,
+                package_description: 'Test',
+                shipping_fee: 252,
+                sender_lat: null,
+                sender_lng: null,
+                receiver_lat: null,
+                receiver_lng: null,
+                status: 'pending'
+            };
+            
+            log('Original data with nulls: ' + JSON.stringify(testData, null, 2), 'info');
+            
+            // Remove null values
+            Object.keys(testData).forEach(key => {
+                if (testData[key] === null || testData[key] === undefined) {
+                    delete testData[key];
+                }
+            });
+            
+            log('Data after null removal: ' + JSON.stringify(testData, null, 2), 'success');
+        }
+
+        function testShippingFee() {
+            log('Testing shipping fee conversion...');
+            
+            const testCases = [
+                { input: 251.819, expected: 252 },
+                { input: 251.1, expected: 251 },
+                { input: 251.9, expected: 252 },
+                { input: 0, expected: 0 },
+                { input: null, expected: 0 },
+                { input: undefined, expected: 0 }
+            ];
+            
+            testCases.forEach(testCase => {
+                const result = Math.round(parseFloat(testCase.input || 0));
+                const passed = result === testCase.expected;
+                log(`Input: ${testCase.input} -> Result: ${result} (Expected: ${testCase.expected}) ${passed ? '✅' : '❌'}`, passed ? 'success' : 'error');
+            });
+        }
+
+        // Auto-run tests on page load
+        window.addEventListener('load', function() {
+            log('Page loaded, running auto-tests...');
+            setTimeout(() => {
+                testDataPreparation();
+                testNullRemoval();
+                testShippingFee();
+                log('All auto-tests completed');
+            }, 1000);
+        });
+    </script>
+</body>
+</html> 

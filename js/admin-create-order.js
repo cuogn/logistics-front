@@ -23,9 +23,10 @@ function setupPriceListener() {
                     const extractedPrice = extractPriceFromText(priceText);
                     
                     if (extractedPrice > 0) {
-                        shippingFee.value = extractedPrice;
-                        calculatedFee = extractedPrice; // Cập nhật biến global
-                        console.log('Updated shipping fee:', extractedPrice);
+                        const roundedPrice = Math.round(extractedPrice); // Đảm bảo là số nguyên
+                        shippingFee.value = roundedPrice;
+                        calculatedFee = roundedPrice; // Cập nhật biến global
+                        console.log('Updated shipping fee:', roundedPrice);
                     }
                 }
             });
@@ -335,20 +336,27 @@ function setupFormValidation() {
                 receiver_address: receiverAddress,
                 package_weight: parseFloat(orderData.package_weight),
                 package_description: orderData.package_description || '',
-                shipping_fee: Math.round(calculatedFee || 0), // Làm tròn thành số nguyên
+                shipping_fee: Math.round(parseFloat(calculatedFee || 0)), // Đảm bảo là số nguyên
                 status: 'pending'
             };
             
-            // Chỉ thêm lat/lng nếu có giá trị
-            if (senderLat && senderLng) {
-                finalOrderData.sender_lat = senderLat;
-                finalOrderData.sender_lng = senderLng;
+            // Chỉ thêm lat/lng nếu có giá trị và không phải null
+            if (senderLat && senderLng && !isNaN(senderLat) && !isNaN(senderLng)) {
+                finalOrderData.sender_lat = parseFloat(senderLat);
+                finalOrderData.sender_lng = parseFloat(senderLng);
             }
             
-            if (receiverLat && receiverLng) {
-                finalOrderData.receiver_lat = receiverLat;
-                finalOrderData.receiver_lng = receiverLng;
+            if (receiverLat && receiverLng && !isNaN(receiverLat) && !isNaN(receiverLng)) {
+                finalOrderData.receiver_lat = parseFloat(receiverLat);
+                finalOrderData.receiver_lng = parseFloat(receiverLng);
             }
+            
+            // Loại bỏ các trường có giá trị null hoặc undefined
+            Object.keys(finalOrderData).forEach(key => {
+                if (finalOrderData[key] === null || finalOrderData[key] === undefined) {
+                    delete finalOrderData[key];
+                }
+            });
             
             console.log('Submitting order data:', finalOrderData);
             

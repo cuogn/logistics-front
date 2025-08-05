@@ -325,8 +325,9 @@ class DistanceCalculator {
             
             // Tính giá tiền
             const price = this.calculatePrice(distance);
+            const roundedPrice = Math.round(price); // Đảm bảo là số nguyên
             
-            console.log('Distance:', distance, 'Duration:', duration, 'Price:', price);
+            console.log('Distance:', distance, 'Duration:', duration, 'Price:', roundedPrice);
             
             // Hiển thị thông tin
             const distanceElement = document.getElementById('distanceValue');
@@ -335,30 +336,29 @@ class DistanceCalculator {
             const trafficElement = document.getElementById('trafficStatus');
             const priceElement = document.getElementById('priceValue');
             const infoPanel = document.getElementById('distanceInfo');
-            
+
             if (distanceElement) distanceElement.textContent = this.formatDistance(distance);
             if (durationElement) durationElement.textContent = this.formatDuration(duration);
             if (transportElement) transportElement.textContent = 'Ô tô';
             if (trafficElement) trafficElement.textContent = 'Bình thường';
-            if (priceElement) priceElement.textContent = this.formatPrice(price);
+            if (priceElement) priceElement.textContent = this.formatPrice(roundedPrice);
             if (infoPanel) infoPanel.style.display = 'block';
             
             // Cập nhật phí vận chuyển trong form nếu có
             const shippingFee = document.getElementById('shippingFee');
             if (shippingFee) {
-                shippingFee.value = price;
+                shippingFee.value = roundedPrice;
             }
             
             // Cập nhật biến global nếu có
             if (typeof calculatedFee !== 'undefined') {
-                calculatedFee = price;
+                calculatedFee = roundedPrice;
             }
             
-            showNotification(`✅ Khoảng cách: ${this.formatDistance(distance)}, Thời gian: ${this.formatDuration(duration)}, Giá: ${this.formatPrice(price)} (Tính toán đơn giản)`, 'success');
+            console.log('Distance info displayed successfully');
             
         } catch (error) {
             console.error('Error displaying distance info:', error);
-            showNotification('Lỗi hiển thị thông tin khoảng cách', 'error');
         }
     }
 

@@ -373,12 +373,13 @@ class LocationSelector {
         // Cập nhật phí vận chuyển trong form nếu có
         const shippingFee = document.getElementById('shippingFee');
         if (shippingFee) {
-            shippingFee.value = price;
+            const roundedPrice = Math.round(price); // Đảm bảo là số nguyên
+            shippingFee.value = roundedPrice;
         }
         
         // Cập nhật biến global nếu có
         if (typeof calculatedFee !== 'undefined') {
-            calculatedFee = price;
+            calculatedFee = Math.round(price); // Đảm bảo là số nguyên
         }
     }
 
