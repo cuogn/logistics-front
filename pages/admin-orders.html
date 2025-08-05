@@ -644,7 +644,7 @@
                     <td>${order.package_weight} kg</td>
                     <td>${ui.formatCurrency(order.shipping_fee)}</td>
                     <td>${ui.getStatusBadge(order.current_status)}</td>
-                    <td>${api.formatDate(order.created_at)}</td>
+                    <td>${ui.formatDate(order.created_at)}</td>
                     <td>
                         <div class="table-actions">
                             <a href="admin-order-detail.html?id=${order.id}" class="btn btn-sm btn-outline">
