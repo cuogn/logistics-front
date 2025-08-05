@@ -756,6 +756,102 @@
                             </div>
                         </div>
                     </div>
+
+            <!-- Form thông tin đơn hàng -->
+            <form id="createOrderForm" class="form-section">
+                <h2 class="section-title"><i data-lucide="package"></i> Thông Tin Đơn Hàng</h2>
+                
+                <!-- Thông tin người gửi -->
+                <div class="form-section">
+                    <h3 class="section-title"><i data-lucide="user"></i> Thông Tin Người Gửi</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="senderName" class="form-label">Tên Người Gửi *</label>
+                            <input type="text" id="senderName" name="sender_name" class="form-input" required>
+                            <div class="form-error" id="senderNameError"></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="senderPhone" class="form-label">Số Điện Thoại *</label>
+                            <input type="tel" id="senderPhone" name="sender_phone" class="form-input" required pattern="[0-9]{10,11}" maxlength="11">
+                            <div class="form-error" id="senderPhoneError">Số điện thoại phải có 10-11 chữ số</div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="senderAddress" class="form-label">Địa Chỉ Người Gửi *</label>
+                        <textarea id="senderAddress" name="sender_address" class="form-input" rows="2" required readonly placeholder="Chọn điểm A trên bản đồ hoặc dropdown..."></textarea>
+                        <div class="form-error" id="senderAddressError"></div>
+                    </div>
+                </div>
+
+                <!-- Thông tin người nhận -->
+                <div class="form-section">
+                    <h3 class="section-title"><i data-lucide="user-check"></i> Thông Tin Người Nhận</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="receiverName" class="form-label">Tên Người Nhận *</label>
+                            <input type="text" id="receiverName" name="receiver_name" class="form-input" required>
+                            <div class="form-error" id="receiverNameError"></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="receiverPhone" class="form-label">Số Điện Thoại *</label>
+                            <input type="tel" id="receiverPhone" name="receiver_phone" class="form-input" required pattern="[0-9]{10,11}" maxlength="11">
+                            <div class="form-error" id="receiverPhoneError">Số điện thoại phải có 10-11 chữ số</div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="receiverAddress" class="form-label">Địa Chỉ Người Nhận *</label>
+                        <textarea id="receiverAddress" name="receiver_address" class="form-input" rows="2" required readonly placeholder="Chọn điểm B trên bản đồ hoặc dropdown..."></textarea>
+                        <div class="form-error" id="receiverAddressError"></div>
+                    </div>
+                </div>
+
+                <!-- Thông tin hàng hóa -->
+                <div class="form-section">
+                    <h3 class="section-title"><i data-lucide="package"></i> Thông Tin Hàng Hóa</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="packageWeight" class="form-label">Trọng Lượng (kg) *</label>
+                            <input type="number" id="packageWeight" name="package_weight" class="form-input" step="0.1" min="0.1" required>
+                            <div class="form-error" id="packageWeightError">Trọng lượng phải là số dương</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="shippingFee" class="form-label">Phí Vận Chuyển (VNĐ) *</label>
+                            <input type="number" id="shippingFee" name="shipping_fee" class="form-input" min="0" required disabled>
+                            <div class="form-error" id="shippingFeeError">Phí vận chuyển phải là số dương</div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="packageDimensions" class="form-label">Kích Thước</label>
+                        <input type="text" id="packageDimensions" name="package_dimensions" class="form-input" placeholder="Dài x Rộng x Cao (cm)">
+                    </div>
+                    <div class="form-group">
+                        <label for="packageDescription" class="form-label">Mô Tả Hàng Hóa</label>
+                        <textarea id="packageDescription" name="package_description" class="form-input" rows="3" placeholder="Mô tả chi tiết về hàng hóa..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="estimatedDeliveryDate" class="form-label">Ngày Giao Dự Kiến</label>
+                        <input type="date" id="estimatedDeliveryDate" name="estimated_delivery_date" class="form-input">
+                    </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="goBack()">
+                        <i data-lucide="x"></i>
+                        Hủy
+                    </button>
+                    <button type="submit" class="btn btn-success" id="submitOrderBtn">
+                        <span class="btn-text">
+                            <i data-lucide="check"></i>
+                            Tạo Đơn Hàng
+                        </span>
+                        <span class="btn-loading" style="display: none;">
+                            <i data-lucide="loader-2" class="animate-spin"></i>
+                            Đang tạo...
+                        </span>
+                    </button>
+                </div>
+            </form>
                 </div>
         
             <!-- Loading Modal -->
@@ -798,13 +894,34 @@
                         document.getElementById('weightFee').textContent = formatCurrency(weightFee);
                         document.getElementById('shippingFee').value = calculatedFee;
                         document.getElementById('distanceDetails').style.display = 'grid';
+                        
+                        // Cập nhật địa chỉ nếu có
+                        if (this.point1Address) {
+                            document.getElementById('senderAddress').value = this.point1Address;
+                        }
+                        if (this.point2Address) {
+                            document.getElementById('receiverAddress').value = this.point2Address;
+                        }
+                    }
+                };
+            }
+            
+            // Override updateInputs để cập nhật địa chỉ vào form
+            if (distanceCalculator && distanceCalculator.updateInputs) {
+                distanceCalculator.updateInputs = function(point, position) {
+                    if (point === 1 && this.point1Address) {
+                        document.getElementById('senderAddress').value = this.point1Address;
+                    } else if (point === 2 && this.point2Address) {
+                        document.getElementById('receiverAddress').value = this.point2Address;
                     }
                 };
             }
         });
+
         // Form submit
         document.getElementById('createOrderForm').addEventListener('submit', async function(e) {
             e.preventDefault();
+            
             // Validate trọng lượng
             const weight = parseFloat(document.getElementById('packageWeight').value);
             if (isNaN(weight) || weight <= 0) {
@@ -813,6 +930,7 @@
             } else {
                 document.getElementById('packageWeightError').classList.remove('show');
             }
+            
             // Validate đã có phí vận chuyển
             if (!calculatedFee) {
                 document.getElementById('shippingFeeError').classList.add('show');
@@ -820,14 +938,36 @@
             } else {
                 document.getElementById('shippingFeeError').classList.remove('show');
             }
+            
+            // Validate các trường bắt buộc
+            const requiredFields = ['senderName', 'senderPhone', 'senderAddress', 'receiverName', 'receiverPhone', 'receiverAddress'];
+            let isValid = true;
+            
+            requiredFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (!field.value.trim()) {
+                    document.getElementById(fieldId + 'Error').classList.add('show');
+                    isValid = false;
+                } else {
+                    document.getElementById(fieldId + 'Error').classList.remove('show');
+                }
+            });
+            
+            if (!isValid) {
+                alert('Vui lòng điền đầy đủ thông tin bắt buộc');
+                return;
+            }
+            
             // Lấy thông tin điểm A/B từ distanceCalculator
-            const senderAddress = distanceCalculator.point1Address || '';
-            const receiverAddress = distanceCalculator.point2Address || '';
+            const senderAddress = distanceCalculator.point1Address || document.getElementById('senderAddress').value;
+            const receiverAddress = distanceCalculator.point2Address || document.getElementById('receiverAddress').value;
+            
             // Lấy lat/lng nếu có
             const senderLat = distanceCalculator.point1 ? distanceCalculator.point1.lat : null;
             const senderLng = distanceCalculator.point1 ? distanceCalculator.point1.lng : null;
             const receiverLat = distanceCalculator.point2 ? distanceCalculator.point2.lat : null;
             const receiverLng = distanceCalculator.point2 ? distanceCalculator.point2.lng : null;
+            
             // Lấy các trường còn lại
             const formData = new FormData(e.target);
             const orderData = Object.fromEntries(formData.entries());
@@ -838,6 +978,7 @@
             orderData.receiver_lat = receiverLat;
             orderData.receiver_lng = receiverLng;
             orderData.shipping_fee = calculatedFee;
+            
             try {
                 const response = await api.createOrder(orderData);
                 if (response.success) {
@@ -850,7 +991,31 @@
                 alert(error.message || 'Có lỗi xảy ra khi tạo đơn hàng');
             }
         });
+
+        // Input validation listeners
+        document.getElementById('senderPhone').addEventListener('input', function() {
+            this.value = this.value.replace(/\D/g, '');
+        });
+
+        document.getElementById('receiverPhone').addEventListener('input', function() {
+            this.value = this.value.replace(/\D/g, '');
+        });
+
+        document.getElementById('packageWeight').addEventListener('input', function() {
+            const weight = parseFloat(this.value);
+            if (this.value && (isNaN(weight) || weight <= 0)) {
+                document.getElementById('packageWeightError').classList.add('show');
+            } else {
+                document.getElementById('packageWeightError').classList.remove('show');
+            }
+        });
+
         function logout() { api.logout(); }
+        function goBack() {
+            if (confirm('Bạn có chắc chắn muốn hủy? Dữ liệu đã nhập sẽ bị mất.')) {
+                window.location.href = 'admin-orders.html';
+            }
+        }
         function formatCurrency(amount) {
             return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
         }
