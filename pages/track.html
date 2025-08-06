@@ -173,7 +173,7 @@
                         getLatLng(first, order.sender_lat, order.sender_lng, order.sender_address, function(startLat, startLng) {
                             getLatLng(last, order.receiver_lat, order.receiver_lng, order.receiver_address, function(endLat, endLng) {
                                 if (startLat && startLng && endLat && endLng) {
-                                    showRouteOnMap(startLat, startLng, endLat, endLng);
+                                    showRouteOnMap(startLat, startLng, endLat, endLng, order.current_status);
                                 } else {
                                     showMapAtLocation(endLat, endLng, last.location || order.receiver_address);
                                 }
@@ -182,7 +182,7 @@
                     } else {
                         // Fallback: sender -> receiver
                         if (order.sender_lat && order.sender_lng && order.receiver_lat && order.receiver_lng) {
-                            showRouteOnMap(order.sender_lat, order.sender_lng, order.receiver_lat, order.receiver_lng);
+                            showRouteOnMap(order.sender_lat, order.sender_lng, order.receiver_lat, order.receiver_lng, order.current_status);
                         } else if (order.sender_lat && order.sender_lng && order.receiver_address) {
                             geocodeAndShowRoute(order.sender_lat, order.sender_lng, order.receiver_address);
                         }
@@ -227,15 +227,46 @@
                 .catch(() => callback(null, null));
         }
 
-        function showRouteOnMap(senderLat, senderLng, receiverLat, receiverLng, fallbackToMarker = false) {
-            console.log('Vẽ map từ:', senderLat, senderLng, 'đến', receiverLat, receiverLng);
+        function showRouteOnMap(senderLat, senderLng, receiverLat, receiverLng, status = 'pending', fallbackToMarker = false) {
+            console.log('Vẽ map từ:', senderLat, senderLng, 'đến', receiverLat, receiverLng, 'trạng thái:', status);
             const mapDiv = document.getElementById('map');
             mapDiv.innerHTML = '';
             const API_KEY = '7GUpHwbsEgObqnGg4JG34CJvdbf89IU4iq-SDFe8vmE';
             const platform = new H.service.Platform({ apikey: API_KEY });
             const defaultLayers = platform.createDefaultLayers();
+            
+            // Tính toán vị trí hiển thị dựa trên trạng thái
+            let displayLat, displayLng;
+            const senderLatNum = Number(senderLat);
+            const senderLngNum = Number(senderLng);
+            const receiverLatNum = Number(receiverLat);
+            const receiverLngNum = Number(receiverLng);
+            
+            switch(status) {
+                case 'processing':
+                    // Hiển thị ở 1/3 quãng đường từ điểm gửi đến điểm nhận
+                    displayLat = senderLatNum + (receiverLatNum - senderLatNum) * 0.33;
+                    displayLng = senderLngNum + (receiverLngNum - senderLngNum) * 0.33;
+                    break;
+                case 'shipping':
+                    // Hiển thị ở 2/3 quãng đường từ điểm gửi đến điểm nhận
+                    displayLat = senderLatNum + (receiverLatNum - senderLatNum) * 0.67;
+                    displayLng = senderLngNum + (receiverLngNum - senderLngNum) * 0.67;
+                    break;
+                case 'delivered':
+                    // Hiển thị ở điểm nhận
+                    displayLat = receiverLatNum;
+                    displayLng = receiverLngNum;
+                    break;
+                default:
+                    // pending, failed, cancelled - hiển thị ở điểm gửi
+                    displayLat = senderLatNum;
+                    displayLng = senderLngNum;
+                    break;
+            }
+            
             const map = new H.Map(mapDiv, defaultLayers.vector.normal.map, {
-                center: { lat: Number(receiverLat), lng: Number(receiverLng) },
+                center: { lat: displayLat, lng: displayLng },
                 zoom: 13,
                 pixelRatio: window.devicePixelRatio || 1
             });
@@ -266,7 +297,10 @@
                         linestring.pushLatLngAlt(Number(parts[0]), Number(parts[1]));
                     });
                     const routeLine = new H.map.Polyline(linestring, {
-                        style: { strokeColor: '#007bff', lineWidth: 5 }
+                        style: { 
+                            strokeColor: getStatusColor(status), 
+                            lineWidth: 5 
+                        }
                     });
                     map.addObject(routeLine);
                     // Marker điểm đầu
@@ -281,7 +315,8 @@
                     const durationMin = Math.round(summary.travelTime / 60);
                     let infoHtml = `<div class='here-route-info'>` +
                         `<b>Quãng đường:</b> ${distanceKm} km<br>` +
-                        `<b>Thời gian dự kiến:</b> ${durationMin} phút` +
+                        `<b>Thời gian dự kiến:</b> ${durationMin} phút<br>` +
+                        `<b>Trạng thái:</b> ${getStatusText(status)}` +
                         `</div>`;
                     mapDiv.insertAdjacentHTML('beforeend', infoHtml);
                 } else {
@@ -324,7 +359,34 @@
             }
         }
 
-        function logout() { api.logout(); }
+        function logout() {
+            api.logout();
+        }
+
+        // Helper functions for status
+        function getStatusColor(status) {
+            const colorMap = {
+                'pending': '#ffc107',    // Yellow
+                'processing': '#17a2b8',  // Cyan
+                'shipping': '#007bff',    // Blue
+                'delivered': '#28a745',   // Green
+                'failed': '#dc3545',      // Red
+                'cancelled': '#6c757d'    // Gray
+            };
+            return colorMap[status] || '#007bff';
+        }
+
+        function getStatusText(status) {
+            const textMap = {
+                'pending': 'Chờ xử lý',
+                'processing': 'Đang xử lý',
+                'shipping': 'Đang giao',
+                'delivered': 'Đã giao',
+                'failed': 'Thất bại',
+                'cancelled': 'Đã hủy'
+            };
+            return textMap[status] || status;
+        }
     </script>
 </body>
 </html> 

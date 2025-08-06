@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tạo Đơn Hàng Mới - Staff</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="../css/dashboard.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <a href="../index.html">NTT Express</a>
+                </div>
+                <nav class="nav">
+                    <ul class="nav-list">
+                        <li><a href="staff-dashboard.html" class="nav-link">Dashboard</a></li>
+                        <li><a href="staff-orders.html" class="nav-link">Quản Lý Đơn Hàng</a></li>
+                        <li><a href="staff-track.html" class="nav-link">Theo Dõi Giao Hàng</a></li>
+                        <li><a href="staff-stats.html" class="nav-link">Thống Kê</a></li>
+                    </ul>
+                </nav>
+                <div class="header-actions">
+                    <div class="user-menu">
+                        <span class="user-name" id="userName">Staff</span>
+                        <button class="btn btn-secondary" onclick="logout()">Đăng Xuất</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <div class="page-header">
+                <h1>Tạo Đơn Hàng Mới</h1>
+                <p>Tạo đơn hàng mới và tự động được phân công cho bạn</p>
+            </div>
+
+            <div class="form-section">
+                <form id="createOrderForm">
+                    <!-- Thông tin người gửi -->
+                    <h2>Thông Tin Người Gửi</h2>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Tên người gửi *</label>
+                            <input type="text" name="sender_name" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Số điện thoại *</label>
+                            <input type="tel" name="sender_phone" class="form-input" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Địa chỉ gửi *</label>
+                        <input type="text" name="sender_address" class="form-input" required>
+                    </div>
+
+                    <!-- Thông tin người nhận -->
+                    <h2>Thông Tin Người Nhận</h2>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Tên người nhận *</label>
+                            <input type="text" name="receiver_name" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Số điện thoại *</label>
+                            <input type="tel" name="receiver_phone" class="form-input" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Địa chỉ nhận *</label>
+                        <input type="text" name="receiver_address" class="form-input" required>
+                    </div>
+
+                    <!-- Thông tin hàng hóa -->
+                    <h2>Thông Tin Hàng Hóa</h2>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Trọng lượng (kg) *</label>
+                            <input type="number" name="package_weight" class="form-input" step="0.1" min="0.1" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Kích thước (cm)</label>
+                            <input type="text" name="package_dimensions" class="form-input" placeholder="Dài x Rộng x Cao">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Mô tả hàng hóa</label>
+                        <textarea name="package_description" class="form-input" rows="3" placeholder="Mô tả chi tiết về hàng hóa..."></textarea>
+                    </div>
+
+                    <!-- Thông tin vận chuyển -->
+                    <h2>Thông Tin Vận Chuyển</h2>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Phí vận chuyển (VNĐ) *</label>
+                            <input type="number" name="shipping_fee" class="form-input" min="0" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Ngày giao dự kiến</label>
+                            <input type="date" name="estimated_delivery_date" class="form-input">
+                        </div>
+                    </div>
+
+                    <!-- Thông báo -->
+                    <div class="info-box">
+                        <h3>📋 Lưu ý</h3>
+                        <p>• Đơn hàng sẽ tự động được phân công cho bạn</p>
+                        <p>• Bạn sẽ nhận thông báo khi có đơn hàng mới</p>
+                        <p>• Có thể theo dõi trạng thái đơn hàng trong phần "Quản Lý Đơn Hàng"</p>
+                    </div>
+
+                    <!-- Nút tạo đơn hàng -->
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-success btn-full" id="submitBtn">
+                            <span class="btn-text">
+                                <i data-lucide="plus"></i>
+                                Tạo Đơn Hàng
+                            </span>
+                            <span class="btn-loading" style="display: none;">
+                                <div class="loading-spinner"></div>
+                                Đang tạo...
+                            </span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <script src="../js/lucide.min.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/script.js"></script>
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // Check authentication
+        auth.redirectIfNotStaff();
+
+        // Load user info
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        document.getElementById('userName').textContent = user.full_name || 'Staff';
+
+        // Handle form submission
+        document.getElementById('createOrderForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const submitBtn = document.getElementById('submitBtn');
+            const btnText = submitBtn.querySelector('.btn-text');
+            const btnLoading = submitBtn.querySelector('.btn-loading');
+            
+            // Show loading state
+            btnText.style.display = 'none';
+            btnLoading.style.display = 'inline-flex';
+            submitBtn.disabled = true;
+
+            try {
+                const formData = new FormData(e.target);
+                const orderData = Object.fromEntries(formData.entries());
+                
+                const response = await api.createOrder(orderData);
+                
+                if (response.success) {
+                    ui.showSuccess('Tạo đơn hàng thành công!');
+                    
+                    // Reset form
+                    e.target.reset();
+                    
+                    // Redirect to orders page after 2 seconds
+                    setTimeout(() => {
+                        window.location.href = 'staff-orders.html';
+                    }, 2000);
+                } else {
+                    ui.showError(response.message || 'Tạo đơn hàng thất bại');
+                }
+            } catch (error) {
+                ui.showError(error.message || 'Có lỗi xảy ra khi tạo đơn hàng');
+            } finally {
+                // Reset button state
+                btnText.style.display = 'inline-flex';
+                btnLoading.style.display = 'none';
+                submitBtn.disabled = false;
+            }
+        });
+
+        function logout() {
+            api.logout();
+        }
+    </script>
+</body>
+</html> 

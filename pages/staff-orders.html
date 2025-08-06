@@ -40,10 +40,10 @@
         <div class="container">
             <div class="page-header">
                 <h1>Quản Lý Đơn Hàng</h1>
-                <button class="btn btn-primary" onclick="openCreateOrderModal()">
+                <a href="staff-create-order.html" class="btn btn-primary">
                     <i data-lucide="plus"></i>
                     Tạo Đơn Hàng Mới
-                </button>
+                </a>
             </div>
 
             <!-- Filters -->
@@ -113,78 +113,6 @@
             <div class="pagination" id="pagination"></div>
         </div>
     </main>
-
-    <!-- Create Order Modal -->
-    <div class="modal" id="createOrderModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Tạo Đơn Hàng Mới</h2>
-                <button class="modal-close" onclick="closeCreateOrderModal()">
-                    <i data-lucide="x"></i>
-                </button>
-            </div>
-            <form id="createOrderForm">
-                <div class="modal-body">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="senderName">Tên Người Gửi *</label>
-                            <input type="text" id="senderName" name="sender_name" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="senderPhone">Số Điện Thoại Người Gửi *</label>
-                            <input type="tel" id="senderPhone" name="sender_phone" required>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="senderAddress">Địa Chỉ Người Gửi *</label>
-                        <textarea id="senderAddress" name="sender_address" required></textarea>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="receiverName">Tên Người Nhận *</label>
-                            <input type="text" id="receiverName" name="receiver_name" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="receiverPhone">Số Điện Thoại Người Nhận *</label>
-                            <input type="tel" id="receiverPhone" name="receiver_phone" required>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="receiverAddress">Địa Chỉ Người Nhận *</label>
-                        <textarea id="receiverAddress" name="receiver_address" required></textarea>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="packageWeight">Trọng Lượng (kg) *</label>
-                            <input type="number" id="packageWeight" name="package_weight" step="0.1" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="packageDimensions">Kích Thước</label>
-                            <input type="text" id="packageDimensions" name="package_dimensions" placeholder="Dài x Rộng x Cao">
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="packageDescription">Mô Tả Hàng Hóa</label>
-                        <textarea id="packageDescription" name="package_description"></textarea>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="shippingFee">Phí Vận Chuyển (VNĐ) *</label>
-                            <input type="number" id="shippingFee" name="shipping_fee" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="estimatedDeliveryDate">Ngày Giao Dự Kiến</label>
-                            <input type="date" id="estimatedDeliveryDate" name="estimated_delivery_date">
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="closeCreateOrderModal()">Hủy</button>
-                    <button type="submit" class="btn btn-primary">Tạo Đơn Hàng</button>
-                </div>
-            </form>
-        </div>
-    </div>
 
     <script src="../js/lucide.min.js"></script>
     <script src="../js/api.js"></script>
@@ -292,30 +220,6 @@
             loadOrders(currentPage);
         }
 
-        function openCreateOrderModal() {
-            document.getElementById('createOrderModal').style.display = 'flex';
-        }
-        function closeCreateOrderModal() {
-            document.getElementById('createOrderModal').style.display = 'none';
-            document.getElementById('createOrderForm').reset();
-        }
-        document.getElementById('createOrderForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const formData = new FormData(e.target);
-            const orderData = Object.fromEntries(formData.entries());
-            try {
-                const response = await api.createOrder(orderData);
-                if (response.success) {
-                    ui.showSuccess('Tạo đơn hàng thành công!');
-                    closeCreateOrderModal();
-                    loadOrders(currentPage, currentFilters);
-                } else {
-                    ui.showError(response.message || 'Tạo đơn hàng thất bại');
-                }
-            } catch (error) {
-                ui.showError(error.message || 'Có lỗi xảy ra khi tạo đơn hàng');
-            }
-        });
         async function deleteOrder(orderId) {
             if (!confirm('Bạn có chắc chắn muốn xóa đơn hàng này?')) return;
             try {
