@@ -73,6 +73,64 @@
                 </div>
             </div>
 
+            <!-- Stats Overview -->
+            <div class="stats-overview">
+                <h2>Thống Kê Tổng Quan</h2>
+                <div class="stats-grid">
+                    <div class="stat-card" id="totalOrders">
+                        <div class="stat-icon">
+                            <i data-lucide="package"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value">0</div>
+                            <div class="stat-label">Tổng Đơn Hàng</div>
+                        </div>
+                        <div class="loading-spinner" style="display: none;">
+                            <i data-lucide="loader-2" class="animate-spin"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card" id="totalRevenue">
+                        <div class="stat-icon">
+                            <i data-lucide="dollar-sign"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value">0 ₫</div>
+                            <div class="stat-label">Tổng Doanh Thu</div>
+                        </div>
+                        <div class="loading-spinner" style="display: none;">
+                            <i data-lucide="loader-2" class="animate-spin"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card" id="deliveredOrders">
+                        <div class="stat-icon">
+                            <i data-lucide="check-circle"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value">0</div>
+                            <div class="stat-label">Đơn Đã Giao</div>
+                        </div>
+                        <div class="loading-spinner" style="display: none;">
+                            <i data-lucide="loader-2" class="animate-spin"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card" id="totalUsers">
+                        <div class="stat-icon">
+                            <i data-lucide="users"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value">0</div>
+                            <div class="stat-label">Tổng Người Dùng</div>
+                        </div>
+                        <div class="loading-spinner" style="display: none;">
+                            <i data-lucide="loader-2" class="animate-spin"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Recent Orders -->
             <div class="recent-orders">
                 <div class="section-header">
@@ -250,17 +308,16 @@
         }
         
         function showStatsLoading(show) {
-            const spinnerIds = ['totalOrdersSpinner', 'totalUsersSpinner', 'totalRevenueSpinner', 'deliveredOrdersSpinner'];
-            const valueIds = ['totalOrders', 'totalUsers', 'totalRevenue', 'deliveredOrders'];
+            const statIds = ['totalOrders', 'totalUsers', 'totalRevenue', 'deliveredOrders'];
             
-            spinnerIds.forEach((spinnerId, index) => {
-                const spinner = document.getElementById(spinnerId);
-                const valueElement = document.getElementById(valueIds[index]);
+            statIds.forEach((statId) => {
+                const statCard = document.getElementById(statId);
                 
-                if (spinner && valueElement) {
-                    const statValue = valueElement.querySelector('.stat-value');
+                if (statCard) {
+                    const statValue = statCard.querySelector('.stat-value');
+                    const spinner = statCard.querySelector('.loading-spinner');
                     
-                    if (statValue) {
+                    if (statValue && spinner) {
                         if (show) {
                             spinner.style.display = 'inline';
                             statValue.style.display = 'none';
@@ -270,7 +327,7 @@
                         }
                     }
                 } else {
-                    console.warn(`⚠️ Could not find elements for ${spinnerId} or ${valueIds[index]}`);
+                    console.warn(`⚠️ Could not find stat card with id: ${statId}`);
                 }
             });
         }
