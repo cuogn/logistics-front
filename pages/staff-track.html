@@ -6,14 +6,38 @@
     <title>Theo Dõi Giao Hàng - Staff</title>
     <link rel="stylesheet" href="../css/styles.css">
     <link rel="stylesheet" href="../css/dashboard.css">
+    <link rel="stylesheet" href="../css/maps.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="https://js.api.here.com/v3/3.1/mapsjs-ui.css" />
+    <script type="text/javascript" src="https://js.api.here.com/v3/3.1/mapsjs-core.js"></script>
+    <script type="text/javascript" src="https://js.api.here.com/v3/3.1/mapsjs-service.js"></script>
+    <script type="text/javascript" src="https://js.api.here.com/v3/3.1/mapsjs-ui.js"></script>
+    <script type="text/javascript" src="https://js.api.here.com/v3/3.1/mapsjs-mapevents.js"></script>
     <style>
         #map {
             width: 100%;
             height: 350px;
             border-radius: 12px;
             margin-bottom: 2rem;
+        }
+        .tracking-section {
+            margin-top: 2rem;
+        }
+        .order-detail-card {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        .order-info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem;
+        }
+        .order-desc {
+            margin-top: 1.5rem;
         }
     </style>
 </head>
@@ -82,7 +106,7 @@
     </main>
     <script src="../js/lucide.min.js"></script>
     <script src="../js/api.js"></script>
-    <script src="../js/script.js"></script>
+    <script src="../js/auth.js"></script>
     <script>
         lucide.createIcons();
         auth.redirectIfNotStaff();
@@ -155,7 +179,7 @@
                         `).join('');
                     }
                     document.querySelector('.tracking-section').style.display = 'block';
-                    // Google Maps
+                    // HERE Maps
                     if (order.sender_lat && order.sender_lng && order.receiver_lat && order.receiver_lng) {
                         showRouteOnMap(order.sender_lat, order.sender_lng, order.receiver_lat, order.receiver_lng);
                     }
