@@ -461,11 +461,21 @@
                         });
                         map.addObject(currentMarker);
                         
-                        // Điều chỉnh view để hiển thị toàn bộ tuyến đường với zoom phù hợp
-                        const bounds = routeLine.getBoundingBox();
+                        // Điều chỉnh view để hiển thị 2 địa điểm chính
+                        const senderPoint = { lat: Number(senderLat), lng: Number(senderLng) };
+                        const receiverPoint = { lat: Number(receiverLat), lng: Number(receiverLng) };
+                        
+                        // Tạo bounds chỉ bao gồm 2 điểm chính
+                        const bounds = new H.geo.Rect(
+                            Math.min(senderPoint.lat, receiverPoint.lat),
+                            Math.min(senderPoint.lng, receiverPoint.lng),
+                            Math.max(senderPoint.lat, receiverPoint.lat),
+                            Math.max(senderPoint.lng, receiverPoint.lng)
+                        );
+                        
                         map.getViewModel().setLookAtData({ 
                             bounds: bounds,
-                            padding: { top: 50, right: 50, bottom: 50, left: 50 }
+                            padding: { top: 100, right: 100, bottom: 100, left: 100 }
                         });
                         
                         const summary = route.sections[0].summary;
@@ -540,11 +550,21 @@
                 });
                 map.addObject(currentMarker);
                 
-                // Điều chỉnh view để hiển thị toàn bộ tuyến đường
-                const bounds = routeLine.getBoundingBox();
+                // Điều chỉnh view để hiển thị 2 địa điểm chính
+                const senderPoint = { lat: senderLatNum, lng: senderLngNum };
+                const receiverPoint = { lat: receiverLatNum, lng: receiverLngNum };
+                
+                // Tạo bounds chỉ bao gồm 2 điểm chính
+                const bounds = new H.geo.Rect(
+                    Math.min(senderPoint.lat, receiverPoint.lat),
+                    Math.min(senderPoint.lng, receiverPoint.lng),
+                    Math.max(senderPoint.lat, receiverPoint.lat),
+                    Math.max(senderPoint.lng, receiverPoint.lng)
+                );
+                
                 map.getViewModel().setLookAtData({ 
                     bounds: bounds,
-                    padding: { top: 50, right: 50, bottom: 50, left: 50 }
+                    padding: { top: 100, right: 100, bottom: 100, left: 100 }
                 });
                 
                 // Tính khoảng cách đơn giản
@@ -611,11 +631,12 @@
                     const latCoord = lat / 1E5;
                     const lngCoord = lng / 1E5;
                     
-                    // Validate coordinates
+                    // Validate coordinates - chỉ chấp nhận coordinates hợp lệ
                     if (latCoord >= -90 && latCoord <= 90 && lngCoord >= -180 && lngCoord <= 180) {
                         poly.push({ lat: latCoord, lng: lngCoord });
                     } else {
-                        console.log('Invalid coordinate decoded:', latCoord, lngCoord);
+                        console.log('Skipping invalid coordinate:', latCoord, lngCoord);
+                        // Không thêm vào poly nếu coordinates không hợp lệ
                     }
                 }
             } catch (error) {
@@ -623,7 +644,7 @@
                 return [];
             }
             
-            console.log('Decoded polyline coordinates:', poly.length, 'points');
+            console.log('Decoded polyline coordinates:', poly.length, 'valid points');
             if (poly.length > 0) {
                 console.log('First point:', poly[0]);
                 console.log('Last point:', poly[poly.length - 1]);
