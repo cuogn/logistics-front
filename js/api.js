@@ -373,7 +373,7 @@ const auth = {
             if (role === 'staff') {
                 window.location.href = '../pages/staff-dashboard.html';
             } else if (role === 'customer') {
-                window.location.href = '../pages/dashboard.html';
+                window.location.href = '../pages/customer-dashboard.html';
             } else {
                 window.location.href = '../pages/login.html';
             }
@@ -385,7 +385,7 @@ const auth = {
         if (!this.isStaff()) {
             const role = this.getUserRole();
             if (role === 'customer') {
-                window.location.href = '../pages/dashboard.html';
+                window.location.href = '../pages/customer-dashboard.html';
             } else {
                 window.location.href = '../pages/login.html';
             }
@@ -417,6 +417,22 @@ const auth = {
             } else {
                 window.location.href = '../pages/login.html';
             }
+        }
+    },
+
+    // Điều hướng customer về trang chủ khi truy cập dashboard
+    redirectCustomerToHome() {
+        const role = this.getUserRole();
+        if (role === 'customer') {
+            window.location.href = '../index.html';
+        }
+    },
+
+    // Điều hướng customer đến customer dashboard
+    redirectCustomerToDashboard() {
+        const role = this.getUserRole();
+        if (role === 'customer') {
+            window.location.href = '../pages/customer-dashboard.html';
         }
     }
 };

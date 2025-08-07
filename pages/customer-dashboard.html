@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Quản Lý</title>
+    <title>Dashboard - Khách Hàng</title>
     <link rel="stylesheet" href="../css/styles.css">
     <link rel="stylesheet" href="../css/dashboard.css">
     <link rel="stylesheet" href="../css/stats.css">
@@ -17,7 +17,7 @@
                 <div class="logo"><a href="../index.html">NTT Express</a></div>
                 <nav class="nav">
                     <ul class="nav-list">
-                        <li><a href="customer-dashboard.html" class="nav-link">Dashboard</a></li>
+                        <li><a href="customer-dashboard.html" class="nav-link active">Dashboard</a></li>
                         <li><a href="track.html" class="nav-link">Theo Dõi Đơn Hàng</a></li>
                         <li><a href="about.html" class="nav-link">Giới Thiệu</a></li>
                         <li><a href="contact.html" class="nav-link">Liên Hệ</a></li>
@@ -35,8 +35,8 @@
     <main class="main-content">
         <div class="container">
             <div class="page-header">
-                <h1>Xin chào, <span id="customerName">Quản lý</span>!</h1>
-                <p>Quản lý hệ thống và theo dõi hoạt động logistics.</p>
+                <h1>Xin chào, <span id="customerName">Khách hàng</span>!</h1>
+                <p>Quản lý đơn hàng và tra cứu trạng thái giao hàng của bạn.</p>
             </div>
             <div class="stats-grid" id="statsGrid">
                 <div class="stat-card">
@@ -153,15 +153,12 @@
         lucide.createIcons();
         auth.redirectIfNotLoggedIn();
         
-        // Nếu là customer thì điều hướng về trang chủ
-        auth.redirectCustomerToHome();
-        
-        // Chỉ staff và admin mới truy cập được dashboard này
-        auth.redirectIfNotStaff();
+        // Chỉ customer mới truy cập được
+        auth.redirectIfNotCustomerOnly();
         
         const user = JSON.parse(localStorage.getItem('user') || '{}');
-        document.getElementById('userName').textContent = user.full_name || 'Quản lý';
-        document.getElementById('customerName').textContent = user.full_name || 'Quản lý';
+        document.getElementById('userName').textContent = user.full_name || 'Khách hàng';
+        document.getElementById('customerName').textContent = user.full_name || 'Khách hàng';
         async function loadDashboard() {
             try {
                 console.log('🔄 Loading dashboard data...');
