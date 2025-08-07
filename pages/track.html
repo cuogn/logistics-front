@@ -390,6 +390,11 @@
                 const receiverLatNum = Number(receiverLat);
                 const receiverLngNum = Number(receiverLng);
                 
+                // Validate coordinates first
+                if (isNaN(senderLatNum) || isNaN(senderLngNum) || isNaN(receiverLatNum) || isNaN(receiverLngNum)) {
+                    throw new Error('Invalid coordinates provided');
+                }
+                
                 switch(status) {
                     case 'processing':
                         // Vị trí hiện tại ở 1/3 quãng đường từ điểm gửi đến điểm nhận
@@ -413,32 +418,21 @@
                         break;
                 }
                 
+                console.log('Creating map with center:', (senderLatNum + receiverLatNum) / 2, (senderLngNum + receiverLngNum) / 2);
+                
                 const map = new H.Map(mapDiv, defaultLayers.vector.normal.map, {
                     center: { lat: (senderLatNum + receiverLatNum) / 2, lng: (senderLngNum + receiverLngNum) / 2 },
                     zoom: 10,
                     pixelRatio: window.devicePixelRatio || 1
                 });
+                
+                // Add event listeners
                 window.addEventListener('resize', () => map.getViewPort().resize());
                 const behavior = new H.mapevents.Behavior(new H.mapevents.MapEvents(map));
                 const ui = H.ui.UI.createDefault(map, defaultLayers);
                 
-                if (
-                    isNaN(Number(senderLat)) || isNaN(Number(senderLng)) ||
-                    isNaN(Number(receiverLat)) || isNaN(Number(receiverLng))
-                ) {
-                    console.log('Invalid coordinates, showing error message');
-                    // Hiển thị thông báo lỗi
-                    mapDiv.innerHTML = `
-                        <div style="padding: 2rem; text-align: center; background: #f8f9fa; border-radius: 8px;">
-                            <h3>Thông tin vị trí không hợp lệ</h3>
-                            <p>Trạng thái: ${getStatusText(status)}</p>
-                            <p>Vị trí hiện tại: ${getCurrentPositionText(status)}</p>
-                            <small>Vui lòng liên hệ hỗ trợ để cập nhật thông tin vị trí</small>
-                        </div>
-                    `;
-                    return;
-                }
-
+                console.log('Map created successfully, calling API v8...');
+                
                 // Sử dụng HERE Maps API v8 để tính toán route
                 calculateRouteWithAPIv8(senderLat, senderLng, receiverLat, receiverLng, map, currentLat, currentLng, status);
             } catch (error) {
@@ -476,51 +470,56 @@
                     
                     // Decode polyline
                     const coordinates = decodePolyline(polyline);
-                    const linestring = new H.geo.LineString();
                     
-                    coordinates.forEach(coord => {
-                        linestring.pushLatLngAlt(coord.lat, coord.lng);
-                    });
-                    
-                    const routeLine = new H.map.Polyline(linestring, {
-                        style: { 
-                            strokeColor: '#007bff', 
-                            lineWidth: 5 
-                        }
-                    });
-                    map.addObject(routeLine);
-                    
-                    // Marker điểm gửi
-                    const startMarker = new H.map.Marker({ lat: Number(senderLat), lng: Number(senderLng) });
-                    map.addObject(startMarker);
-                    
-                    // Marker điểm nhận
-                    const endMarker = new H.map.Marker({ lat: Number(receiverLat), lng: Number(receiverLng) });
-                    map.addObject(endMarker);
-                    
-                    // Marker vị trí hiện tại (dựa trên trạng thái)
-                    const currentMarker = new H.map.Marker({ lat: currentLat, lng: currentLng }, {
-                        icon: new H.map.Icon('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJDNi40OCAyIDIgNi40OCAyIDEyQzIgMTcuNTIgNi40OCAyMiAxMiAyMkMxNy41MiAyMiAyMiAxNy41MiAyMiAxMkMyMiA2LjQ4IDE3LjUyIDIgMTIgMloiIGZpbGw9IiNmZmZmZmYiIHN0cm9rZT0iI2ZmMDAwMCIgc3Ryb2tlLXdpZHRoPSIyIi8+CjxwYXRoIGQ9Ik0xMiA4QzEwLjM0IDggOSA5LjM0IDkgMTFDOSAxMi42NiAxMC4zNCAxNCAxMiAxNEMxMy42NiAxNCAxNSAxMi42NiAxNSAxMUMxNSA5LjM0IDEzLjY2IDggMTIgOFoiIGZpbGw9IiNmZjAwMDAiLz4KPC9zdmc+', {
-                            size: { w: 24, h: 24 },
-                            anchor: { x: 12, y: 12 }
-                        })
-                    });
-                    map.addObject(currentMarker);
-                    
-                    // Điều chỉnh view để hiển thị toàn bộ tuyến đường
-                    map.getViewModel().setLookAtData({ bounds: routeLine.getBoundingBox() });
-                    
-                    const summary = route.sections[0].summary;
-                    const distanceKm = (summary.length / 1000).toFixed(2);
-                    const durationMin = Math.round(summary.duration / 60);
-                    
-                    let infoHtml = `<div class='here-route-info'>` +
-                        `<b>Quãng đường:</b> ${distanceKm} km<br>` +
-                        `<b>Thời gian dự kiến:</b> ${durationMin} phút<br>` +
-                        `<b>Trạng thái hiện tại:</b> ${getStatusText(status)}<br>` +
-                        `<b>Vị trí hiện tại:</b> ${getCurrentPositionText(status)}` +
-                        `</div>`;
-                    mapDiv.insertAdjacentHTML('beforeend', infoHtml);
+                    if (coordinates.length > 0) {
+                        const linestring = new H.geo.LineString();
+                        
+                        coordinates.forEach(coord => {
+                            linestring.pushLatLngAlt(coord.lat, coord.lng);
+                        });
+                        
+                        const routeLine = new H.map.Polyline(linestring, {
+                            style: { 
+                                strokeColor: '#007bff', 
+                                lineWidth: 5 
+                            }
+                        });
+                        map.addObject(routeLine);
+                        
+                        // Marker điểm gửi
+                        const startMarker = new H.map.Marker({ lat: Number(senderLat), lng: Number(senderLng) });
+                        map.addObject(startMarker);
+                        
+                        // Marker điểm nhận
+                        const endMarker = new H.map.Marker({ lat: Number(receiverLat), lng: Number(receiverLng) });
+                        map.addObject(endMarker);
+                        
+                        // Marker vị trí hiện tại (dựa trên trạng thái)
+                        const currentMarker = new H.map.Marker({ lat: currentLat, lng: currentLng }, {
+                            icon: new H.map.Icon('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJDNi40OCAyIDIgNi40OCAyIDEyQzIgMTcuNTIgNi40OCAyMiAxMiAyMkMxNy41MiAyMiAyMiAxNy41MiAyMiAxMkMyMiA2LjQ4IDE3LjUyIDIgMTIgMloiIGZpbGw9IiNmZmZmZmYiIHN0cm9rZT0iI2ZmMDAwMCIgc3Ryb2tlLXdpZHRoPSIyIi8+CjxwYXRoIGQ9Ik0xMiA4QzEwLjM0IDggOSA5LjM0IDkgMTFDOSAxMi42NiAxMC4zNCAxNCAxMiAxNEMxMy42NiAxNCAxNSAxMi42NiAxNSAxMUMxNSA5LjM0IDEzLjY2IDggMTIgOFoiIGZpbGw9IiNmZjAwMDAiLz4KPC9zdmc+', {
+                                size: { w: 24, h: 24 },
+                                anchor: { x: 12, y: 12 }
+                            })
+                        });
+                        map.addObject(currentMarker);
+                        
+                        // Điều chỉnh view để hiển thị toàn bộ tuyến đường
+                        map.getViewModel().setLookAtData({ bounds: routeLine.getBoundingBox() });
+                        
+                        const summary = route.sections[0].summary;
+                        const distanceKm = (summary.length / 1000).toFixed(2);
+                        const durationMin = Math.round(summary.duration / 60);
+                        
+                        let infoHtml = `<div class='here-route-info'>` +
+                            `<b>Quãng đường:</b> ${distanceKm} km<br>` +
+                            `<b>Thời gian dự kiến:</b> ${durationMin} phút<br>` +
+                            `<b>Trạng thái hiện tại:</b> ${getStatusText(status)}<br>` +
+                            `<b>Vị trí hiện tại:</b> ${getCurrentPositionText(status)}` +
+                            `</div>`;
+                        document.getElementById('map').insertAdjacentHTML('beforeend', infoHtml);
+                    } else {
+                        throw new Error('Invalid polyline coordinates');
+                    }
                 } else {
                     throw new Error('No routes found in response');
                 }
@@ -534,10 +533,20 @@
         // Hàm hiển thị map đơn giản với đường thẳng
         function showSimpleMap(map, senderLat, senderLng, receiverLat, receiverLng, currentLat, currentLng, status) {
             try {
+                // Validate coordinates
+                const senderLatNum = Number(senderLat);
+                const senderLngNum = Number(senderLng);
+                const receiverLatNum = Number(receiverLat);
+                const receiverLngNum = Number(receiverLng);
+                
+                if (isNaN(senderLatNum) || isNaN(senderLngNum) || isNaN(receiverLatNum) || isNaN(receiverLngNum)) {
+                    throw new Error('Invalid coordinates');
+                }
+                
                 // Vẽ đường thẳng đơn giản
                 const linestring = new H.geo.LineString();
-                linestring.pushLatLngAlt(Number(senderLat), Number(senderLng));
-                linestring.pushLatLngAlt(Number(receiverLat), Number(receiverLng));
+                linestring.pushLatLngAlt(senderLatNum, senderLngNum);
+                linestring.pushLatLngAlt(receiverLatNum, receiverLngNum);
                 
                 const routeLine = new H.map.Polyline(linestring, {
                     style: { 
@@ -549,11 +558,11 @@
                 map.addObject(routeLine);
                 
                 // Marker điểm gửi
-                const startMarker = new H.map.Marker({ lat: Number(senderLat), lng: Number(senderLng) });
+                const startMarker = new H.map.Marker({ lat: senderLatNum, lng: senderLngNum });
                 map.addObject(startMarker);
                 
                 // Marker điểm nhận
-                const endMarker = new H.map.Marker({ lat: Number(receiverLat), lng: Number(receiverLng) });
+                const endMarker = new H.map.Marker({ lat: receiverLatNum, lng: receiverLngNum });
                 map.addObject(endMarker);
                 
                 // Marker vị trí hiện tại
@@ -566,7 +575,7 @@
                 map.addObject(currentMarker);
                 
                 // Tính khoảng cách đơn giản
-                const distanceKm = calculateDistance(senderLat, senderLng, receiverLat, receiverLng);
+                const distanceKm = calculateDistance(senderLatNum, senderLngNum, receiverLatNum, receiverLngNum);
                 
                 let infoHtml = `<div class='here-route-info'>` +
                     `<b>Quãng đường:</b> ${distanceKm.toFixed(2)} km (ước tính)<br>` +
@@ -574,7 +583,7 @@
                     `<b>Vị trí hiện tại:</b> ${getCurrentPositionText(status)}<br>` +
                     `<small style="color: #666;">⚠️ Hiển thị đường thẳng do lỗi API</small>` +
                     `</div>`;
-                mapDiv.insertAdjacentHTML('beforeend', infoHtml);
+                document.getElementById('map').insertAdjacentHTML('beforeend', infoHtml);
             } catch (error) {
                 console.error('Error in showSimpleMap:', error);
                 // Final fallback: chỉ hiển thị thông báo
@@ -592,32 +601,52 @@
 
         // Hàm decode polyline từ HERE Maps API
         function decodePolyline(encoded) {
+            if (!encoded || typeof encoded !== 'string') {
+                console.log('Invalid polyline string:', encoded);
+                return [];
+            }
+            
             const poly = [];
             let index = 0, len = encoded.length;
             let lat = 0, lng = 0;
 
-            while (index < len) {
-                let b, shift = 0, result = 0;
-                do {
-                    b = encoded.charCodeAt(index++) - 63;
-                    result |= (b & 0x1f) << shift;
-                    shift += 5;
-                } while (b >= 0x20);
-                let dlat = ((result & 1) ? ~(result >> 1) : (result >> 1));
-                lat += dlat;
+            try {
+                while (index < len) {
+                    let b, shift = 0, result = 0;
+                    do {
+                        b = encoded.charCodeAt(index++) - 63;
+                        result |= (b & 0x1f) << shift;
+                        shift += 5;
+                    } while (b >= 0x20);
+                    let dlat = ((result & 1) ? ~(result >> 1) : (result >> 1));
+                    lat += dlat;
 
-                shift = 0;
-                result = 0;
-                do {
-                    b = encoded.charCodeAt(index++) - 63;
-                    result |= (b & 0x1f) << shift;
-                    shift += 5;
-                } while (b >= 0x20);
-                let dlng = ((result & 1) ? ~(result >> 1) : (result >> 1));
-                lng += dlng;
+                    shift = 0;
+                    result = 0;
+                    do {
+                        b = encoded.charCodeAt(index++) - 63;
+                        result |= (b & 0x1f) << shift;
+                        shift += 5;
+                    } while (b >= 0x20);
+                    let dlng = ((result & 1) ? ~(result >> 1) : (result >> 1));
+                    lng += dlng;
 
-                poly.push({ lat: lat / 1E5, lng: lng / 1E5 });
+                    const latCoord = lat / 1E5;
+                    const lngCoord = lng / 1E5;
+                    
+                    // Validate coordinates
+                    if (latCoord >= -90 && latCoord <= 90 && lngCoord >= -180 && lngCoord <= 180) {
+                        poly.push({ lat: latCoord, lng: lngCoord });
+                    } else {
+                        console.log('Invalid coordinate decoded:', latCoord, lngCoord);
+                    }
+                }
+            } catch (error) {
+                console.error('Error decoding polyline:', error);
+                return [];
             }
+            
+            console.log('Decoded polyline coordinates:', poly.length);
             return poly;
         }
 
