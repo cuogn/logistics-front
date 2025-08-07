@@ -159,33 +159,22 @@
                             <tr>
                                 <td>${ui.formatDateTime(item.created_at)}</td>
                                 <td>${ui.getStatusBadge(item.status)}</td>
-                                <td>${item.location || '-'}</td>
+                                <td>${item.location || getCurrentPositionText(item.status)}</td>
                                 <td>${item.description || '-'}</td>
                                 <td>${item.created_by_name || '-'}</td>
                             </tr>
                         `).join('');
                     }
                     document.querySelector('.tracking-section').style.display = 'block';
-                    // Vẽ tuyến đường từ tracking cũ nhất đến mới nhất
-                    if (tracking.length > 0) {
-                        const first = tracking[tracking.length - 1]; // cũ nhất
-                        const last = tracking[0]; // mới nhất
-                        getLatLng(first, order.sender_lat, order.sender_lng, order.sender_address, function(startLat, startLng) {
-                            getLatLng(last, order.receiver_lat, order.receiver_lng, order.receiver_address, function(endLat, endLng) {
-                                if (startLat && startLng && endLat && endLng) {
-                                    showRouteOnMap(startLat, startLng, endLat, endLng, order.current_status);
-                                } else {
-                                    showMapAtLocation(endLat, endLng, last.location || order.receiver_address);
-                                }
-                            });
-                        });
+                    // Vẽ tuyến đường từ nơi gửi đến nơi nhận
+                    if (order.sender_lat && order.sender_lng && order.receiver_lat && order.receiver_lng) {
+                        showRouteOnMap(order.sender_lat, order.sender_lng, order.receiver_lat, order.receiver_lng, order.current_status);
+                    } else if (order.sender_lat && order.sender_lng && order.receiver_address) {
+                        geocodeAndShowRoute(order.sender_lat, order.sender_lng, order.receiver_address, order.current_status);
+                    } else if (order.sender_address && order.receiver_address) {
+                        geocodeAndShowFullRoute(order.sender_address, order.receiver_address, order.current_status);
                     } else {
-                        // Fallback: sender -> receiver
-                        if (order.sender_lat && order.sender_lng && order.receiver_lat && order.receiver_lng) {
-                            showRouteOnMap(order.sender_lat, order.sender_lng, order.receiver_lat, order.receiver_lng, order.current_status);
-                        } else if (order.sender_lat && order.sender_lng && order.receiver_address) {
-                            geocodeAndShowRoute(order.sender_lat, order.sender_lng, order.receiver_address);
-                        }
+                        showMapAtLocation(16.05, 108.2, 'Không có thông tin vị trí');
                     }
                 } else {
                     detailDiv.innerHTML = '<div class="alert alert-error">Không tìm thấy đơn hàng</div>';
@@ -227,6 +216,40 @@
                 .catch(() => callback(null, null));
         }
 
+        // Geocode và hiển thị tuyến đường từ điểm gửi đến địa chỉ nhận
+        function geocodeAndShowRoute(senderLat, senderLng, receiverAddress, status) {
+            geocodeAddress(receiverAddress, function(receiverLat, receiverLng) {
+                if (receiverLat && receiverLng) {
+                    showRouteOnMap(senderLat, senderLng, receiverLat, receiverLng, status);
+                } else {
+                    showMapAtLocation(senderLat, senderLng, 'Không thể tìm thấy địa chỉ nhận');
+                }
+            });
+        }
+
+        // Geocode và hiển thị tuyến đường đầy đủ từ địa chỉ gửi đến địa chỉ nhận
+        function geocodeAndShowFullRoute(senderAddress, receiverAddress, status) {
+            geocodeAddress(senderAddress, function(senderLat, senderLng) {
+                if (senderLat && senderLng) {
+                    geocodeAddress(receiverAddress, function(receiverLat, receiverLng) {
+                        if (receiverLat && receiverLng) {
+                            showRouteOnMap(senderLat, senderLng, receiverLat, receiverLng, status);
+                        } else {
+                            showMapAtLocation(senderLat, senderLng, 'Không thể tìm thấy địa chỉ nhận');
+                        }
+                    });
+                } else {
+                    geocodeAddress(receiverAddress, function(receiverLat, receiverLng) {
+                        if (receiverLat && receiverLng) {
+                            showMapAtLocation(receiverLat, receiverLng, 'Không thể tìm thấy địa chỉ gửi');
+                        } else {
+                            showMapAtLocation(16.05, 108.2, 'Không thể tìm thấy địa chỉ');
+                        }
+                    });
+                }
+            });
+        }
+
         function showRouteOnMap(senderLat, senderLng, receiverLat, receiverLng, status = 'pending', fallbackToMarker = false) {
             console.log('Vẽ map từ:', senderLat, senderLng, 'đến', receiverLat, receiverLng, 'trạng thái:', status);
             const mapDiv = document.getElementById('map');
@@ -235,8 +258,8 @@
             const platform = new H.service.Platform({ apikey: API_KEY });
             const defaultLayers = platform.createDefaultLayers();
             
-            // Tính toán vị trí hiển thị dựa trên trạng thái
-            let displayLat, displayLng;
+            // Tính toán vị trí hiện tại dựa trên trạng thái
+            let currentLat, currentLng;
             const senderLatNum = Number(senderLat);
             const senderLngNum = Number(senderLng);
             const receiverLatNum = Number(receiverLat);
@@ -244,30 +267,30 @@
             
             switch(status) {
                 case 'processing':
-                    // Hiển thị ở 1/3 quãng đường từ điểm gửi đến điểm nhận
-                    displayLat = senderLatNum + (receiverLatNum - senderLatNum) * 0.33;
-                    displayLng = senderLngNum + (receiverLngNum - senderLngNum) * 0.33;
+                    // Vị trí hiện tại ở 1/3 quãng đường từ điểm gửi đến điểm nhận
+                    currentLat = senderLatNum + (receiverLatNum - senderLatNum) * 0.33;
+                    currentLng = senderLngNum + (receiverLngNum - senderLngNum) * 0.33;
                     break;
                 case 'shipping':
-                    // Hiển thị ở 2/3 quãng đường từ điểm gửi đến điểm nhận
-                    displayLat = senderLatNum + (receiverLatNum - senderLatNum) * 0.67;
-                    displayLng = senderLngNum + (receiverLngNum - senderLngNum) * 0.67;
+                    // Vị trí hiện tại ở 2/3 quãng đường từ điểm gửi đến điểm nhận
+                    currentLat = senderLatNum + (receiverLatNum - senderLatNum) * 0.67;
+                    currentLng = senderLngNum + (receiverLngNum - senderLngNum) * 0.67;
                     break;
                 case 'delivered':
-                    // Hiển thị ở điểm nhận
-                    displayLat = receiverLatNum;
-                    displayLng = receiverLngNum;
+                    // Vị trí hiện tại ở điểm nhận
+                    currentLat = receiverLatNum;
+                    currentLng = receiverLngNum;
                     break;
                 default:
-                    // pending, failed, cancelled - hiển thị ở điểm gửi
-                    displayLat = senderLatNum;
-                    displayLng = senderLngNum;
+                    // pending, failed, cancelled - vị trí hiện tại ở điểm gửi
+                    currentLat = senderLatNum;
+                    currentLng = senderLngNum;
                     break;
             }
             
             const map = new H.Map(mapDiv, defaultLayers.vector.normal.map, {
-                center: { lat: displayLat, lng: displayLng },
-                zoom: 13,
+                center: { lat: (senderLatNum + receiverLatNum) / 2, lng: (senderLngNum + receiverLngNum) / 2 },
+                zoom: 12,
                 pixelRatio: window.devicePixelRatio || 1
             });
             window.addEventListener('resize', () => map.getViewPort().resize());
@@ -298,25 +321,40 @@
                     });
                     const routeLine = new H.map.Polyline(linestring, {
                         style: { 
-                            strokeColor: getStatusColor(status), 
+                            strokeColor: '#007bff', 
                             lineWidth: 5 
                         }
                     });
                     map.addObject(routeLine);
-                    // Marker điểm đầu
+                    
+                    // Marker điểm gửi
                     const startMarker = new H.map.Marker({ lat: Number(senderLat), lng: Number(senderLng) });
                     map.addObject(startMarker);
-                    // Marker điểm cuối
+                    
+                    // Marker điểm nhận
                     const endMarker = new H.map.Marker({ lat: Number(receiverLat), lng: Number(receiverLng) });
                     map.addObject(endMarker);
+                    
+                    // Marker vị trí hiện tại (dựa trên trạng thái)
+                    const currentMarker = new H.map.Marker({ lat: currentLat, lng: currentLng }, {
+                        icon: new H.map.Icon('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJDNi40OCAyIDIgNi40OCAyIDEyQzIgMTcuNTIgNi40OCAyMiAxMiAyMkMxNy41MiAyMiAyMiAxNy41MiAyMiAxMkMyMiA2LjQ4IDE3LjUyIDIgMTIgMloiIGZpbGw9IiNmZmZmZmYiIHN0cm9rZT0iI2ZmMDAwMCIgc3Ryb2tlLXdpZHRoPSIyIi8+CjxwYXRoIGQ9Ik0xMiA4QzEwLjM0IDggOSA5LjM0IDkgMTFDOSAxMi42NiAxMC4zNCAxNCAxMiAxNEMxMy42NiAxNCAxNSAxMi42NiAxNSAxMUMxNSA5LjM0IDEzLjY2IDggMTIgOFoiIGZpbGw9IiNmZjAwMDAiLz4KPC9zdmc+', {
+                            size: { w: 24, h: 24 },
+                            anchor: { x: 12, y: 12 }
+                        })
+                    });
+                    map.addObject(currentMarker);
+                    
+                    // Điều chỉnh view để hiển thị toàn bộ tuyến đường
                     map.getViewModel().setLookAtData({ bounds: routeLine.getBoundingBox() });
+                    
                     const summary = route.summary;
                     const distanceKm = (summary.distance / 1000).toFixed(2);
                     const durationMin = Math.round(summary.travelTime / 60);
                     let infoHtml = `<div class='here-route-info'>` +
                         `<b>Quãng đường:</b> ${distanceKm} km<br>` +
                         `<b>Thời gian dự kiến:</b> ${durationMin} phút<br>` +
-                        `<b>Trạng thái:</b> ${getStatusText(status)}` +
+                        `<b>Trạng thái hiện tại:</b> ${getStatusText(status)}<br>` +
+                        `<b>Vị trí hiện tại:</b> ${getCurrentPositionText(status)}` +
                         `</div>`;
                     mapDiv.insertAdjacentHTML('beforeend', infoHtml);
                 } else {
@@ -386,6 +424,18 @@
                 'cancelled': 'Đã hủy'
             };
             return textMap[status] || status;
+        }
+
+        function getCurrentPositionText(status) {
+            const textMap = {
+                'pending': 'Điểm gửi hàng',
+                'processing': 'Trung tâm xử lý',
+                'shipping': 'Đang vận chuyển',
+                'delivered': 'Điểm nhận hàng',
+                'failed': 'Điểm gửi hàng',
+                'cancelled': 'Điểm gửi hàng'
+            };
+            return textMap[status] || 'Không xác định';
         }
     </script>
 </body>
