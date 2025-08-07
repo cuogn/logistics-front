@@ -74,7 +74,7 @@ class RoleNavigationHandler {
         this.showNavItem(nav, 'orders', 'staff-orders.html', 'Quản Lý Đơn Hàng');
         
         // Track
-        this.showNavItem(nav, 'track', 'staff-track.html', 'Theo Dõi Giao Hàng');
+        this.showNavItem(nav, 'track', 'track.html', 'Theo Dõi Giao Hàng');
         
         // Stats
         this.showNavItem(nav, 'stats', 'staff-stats.html', 'Thống Kê');
