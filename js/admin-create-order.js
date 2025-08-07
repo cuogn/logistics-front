@@ -7,7 +7,25 @@ document.addEventListener('DOMContentLoaded', () => {
     setupDropdownListeners();
     setupFormValidation();
     setupPriceListener();
+    loadStaffList();
 });
+
+async function loadStaffList() {
+    const select = document.getElementById('assignedTo');
+    if (!select) return;
+    select.innerHTML = '<option value="">Đang tải danh sách nhân viên...</option>';
+    try {
+        const res = await api.getStaffList();
+        if (res.success && Array.isArray(res.data)) {
+            select.innerHTML = '<option value="">-- Chọn nhân viên xử lý --</option>' +
+                res.data.map(staff => `<option value="${staff.id}">${staff.full_name} (${staff.username})</option>`).join('');
+        } else {
+            select.innerHTML = '<option value="">Không có nhân viên nào</option>';
+        }
+    } catch (e) {
+        select.innerHTML = '<option value="">Lỗi tải danh sách nhân viên</option>';
+    }
+}
 
 function setupPriceListener() {
     // Lắng nghe sự thay đổi của priceValue để cập nhật shippingFee
@@ -337,7 +355,8 @@ function setupFormValidation() {
                 package_weight: parseFloat(orderData.package_weight),
                 package_description: orderData.package_description || '',
                 shipping_fee: Math.round(parseFloat(calculatedFee || 0)), // Đảm bảo là số nguyên
-                status: 'pending'
+                status: 'pending',
+                assigned_to: document.getElementById('assignedTo').value
             };
             
             // Chỉ thêm lat/lng nếu có giá trị và không phải null
