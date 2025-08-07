@@ -86,9 +86,6 @@ class RoleNavigationHandler {
     setupCustomerNavigation() {
         const nav = document.querySelector('.nav');
         
-        // Dashboard
-        this.showNavItem(nav, 'dashboard', 'customer-dashboard.html', 'Dashboard');
-        
         // Track
         this.showNavItem(nav, 'track', 'track.html', 'Theo Dõi Đơn Hàng');
         
@@ -103,7 +100,6 @@ class RoleNavigationHandler {
         const nav = document.querySelector('.nav');
         
         // Default navigation for unknown roles
-        this.showNavItem(nav, 'dashboard', 'customer-dashboard.html', 'Dashboard');
         this.showNavItem(nav, 'track', 'track.html', 'Theo Dõi Đơn Hàng');
     }
 
@@ -169,7 +165,7 @@ class RoleNavigationHandler {
             case 'customer':
                 // Customer chỉ có thể truy cập customer pages
                 if (currentPage.startsWith('admin-') || currentPage.startsWith('staff-')) {
-                    window.location.href = 'customer-dashboard.html';
+                    window.location.href = '../index.html';
                     return false;
                 }
                 return true;

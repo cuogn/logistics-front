@@ -49,7 +49,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Simulate successful login
                 showAuthNotification('Login successful! Redirecting...', 'success');
                 setTimeout(() => {
-                    window.location.href = 'customer-dashboard.html';
+                    window.location.href = '../index.html';
                 }, 1500);
             }, 2000);
         });
