@@ -61,27 +61,32 @@
             </form>
 
             <div id="orderDetail" style="margin-top:2rem;"></div>
-            <div class="tracking-section" style="display:none;">
-                <h2>Lịch Sử Trạng Thái</h2>
-                <div class="table-container">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Thời Gian</th>
-                                <th>Trạng Thái</th>
-                                <th>Vị Trí</th>
-                                <th>Mô Tả</th>
-                                <th>Người Thực Hiện</th>
-                            </tr>
-                        </thead>
-                        <tbody id="trackingBody">
-                            <tr><td colspan="5" class="text-center">Chưa có dữ liệu</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+            <div id="map"></div>
         </div>
     </main>
+
+    <!-- Tracking History Section -->
+    <div class="tracking-section" style="display:none; margin-top:2rem;">
+        <div class="container">
+            <h2>Lịch Sử Trạng Thái</h2>
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Thời Gian</th>
+                            <th>Trạng Thái</th>
+                            <th>Vị Trí</th>
+                            <th>Mô Tả</th>
+                            <th>Người Thực Hiện</th>
+                        </tr>
+                    </thead>
+                    <tbody id="trackingBody">
+                        <tr><td colspan="5" class="text-center">Chưa có dữ liệu</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 
     <script src="../js/lucide.min.js"></script>
     <script src="../js/api.js"></script>
@@ -173,7 +178,8 @@
                     } else if (order.sender_address && order.receiver_address) {
                         geocodeAndShowFullRoute(order.sender_address, order.receiver_address, order.current_status);
                     } else {
-                        showMapAtLocation(16.05, 108.2, 'Không có thông tin vị trí');
+                        console.log('No coordinates available, showing default location');
+                        showRouteFallback(16.05, 108.2, 16.05, 108.2, 16.05, 108.2, order.current_status);
                     }
                 } else {
                     detailDiv.innerHTML = '<div class="alert alert-error">Không tìm thấy đơn hàng</div>';
@@ -245,7 +251,8 @@
                 if (receiverLat && receiverLng) {
                     showRouteOnMap(senderLat, senderLng, receiverLat, receiverLng, status);
                 } else {
-                    showMapAtLocation(senderLat, senderLng, 'Không thể tìm thấy địa chỉ nhận');
+                    console.log('Cannot geocode receiver address, showing sender location');
+                    showRouteFallback(senderLat, senderLng, senderLat, senderLng, senderLat, senderLng, status);
                 }
             });
         }
@@ -258,15 +265,18 @@
                         if (receiverLat && receiverLng) {
                             showRouteOnMap(senderLat, senderLng, receiverLat, receiverLng, status);
                         } else {
-                            showMapAtLocation(senderLat, senderLng, 'Không thể tìm thấy địa chỉ nhận');
+                            console.log('Cannot geocode receiver address');
+                            showRouteFallback(senderLat, senderLng, senderLat, senderLng, senderLat, senderLng, status);
                         }
                     });
                 } else {
                     geocodeAddress(receiverAddress, function(receiverLat, receiverLng) {
                         if (receiverLat && receiverLng) {
-                            showMapAtLocation(receiverLat, receiverLng, 'Không thể tìm thấy địa chỉ gửi');
+                            console.log('Cannot geocode sender address');
+                            showRouteFallback(receiverLat, receiverLng, receiverLat, receiverLng, receiverLat, receiverLng, status);
                         } else {
-                            showMapAtLocation(16.05, 108.2, 'Không thể tìm thấy địa chỉ');
+                            console.log('Cannot geocode both addresses');
+                            showRouteFallback(16.05, 108.2, 16.05, 108.2, 16.05, 108.2, status);
                         }
                     });
                 }
@@ -324,7 +334,8 @@
                 isNaN(Number(senderLat)) || isNaN(Number(senderLng)) ||
                 isNaN(Number(receiverLat)) || isNaN(Number(receiverLng))
             ) {
-                showMapAtLocation(receiverLat, receiverLng);
+                console.log('Invalid coordinates, using fallback');
+                showRouteFallback(senderLatNum, senderLngNum, receiverLatNum, receiverLngNum, currentLat, currentLng, status);
                 return;
             }
 
@@ -476,35 +487,6 @@
                      Math.sin(dLon/2) * Math.sin(dLon/2);
             const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
             return R * c;
-        }
-
-        // Fallback function khi không có tọa độ
-        function showMapAtLocation(lat, lng, address = null) {
-            const mapDiv = document.getElementById('map');
-            mapDiv.innerHTML = '';
-            const API_KEY = '7GUpHwbsEgObqnGg4JG34CJvdbf89IU4iq-SDFe8vmE';
-            const platform = new H.service.Platform({ apikey: API_KEY });
-            const defaultLayers = platform.createDefaultLayers();
-            let center = { lat: 16.05, lng: 108.2 }; // Mặc định Đà Nẵng
-            if (!isNaN(Number(lat)) && !isNaN(Number(lng))) {
-                center = { lat: Number(lat), lng: Number(lng) };
-            }
-            const map = new H.Map(mapDiv, defaultLayers.vector.normal.map, {
-                center: center,
-                zoom: 14,
-                pixelRatio: window.devicePixelRatio || 1
-            });
-            window.addEventListener('resize', () => map.getViewPort().resize());
-            const behavior = new H.mapevents.Behavior(new H.mapevents.MapEvents(map));
-            const ui = H.ui.UI.createDefault(map, defaultLayers);
-            // Thêm marker nếu có tọa độ
-            if (!isNaN(Number(center.lat)) && !isNaN(Number(center.lng))) {
-                const marker = new H.map.Marker(center);
-                map.addObject(marker);
-            }
-            if (address) {
-                mapDiv.insertAdjacentHTML('beforeend', `<div class='here-route-info'>${address}</div>`);
-            }
         }
 
         function logout() {
