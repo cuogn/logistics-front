@@ -377,7 +377,7 @@
                 
                 const map = new H.Map(mapDiv, defaultLayers.vector.normal.map, {
                     center: { lat: (senderLatNum + receiverLatNum) / 2, lng: (senderLngNum + receiverLngNum) / 2 },
-                    zoom: 10,
+                    zoom: 7, // Zoom gần hơn để tránh hiển thị nhiều map
                     pixelRatio: window.devicePixelRatio || 1
                 });
                 
@@ -423,8 +423,11 @@
                     const route = data.routes[0];
                     const polyline = route.sections[0].polyline;
                     
+                    console.log('Polyline from API:', polyline);
+                    
                     // Decode polyline
                     const coordinates = decodePolyline(polyline);
+                    console.log('Decoded coordinates:', coordinates.length);
                     
                     if (coordinates.length > 0) {
                         const linestring = new H.geo.LineString();
@@ -458,8 +461,12 @@
                         });
                         map.addObject(currentMarker);
                         
-                        // Điều chỉnh view để hiển thị toàn bộ tuyến đường
-                        map.getViewModel().setLookAtData({ bounds: routeLine.getBoundingBox() });
+                        // Điều chỉnh view để hiển thị toàn bộ tuyến đường với zoom phù hợp
+                        const bounds = routeLine.getBoundingBox();
+                        map.getViewModel().setLookAtData({ 
+                            bounds: bounds,
+                            padding: { top: 50, right: 50, bottom: 50, left: 50 }
+                        });
                         
                         const summary = route.sections[0].summary;
                         const distanceKm = (summary.length / 1000).toFixed(2);
@@ -472,6 +479,8 @@
                             `<b>Vị trí hiện tại:</b> ${getCurrentPositionText(status)}` +
                             `</div>`;
                         document.getElementById('map').insertAdjacentHTML('beforeend', infoHtml);
+                        
+                        console.log('Route drawn successfully with', coordinates.length, 'points');
                     } else {
                         throw new Error('Invalid polyline coordinates');
                     }
@@ -531,6 +540,13 @@
                 });
                 map.addObject(currentMarker);
                 
+                // Điều chỉnh view để hiển thị toàn bộ tuyến đường
+                const bounds = routeLine.getBoundingBox();
+                map.getViewModel().setLookAtData({ 
+                    bounds: bounds,
+                    padding: { top: 50, right: 50, bottom: 50, left: 50 }
+                });
+                
                 // Tính khoảng cách đơn giản
                 const distanceKm = calculateDistance(senderLatNum, senderLngNum, receiverLatNum, receiverLngNum);
                 
@@ -564,6 +580,8 @@
                 console.log('Invalid polyline string:', encoded);
                 return [];
             }
+            
+            console.log('Decoding polyline:', encoded.substring(0, 50) + '...');
             
             const poly = [];
             let index = 0, len = encoded.length;
@@ -605,7 +623,11 @@
                 return [];
             }
             
-            console.log('Decoded polyline coordinates:', poly.length);
+            console.log('Decoded polyline coordinates:', poly.length, 'points');
+            if (poly.length > 0) {
+                console.log('First point:', poly[0]);
+                console.log('Last point:', poly[poly.length - 1]);
+            }
             return poly;
         }
 
