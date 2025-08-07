@@ -260,32 +260,17 @@
                 if (receiverLat && receiverLng) {
                     showRouteOnMap(senderLat, senderLng, receiverLat, receiverLng, status);
                 } else {
-                    console.log('Cannot geocode receiver address, showing sender location');
-                    // Tạo map đơn giản với chỉ điểm gửi
+                    console.log('Cannot geocode receiver address, showing sender location only');
+                    // Hiển thị thông báo lỗi thay vì tạo map riêng
                     const mapDiv = document.getElementById('map');
-                    mapDiv.innerHTML = '';
-                    const API_KEY = '7GUpHwbsEgObqnGg4JG34CJvdbf89IU4iq-SDFe8vmE';
-                    const platform = new H.service.Platform({ apikey: API_KEY });
-                    const defaultLayers = platform.createDefaultLayers();
-                    const map = new H.Map(mapDiv, defaultLayers.vector.normal.map, {
-                        center: { lat: Number(senderLat), lng: Number(senderLng) },
-                        zoom: 12,
-                        pixelRatio: window.devicePixelRatio || 1
-                    });
-                    window.addEventListener('resize', () => map.getViewPort().resize());
-                    const behavior = new H.mapevents.Behavior(new H.mapevents.MapEvents(map));
-                    const ui = H.ui.UI.createDefault(map, defaultLayers);
-                    
-                    // Marker điểm gửi
-                    const startMarker = new H.map.Marker({ lat: Number(senderLat), lng: Number(senderLng) });
-                    map.addObject(startMarker);
-                    
-                    let infoHtml = `<div class='here-route-info'>` +
-                        `<b>Trạng thái hiện tại:</b> ${getStatusText(status)}<br>` +
-                        `<b>Vị trí hiện tại:</b> ${getCurrentPositionText(status)}<br>` +
-                        `<small style="color: #666;">⚠️ Không thể tìm thấy địa chỉ nhận</small>` +
-                        `</div>`;
-                    mapDiv.insertAdjacentHTML('beforeend', infoHtml);
+                    mapDiv.innerHTML = `
+                        <div style="padding: 2rem; text-align: center; background: #f8f9fa; border-radius: 8px;">
+                            <h3>Không thể hiển thị tuyến đường</h3>
+                            <p>Trạng thái: ${getStatusText(status)}</p>
+                            <p>Vị trí hiện tại: ${getCurrentPositionText(status)}</p>
+                            <small>Không thể tìm thấy địa chỉ nhận hàng</small>
+                        </div>
+                    `;
                 }
             });
         }
@@ -299,62 +284,32 @@
                             showRouteOnMap(senderLat, senderLng, receiverLat, receiverLng, status);
                         } else {
                             console.log('Cannot geocode receiver address');
-                            // Tạo map với chỉ điểm gửi
+                            // Hiển thị thông báo lỗi thay vì tạo map riêng
                             const mapDiv = document.getElementById('map');
-                            mapDiv.innerHTML = '';
-                            const API_KEY = '7GUpHwbsEgObqnGg4JG34CJvdbf89IU4iq-SDFe8vmE';
-                            const platform = new H.service.Platform({ apikey: API_KEY });
-                            const defaultLayers = platform.createDefaultLayers();
-                            const map = new H.Map(mapDiv, defaultLayers.vector.normal.map, {
-                                center: { lat: Number(senderLat), lng: Number(senderLng) },
-                                zoom: 12,
-                                pixelRatio: window.devicePixelRatio || 1
-                            });
-                            window.addEventListener('resize', () => map.getViewPort().resize());
-                            const behavior = new H.mapevents.Behavior(new H.mapevents.MapEvents(map));
-                            const ui = H.ui.UI.createDefault(map, defaultLayers);
-                            
-                            // Marker điểm gửi
-                            const startMarker = new H.map.Marker({ lat: Number(senderLat), lng: Number(senderLng) });
-                            map.addObject(startMarker);
-                            
-                            let infoHtml = `<div class='here-route-info'>` +
-                                `<b>Trạng thái hiện tại:</b> ${getStatusText(status)}<br>` +
-                                `<b>Vị trí hiện tại:</b> ${getCurrentPositionText(status)}<br>` +
-                                `<small style="color: #666;">⚠️ Không thể tìm thấy địa chỉ nhận</small>` +
-                                `</div>`;
-                            mapDiv.insertAdjacentHTML('beforeend', infoHtml);
+                            mapDiv.innerHTML = `
+                                <div style="padding: 2rem; text-align: center; background: #f8f9fa; border-radius: 8px;">
+                                    <h3>Không thể hiển thị tuyến đường</h3>
+                                    <p>Trạng thái: ${getStatusText(status)}</p>
+                                    <p>Vị trí hiện tại: ${getCurrentPositionText(status)}</p>
+                                    <small>Không thể tìm thấy địa chỉ nhận hàng</small>
+                                </div>
+                            `;
                         }
                     });
                 } else {
                     geocodeAddress(receiverAddress, function(receiverLat, receiverLng) {
                         if (receiverLat && receiverLng) {
                             console.log('Cannot geocode sender address');
-                            // Tạo map với chỉ điểm nhận
+                            // Hiển thị thông báo lỗi thay vì tạo map riêng
                             const mapDiv = document.getElementById('map');
-                            mapDiv.innerHTML = '';
-                            const API_KEY = '7GUpHwbsEgObqnGg4JG34CJvdbf89IU4iq-SDFe8vmE';
-                            const platform = new H.service.Platform({ apikey: API_KEY });
-                            const defaultLayers = platform.createDefaultLayers();
-                            const map = new H.Map(mapDiv, defaultLayers.vector.normal.map, {
-                                center: { lat: Number(receiverLat), lng: Number(receiverLng) },
-                                zoom: 12,
-                                pixelRatio: window.devicePixelRatio || 1
-                            });
-                            window.addEventListener('resize', () => map.getViewPort().resize());
-                            const behavior = new H.mapevents.Behavior(new H.mapevents.MapEvents(map));
-                            const ui = H.ui.UI.createDefault(map, defaultLayers);
-                            
-                            // Marker điểm nhận
-                            const endMarker = new H.map.Marker({ lat: Number(receiverLat), lng: Number(receiverLng) });
-                            map.addObject(endMarker);
-                            
-                            let infoHtml = `<div class='here-route-info'>` +
-                                `<b>Trạng thái hiện tại:</b> ${getStatusText(status)}<br>` +
-                                `<b>Vị trí hiện tại:</b> ${getCurrentPositionText(status)}<br>` +
-                                `<small style="color: #666;">⚠️ Không thể tìm thấy địa chỉ gửi</small>` +
-                                `</div>`;
-                            mapDiv.insertAdjacentHTML('beforeend', infoHtml);
+                            mapDiv.innerHTML = `
+                                <div style="padding: 2rem; text-align: center; background: #f8f9fa; border-radius: 8px;">
+                                    <h3>Không thể hiển thị tuyến đường</h3>
+                                    <p>Trạng thái: ${getStatusText(status)}</p>
+                                    <p>Vị trí hiện tại: ${getCurrentPositionText(status)}</p>
+                                    <small>Không thể tìm thấy địa chỉ gửi hàng</small>
+                                </div>
+                            `;
                         } else {
                             console.log('Cannot geocode both addresses');
                             // Hiển thị thông báo lỗi
@@ -543,6 +498,8 @@
                     throw new Error('Invalid coordinates');
                 }
                 
+                console.log('Creating simple map with straight line');
+                
                 // Vẽ đường thẳng đơn giản
                 const linestring = new H.geo.LineString();
                 linestring.pushLatLngAlt(senderLatNum, senderLngNum);
@@ -584,6 +541,8 @@
                     `<small style="color: #666;">⚠️ Hiển thị đường thẳng do lỗi API</small>` +
                     `</div>`;
                 document.getElementById('map').insertAdjacentHTML('beforeend', infoHtml);
+                
+                console.log('Simple map created successfully');
             } catch (error) {
                 console.error('Error in showSimpleMap:', error);
                 // Final fallback: chỉ hiển thị thông báo
