@@ -967,6 +967,20 @@ class DistanceCalculator {
                     try {
                         console.log('Routing result:', result);
                         
+                        // Debug cấu trúc response
+                        if (result.routes && result.routes.length > 0) {
+                            const route = result.routes[0];
+                            console.log('Route structure:', route);
+                            console.log('Route sections:', route.sections);
+                            
+                            if (route.sections && route.sections.length > 0) {
+                                const firstSection = route.sections[0];
+                                console.log('First section:', firstSection);
+                                console.log('Section summary:', firstSection.summary);
+                                console.log('Section polyline:', firstSection.polyline ? firstSection.polyline.substring(0, 50) + '...' : 'No polyline');
+                            }
+                        }
+                        
                         // Đảm bảo có ít nhất một route
                         if (result.routes && result.routes.length > 0) {
                             const route = result.routes[0];
@@ -975,16 +989,16 @@ class DistanceCalculator {
                             const lineStrings = [];
                             
                             // Xử lý từng section của route
-                            route.sections.forEach((section) => {
-                                console.log('Processing section:', section);
+                            route.sections.forEach((section, index) => {
+                                console.log(`Processing section ${index}:`, section);
                                 
                                 // Tạo LineString từ polyline sử dụng fromFlexiblePolyline
                                 try {
                                     const lineString = H.geo.LineString.fromFlexiblePolyline(section.polyline);
                                     lineStrings.push(lineString);
-                                    console.log('LineString created from polyline');
+                                    console.log(`LineString ${index} created from polyline`);
                                 } catch (error) {
-                                    console.error('Error creating LineString from polyline:', error);
+                                    console.error(`Error creating LineString ${index} from polyline:`, error);
                                     // Fallback: tạo LineString từ coordinates
                                     if (section.polyline) {
                                         const coordinates = this.decodePolyline(section.polyline);
@@ -993,6 +1007,7 @@ class DistanceCalculator {
                                             fallbackLineString.pushLatLngAlt(coord.lat, coord.lng);
                                         });
                                         lineStrings.push(fallbackLineString);
+                                        console.log(`Fallback LineString ${index} created with ${coordinates.length} points`);
                                     }
                                 }
                             });
@@ -1001,11 +1016,36 @@ class DistanceCalculator {
                                 // Tạo MultiLineString
                                 const multiLineString = new H.geo.MultiLineString(lineStrings);
                                 
+                                // Tính toán khoảng cách và thời gian từ section
+                                let totalDistance = 0;
+                                let totalDuration = 0;
+                                
+                                route.sections.forEach((section, index) => {
+                                    console.log(`Section ${index} summary:`, section.summary);
+                                    if (section.summary) {
+                                        totalDistance += section.summary.length || 0;
+                                        totalDuration += section.summary.duration || 0;
+                                    }
+                                });
+                                
+                                console.log('Total distance from sections:', totalDistance);
+                                console.log('Total duration from sections:', totalDuration);
+                                
+                                // Nếu không có summary, tính khoảng cách từ coordinates
+                                if (totalDistance === 0) {
+                                    const coordinates = this.extractCoordinatesFromLineStrings(lineStrings);
+                                    if (coordinates.length > 1) {
+                                        totalDistance = this.calculateHaversineDistance(coordinates[0], coordinates[coordinates.length - 1]);
+                                        totalDuration = this.estimateTravelTime(totalDistance);
+                                        console.log('Calculated distance from coordinates:', totalDistance);
+                                    }
+                                }
+                                
                                 // Tạo route object với thông tin cần thiết
                                 const routeObject = {
                                     summary: {
-                                        distance: route.sections[0].summary.length,
-                                        travelTime: route.sections[0].summary.duration
+                                        distance: totalDistance,
+                                        travelTime: totalDuration
                                     },
                                     multiLineString: multiLineString,
                                     lineStrings: lineStrings,
