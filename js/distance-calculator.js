@@ -133,6 +133,18 @@ class DistanceCalculator {
                 return;
             }
             
+            // Validate coordinates for Vietnam
+            const lat = parseFloat(position.lat);
+            const lng = parseFloat(position.lng);
+            
+            console.log('Parsed click coordinates:', lat, lng);
+            
+            // Check if coordinates are reasonable for Vietnam
+            if (lat < 8 || lat > 24 || lng < 102 || lng > 110) {
+                console.warn('Click coordinates outside Vietnam range:', lat, lng);
+                showNotification('Cảnh báo: Tọa độ nằm ngoài phạm vi Việt Nam', 'warning');
+            }
+            
             // Cho phép click trên map để chọn điểm
             // Có thể sử dụng cả dropdown và click trên map
             
@@ -474,9 +486,27 @@ class DistanceCalculator {
             const bounds = routeLine.getBoundingBox();
             
             if (bounds) {
+                // Validate bounds to ensure they're reasonable for Vietnam
+                const top = bounds.getTop();
+                const bottom = bounds.getBottom();
+                const left = bounds.getLeft();
+                const right = bounds.getRight();
+                
+                console.log('Route bounds:', { top, bottom, left, right });
+                
+                // Check if bounds are reasonable for Vietnam
+                if (top < 8 || top > 24 || bottom < 8 || bottom > 24 ||
+                    left < 102 || left > 110 || right < 102 || right > 110) {
+                    console.warn('Route bounds outside Vietnam range, using point-based fit');
+                    this.fitMapToPoints();
+                    return;
+                }
+                
                 // Tính toán padding dựa trên kích thước route
-                const latDiff = bounds.getTop() - bounds.getBottom();
-                const lngDiff = bounds.getRight() - bounds.getLeft();
+                const latDiff = top - bottom;
+                const lngDiff = right - left;
+                
+                console.log('Route dimensions:', { latDiff, lngDiff });
                 
                 // Padding động dựa trên khoảng cách
                 let padding = { top: 50, right: 50, bottom: 50, left: 50 };
@@ -499,6 +529,7 @@ class DistanceCalculator {
                 console.log('Map fitted successfully');
             } else {
                 // Fallback: fit to points
+                console.log('No route bounds, falling back to points');
                 this.fitMapToPoints();
             }
             
@@ -513,26 +544,54 @@ class DistanceCalculator {
     fitMapToPoints() {
         try {
             console.log('Fitting map to points...');
+            console.log('Point 1:', this.point1);
+            console.log('Point 2:', this.point2);
             
-            const points = [this.point1, this.point2];
-            const bounds = new H.geo.Rect(
-                Math.min(...points.map(p => p.lat)),
-                Math.min(...points.map(p => p.lng)),
-                Math.max(...points.map(p => p.lat)),
-                Math.max(...points.map(p => p.lng))
-            );
+            // Validate coordinates first
+            if (!this.point1 || !this.point2 || 
+                !this.point1.lat || !this.point1.lng || 
+                !this.point2.lat || !this.point2.lng) {
+                console.error('Invalid coordinates for points');
+                return;
+            }
             
-            // Thêm padding để 2 điểm không ở sát mép
-            const latPadding = (bounds.getTop() - bounds.getBottom()) * 0.1;
-            const lngPadding = (bounds.getRight() - bounds.getLeft()) * 0.1;
+            // Ensure coordinates are numbers
+            const lat1 = parseFloat(this.point1.lat);
+            const lng1 = parseFloat(this.point1.lng);
+            const lat2 = parseFloat(this.point2.lat);
+            const lng2 = parseFloat(this.point2.lng);
+            
+            console.log('Parsed coordinates - Point 1:', lat1, lng1);
+            console.log('Parsed coordinates - Point 2:', lat2, lng2);
+            
+            // Validate coordinate ranges for Vietnam
+            if (lat1 < 8 || lat1 > 24 || lng1 < 102 || lng1 > 110 ||
+                lat2 < 8 || lat2 > 24 || lng2 < 102 || lng2 > 110) {
+                console.warn('Coordinates outside Vietnam range, but proceeding...');
+            }
+            
+            // Calculate bounds manually to ensure accuracy
+            const minLat = Math.min(lat1, lat2);
+            const maxLat = Math.max(lat1, lat2);
+            const minLng = Math.min(lng1, lng2);
+            const maxLng = Math.max(lng1, lng2);
+            
+            console.log('Calculated bounds:', { minLat, maxLat, minLng, maxLng });
+            
+            // Add padding to bounds
+            const latPadding = (maxLat - minLat) * 0.2; // 20% padding
+            const lngPadding = (maxLng - minLng) * 0.2;
             
             const paddedBounds = new H.geo.Rect(
-                bounds.getBottom() - latPadding,
-                bounds.getLeft() - lngPadding,
-                bounds.getTop() + latPadding,
-                bounds.getRight() + lngPadding
+                minLat - latPadding,
+                minLng - lngPadding,
+                maxLat + latPadding,
+                maxLng + lngPadding
             );
             
+            console.log('Padded bounds:', paddedBounds);
+            
+            // Set map view with bounds
             this.map.getViewModel().setLookAtData({
                 bounds: paddedBounds,
                 padding: { top: 50, right: 50, bottom: 50, left: 50 }
@@ -542,13 +601,15 @@ class DistanceCalculator {
             
         } catch (error) {
             console.error('Error fitting map to points:', error);
-            // Fallback cuối cùng: zoom vào điểm giữa
+            // Fallback cuối cùng: zoom vào điểm giữa với zoom level cố định
             const centerLat = (this.point1.lat + this.point2.lat) / 2;
             const centerLng = (this.point1.lng + this.point2.lng) / 2;
             
+            console.log('Using center fallback:', centerLat, centerLng);
+            
             this.map.getViewModel().setLookAtData({
                 center: { lat: centerLat, lng: centerLng },
-                zoom: 10
+                zoom: 8 // Zoom level phù hợp cho Việt Nam
             });
         }
     }
