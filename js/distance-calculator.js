@@ -260,30 +260,40 @@ class DistanceCalculator {
 
         try {
             showLoading();
+            this.updateStatus('Đang tính toán tuyến đường...');
             
-            // Tính khoảng cách đơn giản bằng công thức Haversine (tạm thời)
-            const distance = this.calculateHaversineDistance(this.point1, this.point2);
-            const duration = this.estimateTravelTime(distance);
+            // Sử dụng HERE Maps Routing API v8 để tính toán chính xác
+            const route = await this.calculateRouteWithAPIv8();
             
-            console.log('Calculated distance:', distance, 'meters');
-            
-            // Tạo route object giả để hiển thị
-            const route = {
-                summary: {
-                    distance: distance,
-                    travelTime: duration
-                },
-                shape: [
-                    `${this.point1.lat},${this.point1.lng}`,
-                    `${this.point2.lat},${this.point2.lng}`
-                ]
-            };
-            
-            hideLoading();
-            
-            this.displayDistanceInfo(route);
-            this.drawRoute(route);
-            this.updateStatus('Hoàn thành - Có thể xóa hoặc đổi vị trí');
+            if (route) {
+                hideLoading();
+                this.displayDistanceInfo(route);
+                this.drawRoute(route);
+                this.updateStatus('Hoàn thành - Có thể xóa hoặc đổi vị trí');
+                showNotification('✅ Đã tính toán tuyến đường thành công', 'success');
+            } else {
+                // Fallback: sử dụng tính toán đơn giản
+                console.log('API failed, using fallback calculation');
+                const distance = this.calculateHaversineDistance(this.point1, this.point2);
+                const duration = this.estimateTravelTime(distance);
+                
+                const fallbackRoute = {
+                    summary: {
+                        distance: distance,
+                        travelTime: duration
+                    },
+                    shape: [
+                        `${this.point1.lat},${this.point1.lng}`,
+                        `${this.point2.lat},${this.point2.lng}`
+                    ]
+                };
+                
+                hideLoading();
+                this.displayDistanceInfo(fallbackRoute);
+                this.drawRoute(fallbackRoute);
+                this.updateStatus('Hoàn thành (ước tính) - Có thể xóa hoặc đổi vị trí');
+                showNotification('⚠️ Sử dụng ước tính do lỗi API', 'warning');
+            }
 
         } catch (error) {
             hideLoading();
@@ -325,7 +335,7 @@ class DistanceCalculator {
             
             // Tính giá tiền
             const price = this.calculatePrice(distance);
-            const roundedPrice = Math.round(price); // Đảm bảo là số nguyên
+            const roundedPrice = Math.round(price);
             
             console.log('Distance:', distance, 'Duration:', duration, 'Price:', roundedPrice);
             
@@ -340,7 +350,7 @@ class DistanceCalculator {
             if (distanceElement) distanceElement.textContent = this.formatDistance(distance);
             if (durationElement) durationElement.textContent = this.formatDuration(duration);
             if (transportElement) transportElement.textContent = 'Ô tô';
-            if (trafficElement) trafficElement.textContent = 'Bình thường';
+            if (trafficElement) trafficElement.textContent = this.getTrafficStatus(duration, distance);
             if (priceElement) priceElement.textContent = this.formatPrice(roundedPrice);
             if (infoPanel) infoPanel.style.display = 'block';
             
@@ -360,6 +370,18 @@ class DistanceCalculator {
         } catch (error) {
             console.error('Error displaying distance info:', error);
         }
+    }
+
+    // Xác định tình trạng giao thông dựa trên thời gian di chuyển
+    getTrafficStatus(duration, distance) {
+        if (!duration || !distance) return 'Không xác định';
+        
+        const speedKmh = (distance / 1000) / (duration / 3600);
+        
+        if (speedKmh > 50) return 'Thông thoáng';
+        else if (speedKmh > 30) return 'Bình thường';
+        else if (speedKmh > 15) return 'Tắc nghẽn';
+        else return 'Rất tắc';
     }
 
     calculatePrice(distanceInMeters) {
@@ -390,21 +412,35 @@ class DistanceCalculator {
             // Xóa route cũ nếu có
             this.clearRoute();
             
-            // Tạo polyline từ route shape (đường thẳng đơn giản)
+            // Tạo polyline từ route coordinates hoặc shape
             const polyline = new H.geo.LineString();
-            if (route.shape && Array.isArray(route.shape)) {
+            
+            if (route.coordinates && Array.isArray(route.coordinates)) {
+                // Sử dụng coordinates chi tiết từ API
+                route.coordinates.forEach(coord => {
+                    polyline.pushLatLngAlt(coord.lat, coord.lng);
+                });
+                console.log('Using detailed coordinates:', route.coordinates.length, 'points');
+            } else if (route.shape && Array.isArray(route.shape)) {
+                // Fallback: sử dụng shape từ route
                 route.shape.forEach(point => {
                     const [lat, lng] = point.split(',');
                     polyline.pushLatLngAlt(parseFloat(lat), parseFloat(lng));
                 });
+                console.log('Using shape coordinates:', route.shape.length, 'points');
+            } else {
+                // Fallback cuối cùng: đường thẳng
+                polyline.pushLatLngAlt(this.point1.lat, this.point1.lng);
+                polyline.pushLatLngAlt(this.point2.lat, this.point2.lng);
+                console.log('Using straight line fallback');
             }
 
-            // Tạo polyline object
+            // Tạo polyline object với style phù hợp
             const routeLine = new H.map.Polyline(polyline, {
                 style: {
                     strokeColor: '#007bff',
-                    lineWidth: 4,
-                    lineDash: [10, 5] // Đường đứt nét để phân biệt
+                    lineWidth: 6,
+                    lineDash: route.coordinates ? [] : [10, 5] // Đường liền nếu có coordinates chi tiết, đứt nét nếu là đường thẳng
                 }
             });
 
@@ -412,13 +448,27 @@ class DistanceCalculator {
             this.map.addObject(routeLine);
             this.currentRoute = routeLine;
 
-            // Fit map to route
+            // Fit map to route với padding
             try {
+                const bounds = routeLine.getBoundingBox();
                 this.map.getViewModel().setLookAtData({
-                    bounds: routeLine.getBoundingBox()
+                    bounds: bounds,
+                    padding: { top: 50, right: 50, bottom: 50, left: 50 }
                 });
             } catch (error) {
                 console.error('Error fitting map to route:', error);
+                // Fallback: fit to points
+                const points = [this.point1, this.point2];
+                const bounds = new H.geo.Rect(
+                    Math.min(...points.map(p => p.lat)),
+                    Math.min(...points.map(p => p.lng)),
+                    Math.max(...points.map(p => p.lat)),
+                    Math.max(...points.map(p => p.lng))
+                );
+                this.map.getViewModel().setLookAtData({
+                    bounds: bounds,
+                    padding: { top: 50, right: 50, bottom: 50, left: 50 }
+                });
             }
             
             console.log('Route drawn successfully');
@@ -520,13 +570,17 @@ class DistanceCalculator {
 
         console.log('Getting directions...');
 
-        // Tạo URL cho chỉ đường (sử dụng HERE Maps directions)
-        const url = `https://route.here.com/directions/v2/route?app_id=DSKU1SgywJuRuRg05B99&app_code=YOUR_APP_CODE&waypoint0=${this.point1.lat},${this.point1.lng}&waypoint1=${this.point2.lat},${this.point2.lng}&mode=fastest;car`;
-        
-        // Mở trong tab mới
         try {
-            window.open(url, '_blank');
-            showNotification('🌐 Đã mở chỉ đường trong tab mới', 'success');
+            // Sử dụng HERE Maps Directions API
+            const API_KEY = '7GUpHwbsEgObqnGg4JG34CJvdbf89IU4iq-SDFe8vmE';
+            const url = `https://router.hereapi.com/v8/routes?transportMode=car&origin=${this.point1.lat},${this.point1.lng}&destination=${this.point2.lat},${this.point2.lng}&return=summary,guidance&apikey=${API_KEY}`;
+            
+            // Mở trong tab mới với thông tin chi tiết
+            const directionsUrl = `https://route.here.com/directions/v2/route?transportMode=car&origin=${this.point1.lat},${this.point1.lng}&destination=${this.point2.lat},${this.point2.lng}&return=summary,guidance&apikey=${API_KEY}`;
+            
+            window.open(directionsUrl, '_blank');
+            showNotification('🌐 Đã mở chỉ đường chi tiết trong tab mới', 'success');
+            
         } catch (error) {
             console.error('Error opening directions:', error);
             showNotification('Lỗi mở chỉ đường', 'error');
@@ -703,6 +757,103 @@ class DistanceCalculator {
         } else {
             return `${minutes}m`;
         }
+    }
+
+    // Tính toán tuyến đường sử dụng HERE Maps API v8
+    async calculateRouteWithAPIv8() {
+        try {
+            console.log('Calculating route with HERE Maps API v8...');
+            
+            const API_KEY = '7GUpHwbsEgObqnGg4JG34CJvdbf89IU4iq-SDFe8vmE';
+            const url = `https://router.hereapi.com/v8/routes?transportMode=car&origin=${this.point1.lat},${this.point1.lng}&destination=${this.point2.lat},${this.point2.lng}&return=summary,polyline&apikey=${API_KEY}`;
+            
+            console.log('Calling HERE Maps API v8:', url);
+            
+            const response = await fetch(url);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            const data = await response.json();
+            console.log('API Response:', data);
+            
+            if (data.routes && data.routes.length > 0) {
+                const route = data.routes[0];
+                const section = route.sections[0];
+                
+                // Decode polyline để có tọa độ chi tiết
+                const coordinates = this.decodePolyline(section.polyline);
+                
+                return {
+                    summary: {
+                        distance: section.summary.length, // Khoảng cách tính bằng mét
+                        travelTime: section.summary.duration // Thời gian tính bằng giây
+                    },
+                    shape: coordinates.map(coord => `${coord.lat},${coord.lng}`),
+                    coordinates: coordinates
+                };
+            } else {
+                throw new Error('No routes found in response');
+            }
+            
+        } catch (error) {
+            console.error('Error in calculateRouteWithAPIv8:', error);
+            return null;
+        }
+    }
+
+    // Decode polyline từ HERE Maps API
+    decodePolyline(encoded) {
+        if (!encoded || typeof encoded !== 'string') {
+            console.log('Invalid polyline string:', encoded);
+            return [];
+        }
+        
+        console.log('Decoding polyline:', encoded.substring(0, 50) + '...');
+        
+        const poly = [];
+        let index = 0, len = encoded.length;
+        let lat = 0, lng = 0;
+
+        try {
+            while (index < len) {
+                let b, shift = 0, result = 0;
+                do {
+                    b = encoded.charCodeAt(index++) - 63;
+                    result |= (b & 0x1f) << shift;
+                    shift += 5;
+                } while (b >= 0x20);
+                let dlat = ((result & 1) ? ~(result >> 1) : (result >> 1));
+                lat += dlat;
+
+                shift = 0;
+                result = 0;
+                do {
+                    b = encoded.charCodeAt(index++) - 63;
+                    result |= (b & 0x1f) << shift;
+                    shift += 5;
+                } while (b >= 0x20);
+                let dlng = ((result & 1) ? ~(result >> 1) : (result >> 1));
+                lng += dlng;
+
+                const latCoord = lat / 1E5;
+                const lngCoord = lng / 1E5;
+                
+                // Validate coordinates
+                if (latCoord >= -90 && latCoord <= 90 && lngCoord >= -180 && lngCoord <= 180) {
+                    poly.push({ lat: latCoord, lng: lngCoord });
+                } else {
+                    console.log('Skipping invalid coordinate:', latCoord, lngCoord);
+                }
+            }
+        } catch (error) {
+            console.error('Error decoding polyline:', error);
+            return [];
+        }
+        
+        console.log('Decoded polyline coordinates:', poly.length, 'valid points');
+        return poly;
     }
 }
 
