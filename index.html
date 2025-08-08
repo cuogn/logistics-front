@@ -28,6 +28,12 @@
                         <li><a href="pages/about.html" class="nav-link">Giới Thiệu</a></li>
                         <li><a href="pages/contact.html" class="nav-link">Liên Hệ</a></li>
                         <li><a href="pages/faq.html" class="nav-link">FAQ</a></li>
+                        <li class="nav-user-menu" id="navUserMenu" style="display:none;">
+                            <div class="user-menu-dropdown">
+                                <span class="user-name" id="navUserName"></span>
+                                <button class="btn btn-secondary btn-sm" id="navLogoutBtn">Đăng Xuất</button>
+                            </div>
+                        </li>
                     </ul>
                 </nav>
                 
@@ -476,18 +482,42 @@ document.addEventListener('DOMContentLoaded', function() {
     const userMenu = document.getElementById('userMenu');
     const userName = document.getElementById('userName');
     const logoutBtn = document.getElementById('logoutBtn');
+    const navUserMenu = document.getElementById('navUserMenu');
+    const navUserName = document.getElementById('navUserName');
+    const navLogoutBtn = document.getElementById('navLogoutBtn');
     const loginBtn = document.querySelector('.header-actions a[href*="login"]');
     const registerBtn = document.querySelector('.header-actions a[href*="register"]');
+    
     if (user && user.role) {
+        // Show user menu in header actions
         if (userMenu && userName && logoutBtn) {
             userMenu.style.display = 'flex';
             userName.textContent = user.lastName ? (user.firstName + ' ' + user.lastName) : user.email;
-            if (loginBtn) loginBtn.style.display = 'none';
-            if (registerBtn) registerBtn.style.display = 'none';
-            logoutBtn.onclick = function() { if (window.api && api.logout) api.logout(); else window.location.href = 'pages/login.html'; };
+            logoutBtn.onclick = function() { 
+                if (window.api && api.logout) api.logout(); 
+                else window.location.href = 'pages/login.html'; 
+            };
         }
+        
+        // Show user menu in navigation
+        if (navUserMenu && navUserName && navLogoutBtn) {
+            navUserMenu.style.display = 'block';
+            navUserName.textContent = user.lastName ? (user.firstName + ' ' + user.lastName) : user.email;
+            navLogoutBtn.onclick = function() { 
+                if (window.api && api.logout) api.logout(); 
+                else window.location.href = 'pages/login.html'; 
+            };
+        }
+        
+        // Hide login/register buttons
+        if (loginBtn) loginBtn.style.display = 'none';
+        if (registerBtn) registerBtn.style.display = 'none';
     } else {
+        // Hide user menus
         if (userMenu) userMenu.style.display = 'none';
+        if (navUserMenu) navUserMenu.style.display = 'none';
+        
+        // Show login/register buttons
         if (loginBtn) loginBtn.style.display = '';
         if (registerBtn) registerBtn.style.display = '';
     }

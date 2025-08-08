@@ -120,26 +120,55 @@ document.addEventListener('DOMContentLoaded', function() {
         statsObserver.observe(stat);
     });
     
-    // Hide login/register buttons if user is logged in
+    // Handle user authentication display
+    handleUserAuth();
+});
+
+// Handle user authentication display
+function handleUserAuth() {
     const user = JSON.parse(localStorage.getItem('user') || 'null');
     const userMenu = document.getElementById('userMenu');
     const userName = document.getElementById('userName');
     const logoutBtn = document.getElementById('logoutBtn');
+    const navUserMenu = document.getElementById('navUserMenu');
+    const navUserName = document.getElementById('navUserName');
+    const navLogoutBtn = document.getElementById('navLogoutBtn');
+    const headerActions = document.querySelector('.header-actions');
+    
     if (user && user.role) {
-        // Hide header login/register
+        // Show user menu in header actions
+        if (userMenu && userName && logoutBtn) {
+            userMenu.style.display = 'flex';
+            userName.textContent = user.lastName ? (user.firstName + ' ' + user.lastName) : user.email;
+            logoutBtn.onclick = function() { 
+                if (window.api && api.logout) api.logout(); 
+                else window.location.href = 'pages/login.html'; 
+            };
+        }
+        
+        // Show user menu in navigation
+        if (navUserMenu && navUserName && navLogoutBtn) {
+            navUserMenu.style.display = 'block';
+            navUserName.textContent = user.lastName ? (user.firstName + ' ' + user.lastName) : user.email;
+            navLogoutBtn.onclick = function() { 
+                if (window.api && api.logout) api.logout(); 
+                else window.location.href = 'pages/login.html'; 
+            };
+        }
+        
+        // Hide login/register buttons
         if (headerActions) {
             const loginBtn = headerActions.querySelector('a[href*="login"]');
             const registerBtn = headerActions.querySelector('a[href*="register"]');
             if (loginBtn) loginBtn.style.display = 'none';
             if (registerBtn) registerBtn.style.display = 'none';
         }
-        if (userMenu && userName && logoutBtn) {
-            userMenu.style.display = 'flex';
-            userName.textContent = user.lastName ? (user.firstName + ' ' + user.lastName) : user.email;
-            logoutBtn.onclick = function() { if (window.api && api.logout) api.logout(); else window.location.href = 'pages/login.html'; };
-        }
     } else {
+        // Hide user menus
         if (userMenu) userMenu.style.display = 'none';
+        if (navUserMenu) navUserMenu.style.display = 'none';
+        
+        // Show login/register buttons
         if (headerActions) {
             const loginBtn = headerActions.querySelector('a[href*="login"]');
             const registerBtn = headerActions.querySelector('a[href*="register"]');
@@ -147,93 +176,62 @@ document.addEventListener('DOMContentLoaded', function() {
             if (registerBtn) registerBtn.style.display = '';
         }
     }
-});
+}
 
 // Create mobile menu
 function createMobileMenu() {
+    const user = JSON.parse(localStorage.getItem('user') || 'null');
     const mobileMenu = document.createElement('div');
     mobileMenu.className = 'mobile-menu';
+    
+    let userMenuHTML = '';
+    if (user && user.role) {
+        const userName = user.lastName ? (user.firstName + ' ' + user.lastName) : user.email;
+        userMenuHTML = `
+            <div class="mobile-user-menu">
+                <div class="mobile-user-info">${userName}</div>
+                <button class="btn btn-secondary" id="mobileLogoutBtn">Đăng Xuất</button>
+            </div>
+        `;
+    } else {
+        userMenuHTML = `
+            <div class="mobile-actions">
+                <a href="pages/login.html" class="btn btn-secondary">Đăng Nhập</a>
+                <a href="pages/register.html" class="btn btn-primary">Đăng Ký</a>
+            </div>
+        `;
+    }
+    
     mobileMenu.innerHTML = `
         <div class="mobile-menu-content">
             <nav class="mobile-nav">
                 <ul class="mobile-nav-list">
-                    <li><a href="#features" class="mobile-nav-link">Features</a></li>
-                    <li><a href="#pricing" class="mobile-nav-link">Pricing</a></li>
-                    <li><a href="#about" class="mobile-nav-link">About Us</a></li>
-                    <li><a href="#contact" class="mobile-nav-link">Contact</a></li>
+                    <li><a href="index.html" class="mobile-nav-link">Trang Chủ</a></li>
+                    <li><a href="pages/services.html" class="mobile-nav-link">Dịch Vụ</a></li>
+                    <li><a href="pages/track.html" class="mobile-nav-link">Theo Dõi</a></li>
+                    <li><a href="pages/distance-calculator.html" class="mobile-nav-link">Tính Khoảng Cách</a></li>
+                    <li><a href="pages/about.html" class="mobile-nav-link">Giới Thiệu</a></li>
+                    <li><a href="pages/contact.html" class="mobile-nav-link">Liên Hệ</a></li>
+                    <li><a href="pages/faq.html" class="mobile-nav-link">FAQ</a></li>
                 </ul>
             </nav>
-            <div class="mobile-actions">
-                <button class="btn btn-secondary">Login</button>
-                <button class="btn btn-primary">Register</button>
-            </div>
+            ${userMenuHTML}
         </div>
     `;
     
     document.body.appendChild(mobileMenu);
     
-    // Add mobile menu styles
-    const style = document.createElement('style');
-    style.textContent = `
-        .mobile-menu {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100vh;
-            background: rgba(0, 0, 0, 0.9);
-            z-index: 1000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s ease;
-        }
-        
-        .mobile-menu.active {
-            opacity: 1;
-            visibility: visible;
-        }
-        
-        .mobile-menu-content {
-            text-align: center;
-            color: white;
-        }
-        
-        .mobile-nav-list {
-            list-style: none;
-            margin-bottom: 2rem;
-        }
-        
-        .mobile-nav-list li {
-            margin-bottom: 1rem;
-        }
-        
-        .mobile-nav-link {
-            color: white;
-            text-decoration: none;
-            font-size: 1.25rem;
-            font-weight: 500;
-            transition: color 0.2s ease;
-        }
-        
-        .mobile-nav-link:hover {
-            color: #60a5fa;
-        }
-        
-        .mobile-actions {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-            align-items: center;
-        }
-        
-        .mobile-actions .btn {
-            width: 200px;
-        }
-    `;
-    document.head.appendChild(style);
+    // Handle mobile logout
+    const mobileLogoutBtn = mobileMenu.querySelector('#mobileLogoutBtn');
+    if (mobileLogoutBtn) {
+        mobileLogoutBtn.addEventListener('click', function() {
+            if (window.api && api.logout) {
+                api.logout();
+            } else {
+                window.location.href = 'pages/login.html';
+            }
+        });
+    }
     
     // Close mobile menu when clicking on links
     const mobileLinks = mobileMenu.querySelectorAll('.mobile-nav-link');
@@ -244,6 +242,16 @@ function createMobileMenu() {
             menuIcon.setAttribute('data-lucide', 'menu');
             lucide.createIcons();
         });
+    });
+    
+    // Close mobile menu when clicking outside
+    mobileMenu.addEventListener('click', function(e) {
+        if (e.target === mobileMenu) {
+            mobileMenu.classList.remove('active');
+            const menuIcon = document.querySelector('#mobileMenuToggle i');
+            menuIcon.setAttribute('data-lucide', 'menu');
+            lucide.createIcons();
+        }
     });
 }
 
