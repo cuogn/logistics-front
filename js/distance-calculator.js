@@ -901,15 +901,16 @@ class DistanceCalculator {
             
             const API_KEY = '7GUpHwbsEgObqnGg4JG34CJvdbf89IU4iq-SDFe8vmE';
             
-            // Sử dụng nhiều tham số để có tuyến đường chính xác hơn
+            // Sử dụng tham số tối ưu để có tuyến đường ngắn nhất
             const params = new URLSearchParams({
                 transportMode: 'car',
                 origin: `${this.point1.lat},${this.point1.lng}`,
                 destination: `${this.point2.lat},${this.point2.lng}`,
                 return: 'summary,polyline',
-                routingMode: 'fast', // Sử dụng chế độ nhanh nhất
-                avoid: 'tollRoad', // Tránh đường thu phí nếu có thể
-                units: 'metric', // Sử dụng đơn vị mét
+                routingMode: 'short', // Sử dụng chế độ ngắn nhất thay vì nhanh nhất
+                avoid: 'tollRoad,ferry', // Tránh đường thu phí và phà
+                units: 'metric',
+                alternatives: '0', // Không có tuyến đường thay thế
                 apikey: API_KEY
             });
             
@@ -931,6 +932,7 @@ class DistanceCalculator {
                 const section = route.sections[0];
                 
                 console.log('Route section:', section);
+                console.log('Route summary:', section.summary);
                 
                 // Decode polyline để có tọa độ chi tiết
                 const coordinates = this.decodePolyline(section.polyline);
@@ -938,13 +940,43 @@ class DistanceCalculator {
                 if (coordinates.length > 0) {
                     console.log('Decoded coordinates:', coordinates.length, 'points');
                     
+                    // Tối ưu hóa tuyến đường
+                    const optimizedCoordinates = this.optimizeRoute(coordinates);
+                    
+                    // Kiểm tra xem tuyến đường có hợp lý không
+                    const directDistance = this.calculateHaversineDistance(this.point1, this.point2);
+                    const routeDistance = section.summary.length;
+                    
+                    console.log('Direct distance:', directDistance, 'm');
+                    console.log('Route distance:', routeDistance, 'm');
+                    console.log('Distance ratio:', (routeDistance / directDistance).toFixed(2));
+                    
+                    // Nếu tuyến đường dài hơn 3 lần khoảng cách trực tiếp, có thể có lỗi
+                    if (routeDistance > directDistance * 3) {
+                        console.warn('Route seems too long, using direct line');
+                        return {
+                            summary: {
+                                distance: directDistance,
+                                travelTime: this.estimateTravelTime(directDistance)
+                            },
+                            shape: [
+                                `${this.point1.lat},${this.point1.lng}`,
+                                `${this.point2.lat},${this.point2.lng}`
+                            ],
+                            coordinates: [
+                                { lat: this.point1.lat, lng: this.point1.lng },
+                                { lat: this.point2.lat, lng: this.point2.lng }
+                            ]
+                        };
+                    }
+                    
                     return {
                         summary: {
                             distance: section.summary.length, // Khoảng cách tính bằng mét
                             travelTime: section.summary.duration // Thời gian tính bằng giây
                         },
-                        shape: coordinates.map(coord => `${coord.lat},${coord.lng}`),
-                        coordinates: coordinates
+                        shape: optimizedCoordinates.map(coord => `${coord.lat},${coord.lng}`),
+                        coordinates: optimizedCoordinates
                     };
                 } else {
                     throw new Error('No valid coordinates decoded from polyline');
@@ -1021,6 +1053,30 @@ class DistanceCalculator {
             poly.push({ lat: this.point2.lat, lng: this.point2.lng });
         }
         
+        // Kiểm tra xem tuyến đường có hợp lý không
+        if (poly.length > 2) {
+            const firstPoint = poly[0];
+            const lastPoint = poly[poly.length - 1];
+            const expectedStart = { lat: this.point1.lat, lng: this.point1.lng };
+            const expectedEnd = { lat: this.point2.lat, lng: this.point2.lng };
+            
+            // Kiểm tra xem điểm đầu và cuối có gần với điểm gốc không
+            const startDistance = this.calculateHaversineDistance(firstPoint, expectedStart);
+            const endDistance = this.calculateHaversineDistance(lastPoint, expectedEnd);
+            
+            console.log('Start point distance from expected:', startDistance, 'm');
+            console.log('End point distance from expected:', endDistance, 'm');
+            
+            // Nếu điểm đầu/cuối cách xa điểm gốc quá 1km, có thể có lỗi
+            if (startDistance > 1000 || endDistance > 1000) {
+                console.warn('Route endpoints seem incorrect, using direct line');
+                return [
+                    { lat: this.point1.lat, lng: this.point1.lng },
+                    { lat: this.point2.lat, lng: this.point2.lng }
+                ];
+            }
+        }
+        
         return poly;
     }
 
@@ -1049,6 +1105,65 @@ class DistanceCalculator {
         }
         
         console.log('=== END DEBUG ===');
+    }
+
+    // Phương thức tối ưu hóa tuyến đường
+    optimizeRoute(coordinates) {
+        if (!coordinates || coordinates.length < 2) {
+            return coordinates;
+        }
+        
+        console.log('Optimizing route with', coordinates.length, 'points');
+        
+        // Nếu chỉ có 2 điểm, không cần tối ưu
+        if (coordinates.length === 2) {
+            return coordinates;
+        }
+        
+        // Tính tổng khoảng cách của tuyến đường hiện tại
+        let totalDistance = 0;
+        for (let i = 1; i < coordinates.length; i++) {
+            totalDistance += this.calculateHaversineDistance(coordinates[i-1], coordinates[i]);
+        }
+        
+        // Khoảng cách trực tiếp
+        const directDistance = this.calculateHaversineDistance(coordinates[0], coordinates[coordinates.length - 1]);
+        
+        console.log('Route total distance:', totalDistance, 'm');
+        console.log('Direct distance:', directDistance, 'm');
+        console.log('Route efficiency:', (directDistance / totalDistance * 100).toFixed(1) + '%');
+        
+        // Nếu tuyến đường dài hơn 2.5 lần khoảng cách trực tiếp, sử dụng đường thẳng
+        if (totalDistance > directDistance * 2.5) {
+            console.warn('Route too inefficient, using direct line');
+            return [
+                coordinates[0],
+                coordinates[coordinates.length - 1]
+            ];
+        }
+        
+        // Nếu tuyến đường có quá nhiều điểm không cần thiết, lọc bớt
+        if (coordinates.length > 10) {
+            console.log('Route has too many points, simplifying...');
+            const simplified = [coordinates[0]];
+            
+            // Giữ lại các điểm quan trọng (cách nhau ít nhất 1km)
+            for (let i = 1; i < coordinates.length - 1; i++) {
+                const prevPoint = simplified[simplified.length - 1];
+                const currentPoint = coordinates[i];
+                const distance = this.calculateHaversineDistance(prevPoint, currentPoint);
+                
+                if (distance > 1000) { // Chỉ giữ điểm cách nhau > 1km
+                    simplified.push(currentPoint);
+                }
+            }
+            
+            simplified.push(coordinates[coordinates.length - 1]);
+            console.log('Simplified route from', coordinates.length, 'to', simplified.length, 'points');
+            return simplified;
+        }
+        
+        return coordinates;
     }
 }
 
