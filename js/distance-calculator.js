@@ -439,6 +439,29 @@ class DistanceCalculator {
                     polyline.pushLatLngAlt(coord.lat, coord.lng);
                 });
                 console.log('Using detailed coordinates:', route.coordinates.length, 'points');
+                
+                // Kiểm tra xem có phải đường thẳng không
+                const isStraight = route.coordinates.length === 2 || this.isStraightLine(route.coordinates);
+                console.log('Is straight line:', isStraight);
+                
+                // Tạo polyline object với style phù hợp
+                const routeLine = new H.map.Polyline(polyline, {
+                    style: {
+                        strokeColor: '#007bff',
+                        lineWidth: 6,
+                        lineDash: isStraight ? [10, 5] : [] // Đường đứt nét nếu là đường thẳng, liền nếu là đường cong
+                    }
+                });
+
+                // Thêm route vào map
+                this.map.addObject(routeLine);
+                this.currentRoute = routeLine;
+
+                // Fit map to route với padding và zoom phù hợp
+                this.fitMapToRoute(routeLine);
+                
+                console.log('Route drawn successfully');
+                
             } else if (route.shape && Array.isArray(route.shape) && route.shape.length > 0) {
                 // Fallback: sử dụng shape từ route
                 route.shape.forEach(point => {
@@ -446,30 +469,39 @@ class DistanceCalculator {
                     polyline.pushLatLngAlt(parseFloat(lat), parseFloat(lng));
                 });
                 console.log('Using shape coordinates:', route.shape.length, 'points');
+                
+                const routeLine = new H.map.Polyline(polyline, {
+                    style: {
+                        strokeColor: '#007bff',
+                        lineWidth: 6,
+                        lineDash: [10, 5] // Đường đứt nét cho fallback
+                    }
+                });
+
+                this.map.addObject(routeLine);
+                this.currentRoute = routeLine;
+                this.fitMapToRoute(routeLine);
+                
             } else {
                 // Fallback cuối cùng: đường thẳng
                 polyline.pushLatLngAlt(this.point1.lat, this.point1.lng);
                 polyline.pushLatLngAlt(this.point2.lat, this.point2.lng);
                 console.log('Using straight line fallback');
+                
+                const routeLine = new H.map.Polyline(polyline, {
+                    style: {
+                        strokeColor: '#ff6b6b', // Màu đỏ cho đường thẳng (cảnh báo)
+                        lineWidth: 4,
+                        lineDash: [10, 5]
+                    }
+                });
+
+                this.map.addObject(routeLine);
+                this.currentRoute = routeLine;
+                this.fitMapToPoints(); // Fit vào 2 điểm thay vì route
+                
+                showNotification('⚠️ Sử dụng đường thẳng do lỗi API', 'warning');
             }
-
-            // Tạo polyline object với style phù hợp
-            const routeLine = new H.map.Polyline(polyline, {
-                style: {
-                    strokeColor: '#007bff',
-                    lineWidth: 6,
-                    lineDash: route.coordinates ? [] : [10, 5] // Đường liền nếu có coordinates chi tiết, đứt nét nếu là đường thẳng
-                }
-            });
-
-            // Thêm route vào map
-            this.map.addObject(routeLine);
-            this.currentRoute = routeLine;
-
-            // Fit map to route với padding và zoom phù hợp
-            this.fitMapToRoute(routeLine);
-            
-            console.log('Route drawn successfully');
             
         } catch (error) {
             console.error('Error drawing route:', error);
@@ -901,16 +933,16 @@ class DistanceCalculator {
             
             const API_KEY = '7GUpHwbsEgObqnGg4JG34CJvdbf89IU4iq-SDFe8vmE';
             
-            // Sử dụng tham số tối ưu để có tuyến đường ngắn nhất
+            // Sử dụng tham số để có tuyến đường thực tế theo đường bộ
             const params = new URLSearchParams({
                 transportMode: 'car',
                 origin: `${this.point1.lat},${this.point1.lng}`,
                 destination: `${this.point2.lat},${this.point2.lng}`,
                 return: 'summary,polyline',
-                routingMode: 'short', // Sử dụng chế độ ngắn nhất thay vì nhanh nhất
-                avoid: 'tollRoad,ferry', // Tránh đường thu phí và phà
+                routingMode: 'fast', // Sử dụng chế độ nhanh nhất để có tuyến đường thực tế
+                avoid: 'tollRoad', // Chỉ tránh đường thu phí
                 units: 'metric',
-                alternatives: '0', // Không có tuyến đường thay thế
+                alternatives: '0',
                 apikey: API_KEY
             });
             
@@ -940,35 +972,17 @@ class DistanceCalculator {
                 if (coordinates.length > 0) {
                     console.log('Decoded coordinates:', coordinates.length, 'points');
                     
-                    // Tối ưu hóa tuyến đường
-                    const optimizedCoordinates = this.optimizeRoute(coordinates);
+                    // Kiểm tra xem tuyến đường có phải là đường thẳng không
+                    const isStraightLine = this.isStraightLine(coordinates);
                     
-                    // Kiểm tra xem tuyến đường có hợp lý không
-                    const directDistance = this.calculateHaversineDistance(this.point1, this.point2);
-                    const routeDistance = section.summary.length;
-                    
-                    console.log('Direct distance:', directDistance, 'm');
-                    console.log('Route distance:', routeDistance, 'm');
-                    console.log('Distance ratio:', (routeDistance / directDistance).toFixed(2));
-                    
-                    // Nếu tuyến đường dài hơn 3 lần khoảng cách trực tiếp, có thể có lỗi
-                    if (routeDistance > directDistance * 3) {
-                        console.warn('Route seems too long, using direct line');
-                        return {
-                            summary: {
-                                distance: directDistance,
-                                travelTime: this.estimateTravelTime(directDistance)
-                            },
-                            shape: [
-                                `${this.point1.lat},${this.point1.lng}`,
-                                `${this.point2.lat},${this.point2.lng}`
-                            ],
-                            coordinates: [
-                                { lat: this.point1.lat, lng: this.point1.lng },
-                                { lat: this.point2.lat, lng: this.point2.lng }
-                            ]
-                        };
+                    if (isStraightLine) {
+                        console.warn('Route appears to be a straight line, API may have failed');
+                        // Thử lại với tham số khác
+                        return await this.retryWithDifferentParams();
                     }
+                    
+                    // Tối ưu hóa tuyến đường nhưng giữ nguyên đường cong
+                    const optimizedCoordinates = this.optimizeRoute(coordinates);
                     
                     return {
                         summary: {
@@ -1080,6 +1094,82 @@ class DistanceCalculator {
         return poly;
     }
 
+    // Kiểm tra xem tuyến đường có phải là đường thẳng không
+    isStraightLine(coordinates) {
+        if (coordinates.length < 3) return true;
+        
+        // Tính khoảng cách trực tiếp
+        const directDistance = this.calculateHaversineDistance(coordinates[0], coordinates[coordinates.length - 1]);
+        
+        // Tính tổng khoảng cách của tuyến đường
+        let routeDistance = 0;
+        for (let i = 1; i < coordinates.length; i++) {
+            routeDistance += this.calculateHaversineDistance(coordinates[i-1], coordinates[i]);
+        }
+        
+        // Nếu tỷ lệ gần 1, có thể là đường thẳng
+        const ratio = routeDistance / directDistance;
+        console.log('Route vs direct distance ratio:', ratio);
+        
+        return ratio < 1.1; // Nếu tỷ lệ < 1.1, coi như đường thẳng
+    }
+
+    // Thử lại với tham số khác
+    async retryWithDifferentParams() {
+        try {
+            console.log('Retrying with different parameters...');
+            
+            const API_KEY = '7GUpHwbsEgObqnGg4JG34CJvdbf89IU4iq-SDFe8vmE';
+            
+            // Thử với tham số khác
+            const params = new URLSearchParams({
+                transportMode: 'car',
+                origin: `${this.point1.lat},${this.point1.lng}`,
+                destination: `${this.point2.lat},${this.point2.lng}`,
+                return: 'summary,polyline',
+                routingMode: 'short',
+                avoid: '',
+                units: 'metric',
+                alternatives: '0',
+                apikey: API_KEY
+            });
+            
+            const url = `https://router.hereapi.com/v8/routes?${params}`;
+            
+            const response = await fetch(url);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            const data = await response.json();
+            
+            if (data.routes && data.routes.length > 0) {
+                const route = data.routes[0];
+                const section = route.sections[0];
+                const coordinates = this.decodePolyline(section.polyline);
+                
+                if (coordinates.length > 0 && !this.isStraightLine(coordinates)) {
+                    console.log('Retry successful, got proper route');
+                    return {
+                        summary: {
+                            distance: section.summary.length,
+                            travelTime: section.summary.duration
+                        },
+                        shape: coordinates.map(coord => `${coord.lat},${coord.lng}`),
+                        coordinates: coordinates
+                    };
+                }
+            }
+            
+            throw new Error('Retry failed, still getting straight line');
+            
+        } catch (error) {
+            console.error('Error in retry:', error);
+            return null;
+        }
+    }
+
     // Phương thức debug để kiểm tra thông tin tuyến đường
     debugRoute(route) {
         console.log('=== ROUTE DEBUG ===');
@@ -1133,27 +1223,24 @@ class DistanceCalculator {
         console.log('Direct distance:', directDistance, 'm');
         console.log('Route efficiency:', (directDistance / totalDistance * 100).toFixed(1) + '%');
         
-        // Nếu tuyến đường dài hơn 2.5 lần khoảng cách trực tiếp, sử dụng đường thẳng
-        if (totalDistance > directDistance * 2.5) {
-            console.warn('Route too inefficient, using direct line');
-            return [
-                coordinates[0],
-                coordinates[coordinates.length - 1]
-            ];
+        // Nếu tuyến đường dài hơn 5 lần khoảng cách trực tiếp, có thể có lỗi
+        if (totalDistance > directDistance * 5) {
+            console.warn('Route seems too long, but keeping road curves');
+            // Không dùng đường thẳng, giữ nguyên đường cong
         }
         
-        // Nếu tuyến đường có quá nhiều điểm không cần thiết, lọc bớt
-        if (coordinates.length > 10) {
+        // Chỉ lọc bớt điểm nếu có quá nhiều (> 20 điểm)
+        if (coordinates.length > 20) {
             console.log('Route has too many points, simplifying...');
             const simplified = [coordinates[0]];
             
-            // Giữ lại các điểm quan trọng (cách nhau ít nhất 1km)
+            // Giữ lại các điểm quan trọng (cách nhau ít nhất 500m)
             for (let i = 1; i < coordinates.length - 1; i++) {
                 const prevPoint = simplified[simplified.length - 1];
                 const currentPoint = coordinates[i];
                 const distance = this.calculateHaversineDistance(prevPoint, currentPoint);
                 
-                if (distance > 1000) { // Chỉ giữ điểm cách nhau > 1km
+                if (distance > 500) { // Chỉ giữ điểm cách nhau > 500m
                     simplified.push(currentPoint);
                 }
             }
