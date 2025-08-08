@@ -1,4 +1,4 @@
-// Distance Calculator với HERE Maps API
+// Distance Calculator với HERE Maps API và API địa chỉ hành chính Việt Nam
 class DistanceCalculator {
     constructor() {
         console.log('Creating DistanceCalculator instance...');
@@ -13,6 +13,9 @@ class DistanceCalculator {
         this.currentRoute = null;
         this.defaultPricePerKm = 5000; // Giá mặc định 5000 VND
         
+        // Thêm reference đến VietnamLocationSelector
+        this.locationSelector = null;
+        
         this.init();
     }
 
@@ -26,13 +29,125 @@ class DistanceCalculator {
             // Setup event listeners
             this.setupEventListeners();
             
+            // Đợi Location Selector được khởi tạo
+            this.waitForLocationSelector();
+            
             console.log('Distance Calculator initialized successfully');
-            showNotification('✅ Bản đồ đã sẵn sàng! Nhấp để đặt điểm A', 'success');
+            showNotification('✅ Bản đồ đã sẵn sàng! Chọn địa điểm từ dropdown hoặc click trên bản đồ', 'success');
             
         } catch (error) {
             console.error('Error initializing distance calculator:', error);
             showNotification('Lỗi khởi tạo bản đồ: ' + error.message, 'error');
         }
+    }
+
+    // Đợi Location Selector được khởi tạo
+    waitForLocationSelector() {
+        const checkInterval = setInterval(() => {
+            if (window.vietnamLocationSelector) {
+                this.locationSelector = window.vietnamLocationSelector;
+                console.log('Location Selector connected:', this.locationSelector);
+                clearInterval(checkInterval);
+                
+                // Thêm event listeners cho dropdown changes
+                this.setupDropdownEventListeners();
+            }
+        }, 100);
+    }
+
+    // Thêm event listeners cho dropdown changes
+    setupDropdownEventListeners() {
+        if (!this.locationSelector) return;
+
+        // Lắng nghe sự kiện wardSelected từ Location Selector
+        document.addEventListener('wardSelected', async (event) => {
+            const { point, address } = event.detail;
+            if (address) {
+                await this.getCoordinatesFromAddress(address, point);
+            }
+        });
+    }
+
+    // Lấy tọa độ từ địa chỉ sử dụng HERE Maps Geocoding API
+    async getCoordinatesFromAddress(address, point) {
+        try {
+            console.log(`Getting coordinates for ${point}:`, address);
+            
+            const API_KEY = '7GUpHwbsEgObqnGg4JG34CJvdbf89IU4iq-SDFe8vmE';
+            const params = new URLSearchParams({
+                q: address,
+                apiKey: API_KEY,
+                limit: 1
+            });
+            
+            const response = await fetch(`https://geocode.search.hereapi.com/v1/geocode?${params}`);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            
+            if (data.items && data.items.length > 0) {
+                const item = data.items[0];
+                const position = item.position;
+                
+                console.log(`Coordinates found for ${point}:`, position);
+                
+                // Xóa markers cũ nếu có
+                this.clearMarkers();
+                
+                // Cập nhật tọa độ cho điểm
+                if (point === 'A') {
+                    this.point1 = position;
+                    this.addMarker(position, 'A');
+                    this.updateStatus('Nhấp để đặt điểm B hoặc chọn từ dropdown');
+                    showNotification('✅ Đã đặt điểm A từ dropdown', 'success');
+                } else if (point === 'B') {
+                    this.point2 = position;
+                    this.addMarker(position, 'B');
+                    this.updateStatus('Đang tính toán khoảng cách...');
+                    showNotification('✅ Đã đặt điểm B từ dropdown', 'success');
+                    
+                    // Tự động tính khoảng cách
+                    await this.calculateDistance();
+                }
+                
+                // Cập nhật hiển thị tọa độ
+                this.updateCoordinatesDisplay(point, position);
+                
+            } else {
+                console.warn(`No coordinates found for address: ${address}`);
+                showNotification(`Không tìm thấy tọa độ cho địa chỉ: ${address}`, 'warning');
+            }
+            
+        } catch (error) {
+            console.error(`Error getting coordinates for ${point}:`, error);
+            showNotification(`Lỗi lấy tọa độ cho điểm ${point}: ${error.message}`, 'error');
+        }
+    }
+
+    // Cập nhật hiển thị tọa độ
+    updateCoordinatesDisplay(point, position) {
+        const coordsSpan = point === 'A' ? 
+            document.getElementById('pointACoords') : 
+            document.getElementById('pointBCoords');
+            
+        if (coordsSpan) {
+            coordsSpan.textContent = `${position.lat.toFixed(6)}, ${position.lng.toFixed(6)}`;
+        }
+    }
+
+    // Xóa markers cũ
+    clearMarkers() {
+        this.markers.forEach(marker => {
+            try {
+                this.map.removeObject(marker);
+            } catch (error) {
+                console.error('Error removing marker:', error);
+            }
+        });
+        this.markers = [];
     }
 
     initMap() {
@@ -145,8 +260,8 @@ class DistanceCalculator {
                 showNotification('Cảnh báo: Tọa độ nằm ngoài phạm vi Việt Nam', 'warning');
             }
             
-            // Cho phép click trên map để chọn điểm
-            // Có thể sử dụng cả dropdown và click trên map
+            // Xóa markers cũ nếu có
+            this.clearMarkers();
             
             if (!this.point1) {
                 // Đặt điểm A
@@ -154,9 +269,10 @@ class DistanceCalculator {
                 this.point1 = position;
                 this.addMarker(position, 'A');
                 this.getAddressFromLatLng(position, 'A');
-                this.updateStatus('Nhấp để đặt điểm B');
+                this.updateStatus('Nhấp để đặt điểm B hoặc chọn từ dropdown');
                 this.updateInputs('A', position);
-                showNotification('✅ Đã đặt điểm A', 'success');
+                this.updateCoordinatesDisplay('A', position);
+                showNotification('✅ Đã đặt điểm A từ bản đồ', 'success');
                 
             } else if (!this.point2) {
                 // Đặt điểm B
@@ -166,6 +282,7 @@ class DistanceCalculator {
                 this.getAddressFromLatLng(position, 'B');
                 this.updateStatus('Đang tính toán khoảng cách...');
                 this.updateInputs('B', position);
+                this.updateCoordinatesDisplay('B', position);
                 
                 // Tính khoảng cách
                 await this.calculateDistance();
@@ -696,8 +813,30 @@ class DistanceCalculator {
         // Reset inputs
         this.resetInputs();
         
+        // Reset coordinates display
+        const pointACoords = document.getElementById('pointACoords');
+        const pointBCoords = document.getElementById('pointBCoords');
+        if (pointACoords) pointACoords.textContent = '--';
+        if (pointBCoords) pointBCoords.textContent = '--';
+        
+        // Reset dropdowns nếu có Location Selector
+        if (this.locationSelector) {
+            // Reset dropdowns về trạng thái ban đầu
+            this.locationSelector.pointAProvince.value = '';
+            this.locationSelector.pointADistrict.innerHTML = '<option value="">Chọn quận/huyện</option>';
+            this.locationSelector.pointAWard.innerHTML = '<option value="">Chọn xã/phường</option>';
+            this.locationSelector.pointADistrict.disabled = true;
+            this.locationSelector.pointAWard.disabled = true;
+            
+            this.locationSelector.pointBProvince.value = '';
+            this.locationSelector.pointBDistrict.innerHTML = '<option value="">Chọn quận/huyện</option>';
+            this.locationSelector.pointBWard.innerHTML = '<option value="">Chọn xã/phường</option>';
+            this.locationSelector.pointBDistrict.disabled = true;
+            this.locationSelector.pointBWard.disabled = true;
+        }
+        
         // Reset status
-        this.updateStatus('Sẵn sàng - Nhấp để đặt điểm A');
+        this.updateStatus('Sẵn sàng - Chọn địa điểm từ dropdown hoặc click trên bản đồ');
         
         // Ẩn thông tin khoảng cách
         const infoPanel = document.getElementById('distanceInfo');
@@ -739,6 +878,10 @@ class DistanceCalculator {
         this.updateInputs('A', this.point1);
         this.updateInputs('B', this.point2);
 
+        // Cập nhật hiển thị tọa độ
+        this.updateCoordinatesDisplay('A', this.point1);
+        this.updateCoordinatesDisplay('B', this.point2);
+
         // Tính lại khoảng cách
         await this.calculateDistance();
 
@@ -773,7 +916,7 @@ class DistanceCalculator {
     reset() {
         console.log('Resetting distance calculator...');
         this.clearPoints();
-        this.updateStatus('Sẵn sàng - Nhấp để đặt điểm A');
+        this.updateStatus('Sẵn sàng - Chọn địa điểm từ dropdown hoặc click trên bản đồ');
         showNotification('🔄 Đã làm mới ứng dụng', 'success');
     }
 
