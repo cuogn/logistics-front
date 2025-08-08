@@ -69,7 +69,7 @@
         <div class="container">
             <h2>Lịch Sử Trạng Thái</h2>
             <div class="table-container">
-                <table class="table">
+                <table class="table table-responsive-stack">
                     <thead>
                         <tr>
                             <th>Thời Gian</th>
@@ -160,11 +160,11 @@
                     } else {
                         trackingBody.innerHTML = tracking.map(item => `
                             <tr>
-                                <td>${ui.formatDateTime(item.created_at)}</td>
-                                <td>${ui.getStatusBadge(item.status)}</td>
-                                <td>${item.location || getCurrentPositionText(item.status)}</td>
-                                <td>${item.description || '-'}</td>
-                                <td>${item.created_by_name || '-'}</td>
+                                <td data-label="Thời Gian">${ui.formatDateTime(item.created_at)}</td>
+                                <td data-label="Trạng Thái">${ui.getStatusBadge(item.status)}</td>
+                                <td data-label="Vị Trí">${item.location || getCurrentPositionText(item.status)}</td>
+                                <td data-label="Mô Tả">${item.description || '-'}</td>
+                                <td data-label="Người Thực Hiện">${item.created_by_name || '-'}</td>
                             </tr>
                         `).join('');
                     }
