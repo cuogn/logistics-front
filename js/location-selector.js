@@ -199,15 +199,18 @@ class VietnamAddressAPI {
         this.provinces = [];
         this.wards = {};
         this.districts = {};
+        this.cache = new Map(); // Cache để tránh gọi API nhiều lần
+        this.cacheTimeout = 5 * 60 * 1000; // 5 phút
     }
 
     // Sử dụng CORS proxy để tránh lỗi CORS
     async fetchWithProxy(url) {
         const proxies = [
-            null, // Direct fetch
-            'https://cors-anywhere.herokuapp.com/',
-            'https://api.allorigins.win/raw?url=',
-            'https://corsproxy.io/?'
+            'https://api.allorigins.win/raw?url=', // Most reliable
+            'https://corsproxy.io/?',
+            'https://thingproxy.freeboard.io/fetch/',
+            'https://api.codetabs.com/v1/proxy?quest=',
+            null // Direct fetch as last resort
         ];
 
         for (let i = 0; i < proxies.length; i++) {
@@ -228,6 +231,8 @@ class VietnamAddressAPI {
                 if (response.ok) {
                     console.log(`✅ Success with proxy ${i + 1}/${proxies.length}`);
                     return response;
+                } else {
+                    console.log(`❌ Proxy ${i + 1}/${proxies.length} returned status: ${response.status}`);
                 }
             } catch (error) {
                 console.log(`❌ Proxy ${i + 1}/${proxies.length} failed:`, error.message);
@@ -238,11 +243,43 @@ class VietnamAddressAPI {
         throw new Error('All proxies failed');
     }
 
+    // Cache helper methods
+    getCacheKey(url) {
+        return `api_${btoa(url)}`;
+    }
+
+    getFromCache(key) {
+        const cached = this.cache.get(key);
+        if (cached && Date.now() - cached.timestamp < this.cacheTimeout) {
+            console.log(`📦 Using cached data for: ${key}`);
+            return cached.data;
+        }
+        return null;
+    }
+
+    setCache(key, data) {
+        this.cache.set(key, {
+            data: data,
+            timestamp: Date.now()
+        });
+        console.log(`💾 Cached data for: ${key}`);
+    }
+
     // Lấy danh sách tỉnh/thành phố
     async getProvinces(mode = 2) {
         try {
-            console.log('Fetching provinces from tailieu365.com API...');
             const url = `${this.baseURL}/province?mode=${mode}`;
+            const cacheKey = this.getCacheKey(url);
+            
+            // Kiểm tra cache trước
+            const cachedData = this.getFromCache(cacheKey);
+            if (cachedData) {
+                this.provinces = cachedData;
+                console.log(`✅ Đã tải ${cachedData.length} tỉnh/thành phố từ cache`);
+                return cachedData;
+            }
+
+            console.log('Fetching provinces from tailieu365.com API...');
             const response = await this.fetchWithProxy(url);
             
             if (!response.ok) {
@@ -251,6 +288,9 @@ class VietnamAddressAPI {
             
             const data = await response.json();
             this.provinces = data;
+            
+            // Cache the data
+            this.setCache(cacheKey, data);
             
             console.log(`✅ Đã tải ${data.length} tỉnh/thành phố từ API`);
             console.log('📊 Sample data:', data.slice(0, 3));
@@ -294,6 +334,16 @@ class VietnamAddressAPI {
     async getWardsByProvince(provinceId) {
         try {
             const url = `${this.baseURL}/ward?provinceId=${provinceId}`;
+            const cacheKey = this.getCacheKey(url);
+            
+            // Kiểm tra cache trước
+            const cachedData = this.getFromCache(cacheKey);
+            if (cachedData) {
+                this.wards[`province_${provinceId}`] = cachedData;
+                console.log(`✅ Đã tải ${cachedData.length} xã/phường cho tỉnh ${provinceId} từ cache`);
+                return cachedData;
+            }
+
             const response = await this.fetchWithProxy(url);
             
             if (!response.ok) {
@@ -302,6 +352,9 @@ class VietnamAddressAPI {
             
             const data = await response.json();
             this.wards[`province_${provinceId}`] = data;
+            
+            // Cache the data
+            this.setCache(cacheKey, data);
             
             console.log(`✅ Đã tải ${data.length} xã/phường cho tỉnh ${provinceId}`);
             return data;
@@ -374,6 +427,45 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('Provinces:', provinces);
         }).catch(error => {
             console.error('Error:', error);
+        });
+    };
+
+    // Thêm function để clear cache
+    window.clearVietnamAPICache = function() {
+        locationSelector.addressAPI.cache.clear();
+        console.log('🗑️ Cache cleared');
+    };
+
+    // Thêm function để xem cache status
+    window.getVietnamAPICacheStatus = function() {
+        console.log('📊 Cache status:', {
+            size: locationSelector.addressAPI.cache.size,
+            entries: Array.from(locationSelector.addressAPI.cache.entries()).map(([key, value]) => ({
+                key: key,
+                age: Math.round((Date.now() - value.timestamp) / 1000) + 's ago'
+            }))
+        });
+    };
+
+    // Thêm function để test API trực tiếp
+    window.testDirectAPI = function() {
+        console.log('🧪 Testing direct API call...');
+        fetch('https://tailieu365.com/api/address/province?mode=2', {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json'
+            }
+        }).then(response => {
+            console.log('Direct API response status:', response.status);
+            if (response.ok) {
+                return response.json();
+            } else {
+                throw new Error(`HTTP ${response.status}`);
+            }
+        }).then(data => {
+            console.log('Direct API data:', data);
+        }).catch(error => {
+            console.error('Direct API error:', error);
         });
     };
 }); 
