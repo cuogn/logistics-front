@@ -274,7 +274,7 @@ class DistanceCalculator {
             showLoading();
             this.updateStatus('Đang tính toán tuyến đường...');
             
-            // Sử dụng HERE Maps Routing API v8 để tính toán chính xác
+            // Sử dụng HERE Maps Routing Service v8 để tính toán chính xác
             const route = await this.calculateRouteWithAPIv8();
             
             if (route) {
@@ -300,6 +300,10 @@ class DistanceCalculator {
                     shape: [
                         `${this.point1.lat},${this.point1.lng}`,
                         `${this.point2.lat},${this.point2.lng}`
+                    ],
+                    coordinates: [
+                        { lat: this.point1.lat, lng: this.point1.lng },
+                        { lat: this.point2.lat, lng: this.point2.lng }
                     ]
                 };
                 
@@ -430,78 +434,90 @@ class DistanceCalculator {
             // Xóa route cũ nếu có
             this.clearRoute();
             
-            // Tạo polyline từ route coordinates hoặc shape
-            const polyline = new H.geo.LineString();
+            let routeLine;
             
-            if (route.coordinates && Array.isArray(route.coordinates) && route.coordinates.length > 0) {
-                // Sử dụng coordinates chi tiết từ API - đây là tuyến đường thực tế
+            if (route.multiLineString) {
+                // Sử dụng MultiLineString từ HERE Maps Routing Service
+                console.log('Using MultiLineString for route');
+                
+                routeLine = new H.map.Polyline(route.multiLineString, {
+                    style: {
+                        strokeColor: '#007bff',
+                        lineWidth: 6
+                    }
+                });
+                
+                console.log('Route drawn with MultiLineString');
+                
+            } else if (route.coordinates && Array.isArray(route.coordinates) && route.coordinates.length > 0) {
+                // Fallback: sử dụng coordinates
+                console.log('Using coordinates for route');
+                
+                const polyline = new H.geo.LineString();
                 route.coordinates.forEach(coord => {
                     polyline.pushLatLngAlt(coord.lat, coord.lng);
                 });
-                console.log('Using detailed coordinates:', route.coordinates.length, 'points');
                 
-                // Kiểm tra xem có phải đường thẳng không
-                const isStraight = route.coordinates.length === 2 || this.isStraightLine(route.coordinates);
-                console.log('Is straight line:', isStraight);
-                
-                // Tạo polyline object với style phù hợp
-                const routeLine = new H.map.Polyline(polyline, {
+                routeLine = new H.map.Polyline(polyline, {
                     style: {
                         strokeColor: '#007bff',
-                        lineWidth: 6,
-                        lineDash: isStraight ? [10, 5] : [] // Đường đứt nét nếu là đường thẳng, liền nếu là đường cong
+                        lineWidth: 6
                     }
                 });
-
-                // Thêm route vào map
-                this.map.addObject(routeLine);
-                this.currentRoute = routeLine;
-
-                // Fit map to route với padding và zoom phù hợp
-                this.fitMapToRoute(routeLine);
                 
-                console.log('Route drawn successfully');
+                console.log('Route drawn with coordinates');
                 
             } else if (route.shape && Array.isArray(route.shape) && route.shape.length > 0) {
                 // Fallback: sử dụng shape từ route
+                console.log('Using shape coordinates for route');
+                
+                const polyline = new H.geo.LineString();
                 route.shape.forEach(point => {
                     const [lat, lng] = point.split(',');
                     polyline.pushLatLngAlt(parseFloat(lat), parseFloat(lng));
                 });
-                console.log('Using shape coordinates:', route.shape.length, 'points');
                 
-                const routeLine = new H.map.Polyline(polyline, {
+                routeLine = new H.map.Polyline(polyline, {
                     style: {
                         strokeColor: '#007bff',
                         lineWidth: 6,
                         lineDash: [10, 5] // Đường đứt nét cho fallback
                     }
                 });
-
-                this.map.addObject(routeLine);
-                this.currentRoute = routeLine;
-                this.fitMapToRoute(routeLine);
                 
             } else {
                 // Fallback cuối cùng: đường thẳng
-                polyline.pushLatLngAlt(this.point1.lat, this.point1.lng);
-                polyline.pushLatLngAlt(this.point2.lat, this.point2.lng);
                 console.log('Using straight line fallback');
                 
-                const routeLine = new H.map.Polyline(polyline, {
+                const polyline = new H.geo.LineString();
+                polyline.pushLatLngAlt(this.point1.lat, this.point1.lng);
+                polyline.pushLatLngAlt(this.point2.lat, this.point2.lng);
+                
+                routeLine = new H.map.Polyline(polyline, {
                     style: {
                         strokeColor: '#ff6b6b', // Màu đỏ cho đường thẳng (cảnh báo)
                         lineWidth: 4,
                         lineDash: [10, 5]
                     }
                 });
-
-                this.map.addObject(routeLine);
-                this.currentRoute = routeLine;
-                this.fitMapToPoints(); // Fit vào 2 điểm thay vì route
                 
                 showNotification('⚠️ Sử dụng đường thẳng do lỗi API', 'warning');
             }
+            
+            // Thêm route vào map
+            this.map.addObject(routeLine);
+            this.currentRoute = routeLine;
+            
+            // Fit map to route
+            if (route.multiLineString) {
+                // Sử dụng bounds của MultiLineString
+                this.fitMapToRoute(routeLine);
+            } else {
+                // Sử dụng bounds của Polyline
+                this.fitMapToRoute(routeLine);
+            }
+            
+            console.log('Route drawn successfully');
             
         } catch (error) {
             console.error('Error drawing route:', error);
@@ -926,83 +942,121 @@ class DistanceCalculator {
         }
     }
 
-    // Tính toán tuyến đường sử dụng HERE Maps API v8
+    // Tính toán tuyến đường sử dụng HERE Maps Routing Service v8
     async calculateRouteWithAPIv8() {
         try {
-            console.log('Calculating route with HERE Maps API v8...');
+            console.log('Calculating route with HERE Maps Routing Service v8...');
             
-            const API_KEY = '7GUpHwbsEgObqnGg4JG34CJvdbf89IU4iq-SDFe8vmE';
+            // Sử dụng HERE Maps Routing Service v8
+            const router = this.platform.getRoutingService(null, 8);
             
-            // Sử dụng tham số để có tuyến đường thực tế theo đường bộ
-            const params = new URLSearchParams({
-                transportMode: 'car',
+            // Tạo parameters cho routing request
+            const routingParameters = {
+                routingMode: "fast",
+                transportMode: "car",
                 origin: `${this.point1.lat},${this.point1.lng}`,
                 destination: `${this.point2.lat},${this.point2.lng}`,
-                return: 'summary,polyline',
-                routingMode: 'fast', // Sử dụng chế độ nhanh nhất để có tuyến đường thực tế
-                avoid: 'tollRoad', // Chỉ tránh đường thu phí
-                units: 'metric',
-                alternatives: '0',
-                apikey: API_KEY
-            });
+                return: "polyline"
+            };
             
-            const url = `https://router.hereapi.com/v8/routes?${params}`;
+            console.log('Routing parameters:', routingParameters);
             
-            console.log('Calling HERE Maps API v8:', url);
-            
-            const response = await fetch(url);
-            
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-            
-            const data = await response.json();
-            console.log('API Response:', data);
-            
-            if (data.routes && data.routes.length > 0) {
-                const route = data.routes[0];
-                const section = route.sections[0];
-                
-                console.log('Route section:', section);
-                console.log('Route summary:', section.summary);
-                
-                // Decode polyline để có tọa độ chi tiết
-                const coordinates = this.decodePolyline(section.polyline);
-                
-                if (coordinates.length > 0) {
-                    console.log('Decoded coordinates:', coordinates.length, 'points');
-                    
-                    // Kiểm tra xem tuyến đường có phải là đường thẳng không
-                    const isStraightLine = this.isStraightLine(coordinates);
-                    
-                    if (isStraightLine) {
-                        console.warn('Route appears to be a straight line, API may have failed');
-                        // Thử lại với tham số khác
-                        return await this.retryWithDifferentParams();
+            // Sử dụng Promise để handle async routing
+            return new Promise((resolve, reject) => {
+                const onResult = (result) => {
+                    try {
+                        console.log('Routing result:', result);
+                        
+                        // Đảm bảo có ít nhất một route
+                        if (result.routes && result.routes.length > 0) {
+                            const route = result.routes[0];
+                            console.log('Route found:', route);
+                            
+                            const lineStrings = [];
+                            
+                            // Xử lý từng section của route
+                            route.sections.forEach((section) => {
+                                console.log('Processing section:', section);
+                                
+                                // Tạo LineString từ polyline sử dụng fromFlexiblePolyline
+                                try {
+                                    const lineString = H.geo.LineString.fromFlexiblePolyline(section.polyline);
+                                    lineStrings.push(lineString);
+                                    console.log('LineString created from polyline');
+                                } catch (error) {
+                                    console.error('Error creating LineString from polyline:', error);
+                                    // Fallback: tạo LineString từ coordinates
+                                    if (section.polyline) {
+                                        const coordinates = this.decodePolyline(section.polyline);
+                                        const fallbackLineString = new H.geo.LineString();
+                                        coordinates.forEach(coord => {
+                                            fallbackLineString.pushLatLngAlt(coord.lat, coord.lng);
+                                        });
+                                        lineStrings.push(fallbackLineString);
+                                    }
+                                }
+                            });
+                            
+                            if (lineStrings.length > 0) {
+                                // Tạo MultiLineString
+                                const multiLineString = new H.geo.MultiLineString(lineStrings);
+                                
+                                // Tạo route object với thông tin cần thiết
+                                const routeObject = {
+                                    summary: {
+                                        distance: route.sections[0].summary.length,
+                                        travelTime: route.sections[0].summary.duration
+                                    },
+                                    multiLineString: multiLineString,
+                                    lineStrings: lineStrings,
+                                    coordinates: this.extractCoordinatesFromLineStrings(lineStrings)
+                                };
+                                
+                                console.log('Route object created:', routeObject);
+                                resolve(routeObject);
+                            } else {
+                                reject(new Error('No valid LineStrings created'));
+                            }
+                        } else {
+                            reject(new Error('No routes found in response'));
+                        }
+                    } catch (error) {
+                        console.error('Error processing routing result:', error);
+                        reject(error);
                     }
-                    
-                    // Tối ưu hóa tuyến đường nhưng giữ nguyên đường cong
-                    const optimizedCoordinates = this.optimizeRoute(coordinates);
-                    
-                    return {
-                        summary: {
-                            distance: section.summary.length, // Khoảng cách tính bằng mét
-                            travelTime: section.summary.duration // Thời gian tính bằng giây
-                        },
-                        shape: optimizedCoordinates.map(coord => `${coord.lat},${coord.lng}`),
-                        coordinates: optimizedCoordinates
-                    };
-                } else {
-                    throw new Error('No valid coordinates decoded from polyline');
-                }
-            } else {
-                throw new Error('No routes found in response');
-            }
+                };
+                
+                const onError = (error) => {
+                    console.error('Routing error:', error);
+                    reject(error);
+                };
+                
+                // Gọi calculateRoute
+                router.calculateRoute(routingParameters, onResult, onError);
+            });
             
         } catch (error) {
             console.error('Error in calculateRouteWithAPIv8:', error);
             return null;
         }
+    }
+
+    // Trích xuất coordinates từ LineStrings
+    extractCoordinatesFromLineStrings(lineStrings) {
+        const coordinates = [];
+        
+        lineStrings.forEach(lineString => {
+            const points = lineString.getLatLngAltArray();
+            for (let i = 0; i < points.length; i += 3) {
+                coordinates.push({
+                    lat: points[i],
+                    lng: points[i + 1]
+                });
+            }
+        });
+        
+        console.log('Extracted coordinates:', coordinates.length, 'points');
+        return coordinates;
     }
 
     // Decode polyline từ HERE Maps API
@@ -1174,6 +1228,11 @@ class DistanceCalculator {
     debugRoute(route) {
         console.log('=== ROUTE DEBUG ===');
         console.log('Route object:', route);
+        
+        if (route.multiLineString) {
+            console.log('MultiLineString route detected');
+            console.log('LineStrings count:', route.lineStrings ? route.lineStrings.length : 'unknown');
+        }
         
         if (route.coordinates) {
             console.log('Coordinates count:', route.coordinates.length);
