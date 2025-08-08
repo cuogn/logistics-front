@@ -823,15 +823,11 @@ class DistanceCalculator {
         if (this.locationSelector) {
             // Reset dropdowns về trạng thái ban đầu
             this.locationSelector.pointAProvince.value = '';
-            this.locationSelector.pointADistrict.innerHTML = '<option value="">Chọn quận/huyện</option>';
             this.locationSelector.pointAWard.innerHTML = '<option value="">Chọn xã/phường</option>';
-            this.locationSelector.pointADistrict.disabled = true;
             this.locationSelector.pointAWard.disabled = true;
             
             this.locationSelector.pointBProvince.value = '';
-            this.locationSelector.pointBDistrict.innerHTML = '<option value="">Chọn quận/huyện</option>';
             this.locationSelector.pointBWard.innerHTML = '<option value="">Chọn xã/phường</option>';
-            this.locationSelector.pointBDistrict.disabled = true;
             this.locationSelector.pointBWard.disabled = true;
         }
         

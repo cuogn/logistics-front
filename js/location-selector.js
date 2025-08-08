@@ -9,13 +9,11 @@ class VietnamLocationSelector {
     initializeSelectors() {
         // Điểm A
         this.pointAProvince = document.getElementById('pointAProvince');
-        this.pointADistrict = document.getElementById('pointADistrict');
         this.pointAWard = document.getElementById('pointAWard');
         this.pointACoords = document.getElementById('pointACoords');
 
         // Điểm B
         this.pointBProvince = document.getElementById('pointBProvince');
-        this.pointBDistrict = document.getElementById('pointBDistrict');
         this.pointBWard = document.getElementById('pointBWard');
         this.pointBCoords = document.getElementById('pointBCoords');
 
@@ -25,12 +23,10 @@ class VietnamLocationSelector {
     setupEventListeners() {
         // Điểm A
         this.pointAProvince.addEventListener('change', () => this.onProvinceChange('A'));
-        this.pointADistrict.addEventListener('change', () => this.onDistrictChange('A'));
         this.pointAWard.addEventListener('change', () => this.onWardChange('A'));
 
         // Điểm B
         this.pointBProvince.addEventListener('change', () => this.onProvinceChange('B'));
-        this.pointBDistrict.addEventListener('change', () => this.onDistrictChange('B'));
         this.pointBWard.addEventListener('change', () => this.onWardChange('B'));
     }
 
@@ -64,54 +60,20 @@ class VietnamLocationSelector {
 
     async onProvinceChange(point) {
         const provinceSelect = point === 'A' ? this.pointAProvince : this.pointBProvince;
-        const districtSelect = point === 'A' ? this.pointADistrict : this.pointBDistrict;
         const wardSelect = point === 'A' ? this.pointAWard : this.pointBWard;
         const coordsSpan = point === 'A' ? this.pointACoords : this.pointBCoords;
 
         const provinceId = provinceSelect.value;
-        
-        // Reset district và ward
-        districtSelect.innerHTML = '<option value="">Chọn quận/huyện</option>';
-        wardSelect.innerHTML = '<option value="">Chọn xã/phường</option>';
-        districtSelect.disabled = true;
-        wardSelect.disabled = true;
-        coordsSpan.textContent = '--';
-
-        if (provinceId) {
-            try {
-                const districts = await this.addressAPI.getDistricts(provinceId);
-                
-                // Cập nhật dropdown quận/huyện
-                districts.forEach(district => {
-                    const option = document.createElement('option');
-                    option.value = district.id;
-                    option.textContent = district.name;
-                    districtSelect.appendChild(option);
-                });
-                
-                districtSelect.disabled = false;
-                console.log(`Đã tải danh sách quận/huyện cho tỉnh ${provinceId}:`, districts.length);
-            } catch (error) {
-                console.error('Lỗi khi tải danh sách quận/huyện:', error);
-            }
-        }
-    }
-
-    async onDistrictChange(point) {
-        const districtSelect = point === 'A' ? this.pointADistrict : this.pointBDistrict;
-        const wardSelect = point === 'A' ? this.pointAWard : this.pointBWard;
-        const coordsSpan = point === 'A' ? this.pointACoords : this.pointBCoords;
-
-        const districtId = districtSelect.value;
         
         // Reset ward
         wardSelect.innerHTML = '<option value="">Chọn xã/phường</option>';
         wardSelect.disabled = true;
         coordsSpan.textContent = '--';
 
-        if (districtId) {
+        if (provinceId) {
             try {
-                const wards = await this.addressAPI.getWardsByDistrict(districtId);
+                // Lấy xã/phường trực tiếp theo tỉnh
+                const wards = await this.addressAPI.getWardsByProvince(provinceId);
                 
                 // Cập nhật dropdown xã/phường
                 wards.forEach(ward => {
@@ -122,7 +84,7 @@ class VietnamLocationSelector {
                 });
                 
                 wardSelect.disabled = false;
-                console.log(`Đã tải danh sách xã/phường cho quận/huyện ${districtId}:`, wards.length);
+                console.log(`Đã tải danh sách xã/phường cho tỉnh ${provinceId}:`, wards.length);
             } catch (error) {
                 console.error('Lỗi khi tải danh sách xã/phường:', error);
             }
@@ -131,21 +93,18 @@ class VietnamLocationSelector {
 
     async onWardChange(point) {
         const provinceSelect = point === 'A' ? this.pointAProvince : this.pointBProvince;
-        const districtSelect = point === 'A' ? this.pointADistrict : this.pointBDistrict;
         const wardSelect = point === 'A' ? this.pointAWard : this.pointBWard;
         const coordsSpan = point === 'A' ? this.pointACoords : this.pointBCoords;
 
         const provinceId = provinceSelect.value;
-        const districtId = districtSelect.value;
         const wardId = wardSelect.value;
 
         if (wardId) {
             // Tạo địa chỉ đầy đủ
             const provinceName = provinceSelect.options[provinceSelect.selectedIndex].text;
-            const districtName = districtSelect.options[districtSelect.selectedIndex].text;
             const wardName = wardSelect.options[wardSelect.selectedIndex].text;
             
-            const fullAddress = `${wardName}, ${districtName}, ${provinceName}, Việt Nam`;
+            const fullAddress = `${wardName}, ${provinceName}, Việt Nam`;
             coordsSpan.textContent = fullAddress;
             
             console.log(`Địa chỉ ${point}:`, fullAddress);
@@ -156,7 +115,6 @@ class VietnamLocationSelector {
                     point: point,
                     address: fullAddress,
                     provinceId: provinceId,
-                    districtId: districtId,
                     wardId: wardId
                 }
             });
@@ -167,15 +125,13 @@ class VietnamLocationSelector {
     // Lấy thông tin địa chỉ đầy đủ
     getFullAddress(point) {
         const provinceSelect = point === 'A' ? this.pointAProvince : this.pointBProvince;
-        const districtSelect = point === 'A' ? this.pointADistrict : this.pointBDistrict;
         const wardSelect = point === 'A' ? this.pointAWard : this.pointBWard;
 
         const provinceName = provinceSelect.options[provinceSelect.selectedIndex]?.text || '';
-        const districtName = districtSelect.options[districtSelect.selectedIndex]?.text || '';
         const wardName = wardSelect.options[wardSelect.selectedIndex]?.text || '';
 
-        if (provinceName && districtName && wardName) {
-            return `${wardName}, ${districtName}, ${provinceName}, Việt Nam`;
+        if (provinceName && wardName) {
+            return `${wardName}, ${provinceName}, Việt Nam`;
         }
         return null;
     }
@@ -186,14 +142,17 @@ class VietnamAddressAPI {
     constructor() {
         this.baseURL = 'https://tailieu365.com/api/address';
         this.provinces = [];
-        this.districts = {};
         this.wards = {};
     }
 
     // Lấy danh sách tỉnh/thành phố
     async getProvinces(mode = 2) {
         try {
-            const response = await fetch(`${this.baseURL}/province?mode=${mode}`);
+            const response = await fetch(`${this.baseURL}/province?mode=${mode}`, {
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
@@ -206,42 +165,14 @@ class VietnamAddressAPI {
         }
     }
 
-    // Lấy danh sách quận/huyện theo tỉnh
-    async getDistricts(provinceId) {
-        try {
-            const response = await fetch(`${this.baseURL}/district?provinceId=${provinceId}`);
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            const data = await response.json();
-            this.districts[provinceId] = data;
-            return data;
-        } catch (error) {
-            console.error('Lỗi khi lấy danh sách quận/huyện:', error);
-            return [];
-        }
-    }
-
-    // Lấy danh sách xã/phường theo quận/huyện
-    async getWardsByDistrict(districtId) {
-        try {
-            const response = await fetch(`${this.baseURL}/ward?districtId=${districtId}`);
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            const data = await response.json();
-            this.wards[districtId] = data;
-            return data;
-        } catch (error) {
-            console.error('Lỗi khi lấy danh sách xã/phường theo quận/huyện:', error);
-            return [];
-        }
-    }
-
-    // Lấy danh sách xã/phường theo tỉnh (mới)
+    // Lấy danh sách xã/phường theo tỉnh
     async getWardsByProvince(provinceId) {
         try {
-            const response = await fetch(`${this.baseURL}/ward?provinceId=${provinceId}`);
+            const response = await fetch(`${this.baseURL}/ward?provinceId=${provinceId}`, {
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
