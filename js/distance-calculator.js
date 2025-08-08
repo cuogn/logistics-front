@@ -266,6 +266,9 @@ class DistanceCalculator {
             const route = await this.calculateRouteWithAPIv8();
             
             if (route) {
+                // Debug route information
+                this.debugRoute(route);
+                
                 hideLoading();
                 this.displayDistanceInfo(route);
                 this.drawRoute(route);
@@ -287,6 +290,9 @@ class DistanceCalculator {
                         `${this.point2.lat},${this.point2.lng}`
                     ]
                 };
+                
+                // Debug fallback route
+                this.debugRoute(fallbackRoute);
                 
                 hideLoading();
                 this.displayDistanceInfo(fallbackRoute);
@@ -415,13 +421,13 @@ class DistanceCalculator {
             // Tạo polyline từ route coordinates hoặc shape
             const polyline = new H.geo.LineString();
             
-            if (route.coordinates && Array.isArray(route.coordinates)) {
-                // Sử dụng coordinates chi tiết từ API
+            if (route.coordinates && Array.isArray(route.coordinates) && route.coordinates.length > 0) {
+                // Sử dụng coordinates chi tiết từ API - đây là tuyến đường thực tế
                 route.coordinates.forEach(coord => {
                     polyline.pushLatLngAlt(coord.lat, coord.lng);
                 });
                 console.log('Using detailed coordinates:', route.coordinates.length, 'points');
-            } else if (route.shape && Array.isArray(route.shape)) {
+            } else if (route.shape && Array.isArray(route.shape) && route.shape.length > 0) {
                 // Fallback: sử dụng shape từ route
                 route.shape.forEach(point => {
                     const [lat, lng] = point.split(',');
@@ -448,34 +454,102 @@ class DistanceCalculator {
             this.map.addObject(routeLine);
             this.currentRoute = routeLine;
 
-            // Fit map to route với padding
-            try {
-                const bounds = routeLine.getBoundingBox();
-                this.map.getViewModel().setLookAtData({
-                    bounds: bounds,
-                    padding: { top: 50, right: 50, bottom: 50, left: 50 }
-                });
-            } catch (error) {
-                console.error('Error fitting map to route:', error);
-                // Fallback: fit to points
-                const points = [this.point1, this.point2];
-                const bounds = new H.geo.Rect(
-                    Math.min(...points.map(p => p.lat)),
-                    Math.min(...points.map(p => p.lng)),
-                    Math.max(...points.map(p => p.lat)),
-                    Math.max(...points.map(p => p.lng))
-                );
-                this.map.getViewModel().setLookAtData({
-                    bounds: bounds,
-                    padding: { top: 50, right: 50, bottom: 50, left: 50 }
-                });
-            }
+            // Fit map to route với padding và zoom phù hợp
+            this.fitMapToRoute(routeLine);
             
             console.log('Route drawn successfully');
             
         } catch (error) {
             console.error('Error drawing route:', error);
             showNotification('Lỗi vẽ tuyến đường', 'error');
+        }
+    }
+
+    // Phương thức mới để fit map vào tuyến đường
+    fitMapToRoute(routeLine) {
+        try {
+            console.log('Fitting map to route...');
+            
+            // Lấy bounds của route
+            const bounds = routeLine.getBoundingBox();
+            
+            if (bounds) {
+                // Tính toán padding dựa trên kích thước route
+                const latDiff = bounds.getTop() - bounds.getBottom();
+                const lngDiff = bounds.getRight() - bounds.getLeft();
+                
+                // Padding động dựa trên khoảng cách
+                let padding = { top: 50, right: 50, bottom: 50, left: 50 };
+                
+                if (latDiff > 1 || lngDiff > 1) {
+                    // Route dài, giảm padding
+                    padding = { top: 20, right: 20, bottom: 20, left: 20 };
+                } else if (latDiff < 0.01 || lngDiff < 0.01) {
+                    // Route ngắn, tăng padding
+                    padding = { top: 100, right: 100, bottom: 100, left: 100 };
+                }
+                
+                console.log('Fitting map with bounds:', bounds, 'padding:', padding);
+                
+                this.map.getViewModel().setLookAtData({
+                    bounds: bounds,
+                    padding: padding
+                });
+                
+                console.log('Map fitted successfully');
+            } else {
+                // Fallback: fit to points
+                this.fitMapToPoints();
+            }
+            
+        } catch (error) {
+            console.error('Error fitting map to route:', error);
+            // Fallback: fit to points
+            this.fitMapToPoints();
+        }
+    }
+
+    // Phương thức fallback để fit map vào 2 điểm
+    fitMapToPoints() {
+        try {
+            console.log('Fitting map to points...');
+            
+            const points = [this.point1, this.point2];
+            const bounds = new H.geo.Rect(
+                Math.min(...points.map(p => p.lat)),
+                Math.min(...points.map(p => p.lng)),
+                Math.max(...points.map(p => p.lat)),
+                Math.max(...points.map(p => p.lng))
+            );
+            
+            // Thêm padding để 2 điểm không ở sát mép
+            const latPadding = (bounds.getTop() - bounds.getBottom()) * 0.1;
+            const lngPadding = (bounds.getRight() - bounds.getLeft()) * 0.1;
+            
+            const paddedBounds = new H.geo.Rect(
+                bounds.getBottom() - latPadding,
+                bounds.getLeft() - lngPadding,
+                bounds.getTop() + latPadding,
+                bounds.getRight() + lngPadding
+            );
+            
+            this.map.getViewModel().setLookAtData({
+                bounds: paddedBounds,
+                padding: { top: 50, right: 50, bottom: 50, left: 50 }
+            });
+            
+            console.log('Map fitted to points successfully');
+            
+        } catch (error) {
+            console.error('Error fitting map to points:', error);
+            // Fallback cuối cùng: zoom vào điểm giữa
+            const centerLat = (this.point1.lat + this.point2.lat) / 2;
+            const centerLng = (this.point1.lng + this.point2.lng) / 2;
+            
+            this.map.getViewModel().setLookAtData({
+                center: { lat: centerLat, lng: centerLng },
+                zoom: 10
+            });
         }
     }
 
@@ -765,7 +839,20 @@ class DistanceCalculator {
             console.log('Calculating route with HERE Maps API v8...');
             
             const API_KEY = '7GUpHwbsEgObqnGg4JG34CJvdbf89IU4iq-SDFe8vmE';
-            const url = `https://router.hereapi.com/v8/routes?transportMode=car&origin=${this.point1.lat},${this.point1.lng}&destination=${this.point2.lat},${this.point2.lng}&return=summary,polyline&apikey=${API_KEY}`;
+            
+            // Sử dụng nhiều tham số để có tuyến đường chính xác hơn
+            const params = new URLSearchParams({
+                transportMode: 'car',
+                origin: `${this.point1.lat},${this.point1.lng}`,
+                destination: `${this.point2.lat},${this.point2.lng}`,
+                return: 'summary,polyline',
+                routingMode: 'fast', // Sử dụng chế độ nhanh nhất
+                avoid: 'tollRoad', // Tránh đường thu phí nếu có thể
+                units: 'metric', // Sử dụng đơn vị mét
+                apikey: API_KEY
+            });
+            
+            const url = `https://router.hereapi.com/v8/routes?${params}`;
             
             console.log('Calling HERE Maps API v8:', url);
             
@@ -782,17 +869,25 @@ class DistanceCalculator {
                 const route = data.routes[0];
                 const section = route.sections[0];
                 
+                console.log('Route section:', section);
+                
                 // Decode polyline để có tọa độ chi tiết
                 const coordinates = this.decodePolyline(section.polyline);
                 
-                return {
-                    summary: {
-                        distance: section.summary.length, // Khoảng cách tính bằng mét
-                        travelTime: section.summary.duration // Thời gian tính bằng giây
-                    },
-                    shape: coordinates.map(coord => `${coord.lat},${coord.lng}`),
-                    coordinates: coordinates
-                };
+                if (coordinates.length > 0) {
+                    console.log('Decoded coordinates:', coordinates.length, 'points');
+                    
+                    return {
+                        summary: {
+                            distance: section.summary.length, // Khoảng cách tính bằng mét
+                            travelTime: section.summary.duration // Thời gian tính bằng giây
+                        },
+                        shape: coordinates.map(coord => `${coord.lat},${coord.lng}`),
+                        coordinates: coordinates
+                    };
+                } else {
+                    throw new Error('No valid coordinates decoded from polyline');
+                }
             } else {
                 throw new Error('No routes found in response');
             }
@@ -840,7 +935,7 @@ class DistanceCalculator {
                 const latCoord = lat / 1E5;
                 const lngCoord = lng / 1E5;
                 
-                // Validate coordinates
+                // Validate coordinates - chỉ chấp nhận coordinates hợp lệ
                 if (latCoord >= -90 && latCoord <= 90 && lngCoord >= -180 && lngCoord <= 180) {
                     poly.push({ lat: latCoord, lng: lngCoord });
                 } else {
@@ -853,7 +948,46 @@ class DistanceCalculator {
         }
         
         console.log('Decoded polyline coordinates:', poly.length, 'valid points');
+        if (poly.length > 0) {
+            console.log('First point:', poly[0]);
+            console.log('Last point:', poly[poly.length - 1]);
+        }
+        
+        // Đảm bảo có ít nhất 2 điểm để vẽ đường
+        if (poly.length < 2) {
+            console.log('Not enough points for route, adding start and end points');
+            poly.unshift({ lat: this.point1.lat, lng: this.point1.lng });
+            poly.push({ lat: this.point2.lat, lng: this.point2.lng });
+        }
+        
         return poly;
+    }
+
+    // Phương thức debug để kiểm tra thông tin tuyến đường
+    debugRoute(route) {
+        console.log('=== ROUTE DEBUG ===');
+        console.log('Route object:', route);
+        
+        if (route.coordinates) {
+            console.log('Coordinates count:', route.coordinates.length);
+            console.log('First coordinate:', route.coordinates[0]);
+            console.log('Last coordinate:', route.coordinates[route.coordinates.length - 1]);
+        }
+        
+        if (route.shape) {
+            console.log('Shape count:', route.shape.length);
+            console.log('First shape point:', route.shape[0]);
+            console.log('Last shape point:', route.shape[route.shape.length - 1]);
+        }
+        
+        if (route.summary) {
+            console.log('Distance (m):', route.summary.distance);
+            console.log('Duration (s):', route.summary.travelTime);
+            console.log('Distance (km):', (route.summary.distance / 1000).toFixed(2));
+            console.log('Duration (min):', Math.round(route.summary.travelTime / 60));
+        }
+        
+        console.log('=== END DEBUG ===');
     }
 }
 
