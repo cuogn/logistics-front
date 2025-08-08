@@ -137,17 +137,28 @@ body {
     border-radius: 0.5rem;
     background: rgba(59, 130, 246, 0.05);
     border: 1px solid rgba(59, 130, 246, 0.1);
+    transition: all 0.3s ease;
+}
+
+.user-menu-dropdown:hover {
+    background: rgba(59, 130, 246, 0.1);
+    border-color: rgba(59, 130, 246, 0.2);
 }
 
 .user-name {
     font-weight: 500;
     color: #1e40af;
     font-size: 0.875rem;
+    white-space: nowrap;
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .btn-sm {
     padding: 0.5rem 1rem;
     font-size: 0.75rem;
+    white-space: nowrap;
 }
 
 .header-actions {
@@ -941,6 +952,12 @@ body {
     
     .user-name {
         font-size: 0.8rem;
+        max-width: 100px;
+    }
+    
+    .btn-sm {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.7rem;
     }
 }
 
@@ -1035,6 +1052,10 @@ body {
         color: #60a5fa;
         font-weight: 500;
         font-size: 1.1rem;
+        padding: 0.5rem;
+        background: rgba(96, 165, 250, 0.1);
+        border-radius: 0.5rem;
+        border: 1px solid rgba(96, 165, 250, 0.2);
     }
     
     .mobile-actions {

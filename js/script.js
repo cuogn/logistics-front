@@ -127,25 +127,12 @@ document.addEventListener('DOMContentLoaded', function() {
 // Handle user authentication display
 function handleUserAuth() {
     const user = JSON.parse(localStorage.getItem('user') || 'null');
-    const userMenu = document.getElementById('userMenu');
-    const userName = document.getElementById('userName');
-    const logoutBtn = document.getElementById('logoutBtn');
     const navUserMenu = document.getElementById('navUserMenu');
     const navUserName = document.getElementById('navUserName');
     const navLogoutBtn = document.getElementById('navLogoutBtn');
     const headerActions = document.querySelector('.header-actions');
     
     if (user && user.role) {
-        // Show user menu in header actions
-        if (userMenu && userName && logoutBtn) {
-            userMenu.style.display = 'flex';
-            userName.textContent = user.lastName ? (user.firstName + ' ' + user.lastName) : user.email;
-            logoutBtn.onclick = function() { 
-                if (window.api && api.logout) api.logout(); 
-                else window.location.href = 'pages/login.html'; 
-            };
-        }
-        
         // Show user menu in navigation
         if (navUserMenu && navUserName && navLogoutBtn) {
             navUserMenu.style.display = 'block';
@@ -164,8 +151,7 @@ function handleUserAuth() {
             if (registerBtn) registerBtn.style.display = 'none';
         }
     } else {
-        // Hide user menus
-        if (userMenu) userMenu.style.display = 'none';
+        // Hide user menu
         if (navUserMenu) navUserMenu.style.display = 'none';
         
         // Show login/register buttons
@@ -230,6 +216,11 @@ function createMobileMenu() {
             } else {
                 window.location.href = 'pages/login.html';
             }
+            // Close mobile menu after logout
+            mobileMenu.classList.remove('active');
+            const menuIcon = document.querySelector('#mobileMenuToggle i');
+            menuIcon.setAttribute('data-lucide', 'menu');
+            lucide.createIcons();
         });
     }
     
