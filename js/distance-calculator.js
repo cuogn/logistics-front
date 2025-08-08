@@ -1,4 +1,211 @@
-// Distance Calculator với HERE Maps API và API địa chỉ hành chính Việt Nam
+// Vietnam Address Data Manager - Quản lý dữ liệu địa chỉ từ JSON files
+class VietnamAddressDataManager {
+    constructor() {
+        this.provinces = [];
+        this.wards = {};
+        this.cache = new Map();
+        this.cacheTimeout = 5 * 60 * 1000; // 5 phút
+        this.jsonData = {
+            provinces: null,
+            wards: null
+        };
+    }
+
+    // Đọc dữ liệu từ JSON files
+    async loadJSONData() {
+        try {
+            console.log('🔄 Loading JSON data...');
+            
+            // Load provinces data
+            if (!this.jsonData.provinces) {
+                console.log('📂 Loading provinces JSON...');
+                const provincesResponse = await fetch('../images/province.json');
+                this.jsonData.provinces = await provincesResponse.json();
+                console.log('✅ Provinces JSON loaded');
+            }
+            
+            // Load wards data (only when needed to save memory)
+            if (!this.jsonData.wards) {
+                console.log('📂 Loading wards JSON...');
+                const wardsResponse = await fetch('../images/ward.json');
+                this.jsonData.wards = await wardsResponse.json();
+                console.log('✅ Wards JSON loaded');
+            }
+            
+            return true;
+        } catch (error) {
+            console.error('❌ Error loading JSON data:', error);
+            return false;
+        }
+    }
+
+    // Cache helper methods
+    getFromCache(key) {
+        const cached = this.cache.get(key);
+        if (cached && Date.now() - cached.timestamp < this.cacheTimeout) {
+            console.log(`📦 Using cached data for: ${key}`);
+            return cached.data;
+        }
+        return null;
+    }
+
+    setCache(key, data) {
+        this.cache.set(key, {
+            data: data,
+            timestamp: Date.now()
+        });
+        console.log(`💾 Cached data for: ${key}`);
+    }
+
+    // Lấy danh sách tỉnh/thành phố từ JSON
+    async getProvinces() {
+        try {
+            const cacheKey = 'provinces_json';
+            
+            // Kiểm tra cache trước
+            const cachedData = this.getFromCache(cacheKey);
+            if (cachedData) {
+                this.provinces = cachedData;
+                console.log(`✅ Đã tải ${cachedData.length} tỉnh/thành phố từ cache`);
+                return cachedData;
+            }
+
+            console.log('🔄 Loading provinces from JSON file...');
+            
+            // Load JSON data
+            const success = await this.loadJSONData();
+            if (!success) {
+                throw new Error('Failed to load JSON data');
+            }
+            
+            // Extract provinces from JSON
+            const provinces = [];
+            if (this.jsonData.provinces) {
+                Object.keys(this.jsonData.provinces).forEach((code) => {
+                    const province = this.jsonData.provinces[code];
+                    provinces.push({
+                        id: parseInt(code),
+                        code: code,
+                        name: province.name,
+                        name_with_type: province.name_with_type,
+                        type: province.type,
+                        slug: province.slug
+                    });
+                });
+            }
+            
+            this.provinces = provinces;
+            
+            // Cache the data
+            this.setCache(cacheKey, provinces);
+            
+            console.log(`✅ Đã tải ${provinces.length} tỉnh/thành phố từ JSON`);
+            console.log('📊 Sample provinces:', provinces.slice(0, 3));
+            
+            return provinces;
+        } catch (error) {
+            console.error('Lỗi khi lấy danh sách tỉnh/thành phố:', error);
+            
+            // Fallback to hardcoded data if JSON fails
+            console.log('🔄 Using fallback data due to JSON error');
+            const fallbackData = [
+                { id: 11, name: 'Hà Nội', name_with_type: 'Thành phố Hà Nội' },
+                { id: 12, name: 'Hồ Chí Minh', name_with_type: 'Thành phố Hồ Chí Minh' },
+                { id: 13, name: 'Đà Nẵng', name_with_type: 'Thành phố Đà Nẵng' },
+                { id: 14, name: 'Hải Phòng', name_with_type: 'Thành phố Hải Phòng' },
+                { id: 15, name: 'Cần Thơ', name_with_type: 'Thành phố Cần Thơ' },
+                { id: 16, name: 'Huế', name_with_type: 'Thành phố Huế' },
+                { id: 17, name: 'An Giang', name_with_type: 'Tỉnh An Giang' },
+                { id: 18, name: 'Bắc Ninh', name_with_type: 'Tỉnh Bắc Ninh' },
+                { id: 19, name: 'Cà Mau', name_with_type: 'Tỉnh Cà Mau' },
+                { id: 20, name: 'Cao Bằng', name_with_type: 'Tỉnh Cao Bằng' },
+                { id: 21, name: 'Đắk Lắk', name_with_type: 'Tỉnh Đắk Lắk' },
+                { id: 22, name: 'Điện Biên', name_with_type: 'Tỉnh Điện Biên' },
+                { id: 23, name: 'Đồng Nai', name_with_type: 'Tỉnh Đồng Nai' },
+                { id: 24, name: 'Đồng Tháp', name_with_type: 'Tỉnh Đồng Tháp' }
+            ];
+            
+            this.provinces = fallbackData;
+            this.setCache('provinces_json', fallbackData);
+            
+            return fallbackData;
+        }
+    }
+
+    // Lấy danh sách xã/phường theo tỉnh từ JSON
+    async getWardsByProvince(provinceId) {
+        try {
+            const cacheKey = `wards_province_${provinceId}`;
+            
+            // Kiểm tra cache trước
+            const cachedData = this.getFromCache(cacheKey);
+            if (cachedData) {
+                this.wards[`province_${provinceId}`] = cachedData;
+                console.log(`✅ Đã tải ${cachedData.length} xã/phường cho tỉnh ${provinceId} từ cache`);
+                return cachedData;
+            }
+
+            console.log(`🔄 Loading wards for province ${provinceId} from JSON...`);
+            
+            // Load JSON data if not loaded
+            const success = await this.loadJSONData();
+            if (!success) {
+                throw new Error('Failed to load JSON data');
+            }
+            
+            // Get province to filter wards
+            const province = this.provinces.find(p => p.id == provinceId);
+            if (!province) {
+                throw new Error(`Province ${provinceId} not found`);
+            }
+            
+            // Extract wards for this province from JSON
+            const wards = [];
+            if (this.jsonData.wards) {
+                Object.keys(this.jsonData.wards).forEach((code) => {
+                    const ward = this.jsonData.wards[code];
+                    if (ward.parent_code == provinceId) {
+                        wards.push({
+                            id: parseInt(code),
+                            code: code,
+                            name: ward.name,
+                            name_with_type: ward.name_with_type,
+                            type: ward.type,
+                            slug: ward.slug,
+                            path: ward.path,
+                            path_with_type: ward.path_with_type,
+                            parent_code: ward.parent_code
+                        });
+                    }
+                });
+            }
+            
+            this.wards[`province_${provinceId}`] = wards;
+            
+            // Cache the data
+            this.setCache(cacheKey, wards);
+            
+            console.log(`✅ Đã tải ${wards.length} xã/phường cho tỉnh ${province.name} từ JSON`);
+            return wards;
+        } catch (error) {
+            console.error('Lỗi khi lấy danh sách xã/phường theo tỉnh:', error);
+            
+            // Fallback to generic wards
+            const fallbackWards = [
+                { id: 1, name: 'Phường 1', name_with_type: 'Phường 1' },
+                { id: 2, name: 'Phường 2', name_with_type: 'Phường 2' },
+                { id: 3, name: 'Phường 3', name_with_type: 'Phường 3' },
+                { id: 4, name: 'Phường 4', name_with_type: 'Phường 4' },
+                { id: 5, name: 'Phường 5', name_with_type: 'Phường 5' }
+            ];
+            
+            this.wards[`province_${provinceId}`] = fallbackWards;
+            return fallbackWards;
+        }
+    }
+}
+
+// Distance Calculator với HERE Maps API và dữ liệu địa chỉ từ JSON files
 class DistanceCalculator {
     constructor() {
         console.log('Creating DistanceCalculator instance...');
@@ -13,8 +220,8 @@ class DistanceCalculator {
         this.currentRoute = null;
         this.defaultPricePerKm = 5000; // Giá mặc định 5000 VND
         
-        // Thêm reference đến VietnamLocationSelector
-        this.locationSelector = null;
+        // Thêm VietnamAddressDataManager
+        this.addressDataManager = new VietnamAddressDataManager();
         
         this.init();
     }
@@ -26,11 +233,14 @@ class DistanceCalculator {
             // Khởi tạo HERE Maps
             this.initMap();
             
+            // Load dữ liệu địa chỉ từ JSON
+            await this.loadAddressData();
+            
             // Setup event listeners
             this.setupEventListeners();
             
-            // Đợi Location Selector được khởi tạo
-            this.waitForLocationSelector();
+            // Setup dropdown event listeners
+            this.setupDropdownEventListeners();
             
             console.log('Distance Calculator initialized successfully');
             showNotification('✅ Bản đồ đã sẵn sàng! Chọn địa điểm từ dropdown hoặc click trên bản đồ', 'success');
@@ -41,31 +251,134 @@ class DistanceCalculator {
         }
     }
 
-    // Đợi Location Selector được khởi tạo
-    waitForLocationSelector() {
-        const checkInterval = setInterval(() => {
-            if (window.vietnamLocationSelector) {
-                this.locationSelector = window.vietnamLocationSelector;
-                console.log('Location Selector connected:', this.locationSelector);
-                clearInterval(checkInterval);
-                
-                // Thêm event listeners cho dropdown changes
-                this.setupDropdownEventListeners();
-            }
-        }, 100);
+    // Load dữ liệu địa chỉ từ JSON files
+    async loadAddressData() {
+        try {
+            console.log('🔄 Loading address data from JSON files...');
+            
+            // Load provinces
+            const provinces = await this.addressDataManager.getProvinces();
+            
+            // Populate province dropdowns
+            this.populateProvinceDropdowns(provinces);
+            
+            console.log('✅ Address data loaded successfully');
+            
+        } catch (error) {
+            console.error('Error loading address data:', error);
+            showNotification('Lỗi tải dữ liệu địa chỉ: ' + error.message, 'warning');
+        }
     }
 
-    // Thêm event listeners cho dropdown changes
-    setupDropdownEventListeners() {
-        if (!this.locationSelector) return;
+    // Populate province dropdowns
+    populateProvinceDropdowns(provinces) {
+        const pointAProvince = document.getElementById('pointAProvince');
+        const pointBProvince = document.getElementById('pointBProvince');
+        
+        if (pointAProvince && pointBProvince) {
+            // Clear existing options
+            pointAProvince.innerHTML = '<option value="">Chọn tỉnh/thành phố</option>';
+            pointBProvince.innerHTML = '<option value="">Chọn tỉnh/thành phố</option>';
+            
+            // Add province options
+            provinces.forEach(province => {
+                const optionA = document.createElement('option');
+                optionA.value = province.id;
+                optionA.textContent = province.name;
+                pointAProvince.appendChild(optionA);
+                
+                const optionB = document.createElement('option');
+                optionB.value = province.id;
+                optionB.textContent = province.name;
+                pointBProvince.appendChild(optionB);
+            });
+            
+            console.log(`✅ Populated ${provinces.length} provinces in dropdowns`);
+        }
+    }
 
-        // Lắng nghe sự kiện wardSelected từ Location Selector
-        document.addEventListener('wardSelected', async (event) => {
-            const { point, address } = event.detail;
-            if (address) {
-                await this.getCoordinatesFromAddress(address, point);
+    // Setup dropdown event listeners
+    setupDropdownEventListeners() {
+        // Point A province change
+        const pointAProvince = document.getElementById('pointAProvince');
+        if (pointAProvince) {
+            pointAProvince.addEventListener('change', (e) => this.onProvinceChange('A', e.target.value));
+        }
+        
+        // Point A ward change
+        const pointAWard = document.getElementById('pointAWard');
+        if (pointAWard) {
+            pointAWard.addEventListener('change', (e) => this.onWardChange('A', e.target.value));
+        }
+        
+        // Point B province change
+        const pointBProvince = document.getElementById('pointBProvince');
+        if (pointBProvince) {
+            pointBProvince.addEventListener('change', (e) => this.onProvinceChange('B', e.target.value));
+        }
+        
+        // Point B ward change
+        const pointBWard = document.getElementById('pointBWard');
+        if (pointBWard) {
+            pointBWard.addEventListener('change', (e) => this.onWardChange('B', e.target.value));
+        }
+    }
+
+    // Handle province change
+    async onProvinceChange(point, provinceId) {
+        if (!provinceId) return;
+        
+        const wardSelect = point === 'A' ? document.getElementById('pointAWard') : document.getElementById('pointBWard');
+        const coordsSpan = point === 'A' ? document.getElementById('pointACoords') : document.getElementById('pointBCoords');
+        
+        if (wardSelect && coordsSpan) {
+            // Reset ward dropdown
+            wardSelect.innerHTML = '<option value="">Chọn xã/phường</option>';
+            wardSelect.disabled = true;
+            coordsSpan.textContent = '--';
+            
+            try {
+                console.log(`🔄 Loading wards for province ${provinceId}...`);
+                const wards = await this.addressDataManager.getWardsByProvince(provinceId);
+                
+                // Populate ward dropdown
+                wards.forEach(ward => {
+                    const option = document.createElement('option');
+                    option.value = ward.id;
+                    option.textContent = ward.name;
+                    wardSelect.appendChild(option);
+                });
+                
+                wardSelect.disabled = false;
+                console.log(`✅ Loaded ${wards.length} wards for province ${provinceId}`);
+                
+            } catch (error) {
+                console.error('Error loading wards:', error);
+                wardSelect.disabled = false;
             }
-        });
+        }
+    }
+
+    // Handle ward change
+    async onWardChange(point, wardId) {
+        if (!wardId) return;
+        
+        const provinceSelect = point === 'A' ? document.getElementById('pointAProvince') : document.getElementById('pointBProvince');
+        const wardSelect = point === 'A' ? document.getElementById('pointAWard') : document.getElementById('pointBWard');
+        const coordsSpan = point === 'A' ? document.getElementById('pointACoords') : document.getElementById('pointBCoords');
+        
+        if (provinceSelect && wardSelect && coordsSpan) {
+            const provinceName = provinceSelect.options[provinceSelect.selectedIndex].text;
+            const wardName = wardSelect.options[wardSelect.selectedIndex].text;
+            
+            const fullAddress = `${wardName}, ${provinceName}, Việt Nam`;
+            coordsSpan.textContent = fullAddress;
+            
+            console.log(`Địa chỉ ${point}:`, fullAddress);
+            
+            // Get coordinates from address
+            await this.getCoordinatesFromAddress(fullAddress, point);
+        }
     }
 
     // Lấy tọa độ từ địa chỉ sử dụng HERE Maps Geocoding API
@@ -1549,7 +1862,7 @@ function showNotification(message, type = 'info') {
 
 // Initialize distance calculator when page loads
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('DOM Content Loaded - Initializing Distance Calculator');
+    console.log('DOM Content Loaded - Initializing Distance Calculator with JSON data');
     
     // Kiểm tra xem HERE Maps API đã load chưa
     if (typeof H === 'undefined') {
@@ -1573,7 +1886,37 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     try {
-        new DistanceCalculator();
+        console.log('🔄 Creating DistanceCalculator with JSON data support...');
+        const distanceCalculator = new DistanceCalculator();
+        
+        // Thêm global reference để debug
+        window.distanceCalculator = distanceCalculator;
+        window.addressDataManager = distanceCalculator.addressDataManager;
+        
+        console.log('✅ DistanceCalculator initialized successfully with JSON data');
+        
+        // Thêm global functions để test
+        window.testJSONData = function() {
+            console.log('🧪 Testing JSON data...');
+            distanceCalculator.addressDataManager.getProvinces().then(provinces => {
+                console.log('Provinces loaded:', provinces.length);
+                console.log('Sample provinces:', provinces.slice(0, 3));
+            });
+        };
+        
+        window.testWardsData = function(provinceId = 11) {
+            console.log(`🧪 Testing wards for province ${provinceId}...`);
+            distanceCalculator.addressDataManager.getWardsByProvince(provinceId).then(wards => {
+                console.log('Wards loaded:', wards.length);
+                console.log('Sample wards:', wards.slice(0, 3));
+            });
+        };
+        
+        window.clearAddressCache = function() {
+            distanceCalculator.addressDataManager.cache.clear();
+            console.log('🗑️ Address cache cleared');
+        };
+        
     } catch (error) {
         console.error('Error creating DistanceCalculator instance:', error);
         showNotification('Lỗi khởi tạo ứng dụng: ' + error.message, 'error');
