@@ -407,16 +407,16 @@ class DistanceCalculator {
                 
                 console.log(`Coordinates found for ${point}:`, position);
                 
-                // Xóa markers cũ nếu có
-                this.clearMarkers();
-                
                 // Cập nhật tọa độ cho điểm
                 if (point === 'A') {
+                    // Xóa markers cũ khi đặt điểm A
+                    this.clearMarkers();
                     this.point1 = position;
                     this.addMarker(position, 'A');
                     this.updateStatus('Nhấp để đặt điểm B hoặc chọn từ dropdown');
                     showNotification('✅ Đã đặt điểm A từ dropdown', 'success');
                 } else if (point === 'B') {
+                    // KHÔNG xóa markers cũ khi đặt điểm B để giữ lại điểm A
                     this.point2 = position;
                     this.addMarker(position, 'B');
                     this.updateStatus('Đang tính toán khoảng cách...');
@@ -573,11 +573,9 @@ class DistanceCalculator {
                 showNotification('Cảnh báo: Tọa độ nằm ngoài phạm vi Việt Nam', 'warning');
             }
             
-            // Xóa markers cũ nếu có
-            this.clearMarkers();
-            
             if (!this.point1) {
-                // Đặt điểm A
+                // Đặt điểm A - xóa markers cũ trước khi đặt điểm đầu tiên
+                this.clearMarkers();
                 console.log('Setting point A:', position);
                 this.point1 = position;
                 this.addMarker(position, 'A');
@@ -588,7 +586,7 @@ class DistanceCalculator {
                 showNotification('✅ Đã đặt điểm A từ bản đồ', 'success');
                 
             } else if (!this.point2) {
-                // Đặt điểm B
+                // Đặt điểm B - KHÔNG xóa markers cũ để giữ lại điểm A
                 console.log('Setting point B:', position);
                 this.point2 = position;
                 this.addMarker(position, 'B');
