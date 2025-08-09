@@ -115,7 +115,9 @@
                 res.data.forEach(staff => {
                     const opt = document.createElement('option');
                     opt.value = staff.id;
-                    opt.textContent = staff.full_name + ' (' + staff.username + ')';
+                    // Hiển thị role nếu có, nếu không thì hiển thị username
+                    const displayRole = staff.role || staff.username || 'N/A';
+                    opt.textContent = staff.full_name + ' (' + displayRole + ')';
                     select.appendChild(opt);
                 });
             } else {

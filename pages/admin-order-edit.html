@@ -210,7 +210,11 @@
                     const select = document.getElementById('assigned_to');
                     if (select) {
                         select.innerHTML = '<option value="">-- Không phân công --</option>' +
-                            staffRes.data.map(staff => `<option value="${staff.id}">${staff.full_name} (${staff.role})</option>`).join('');
+                            staffRes.data.map(staff => {
+                                // Hiển thị role nếu có, nếu không thì hiển thị username
+                                const displayRole = staff.role || staff.username || 'N/A';
+                                return `<option value="${staff.id}">${staff.full_name} (${displayRole})</option>`;
+                            }).join('');
                         // Set selected if order data was loaded successfully
                         const response = await api.getOrder(orderId);
                         if (response.success && response.data.order.assigned_to) {

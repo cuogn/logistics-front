@@ -16,13 +16,22 @@ async function loadStaffList() {
     select.innerHTML = '<option value="">Đang tải danh sách nhân viên...</option>';
     try {
         const res = await api.getStaffList();
+        console.log('Staff list response:', res); // Debug log
+        
         if (res.success && Array.isArray(res.data)) {
+            console.log('Staff data:', res.data); // Debug log
+            
             select.innerHTML = '<option value="">-- Chọn nhân viên xử lý --</option>' +
-                res.data.map(staff => `<option value="${staff.id}">${staff.full_name} (${staff.username})</option>`).join('');
+                res.data.map(staff => {
+                    // Hiển thị role nếu có, nếu không thì hiển thị username
+                    const displayRole = staff.role || staff.username || 'N/A';
+                    return `<option value="${staff.id}">${staff.full_name} (${displayRole})</option>`;
+                }).join('');
         } else {
             select.innerHTML = '<option value="">Không có nhân viên nào</option>';
         }
     } catch (e) {
+        console.error('Error loading staff list:', e);
         select.innerHTML = '<option value="">Lỗi tải danh sách nhân viên</option>';
     }
 }
