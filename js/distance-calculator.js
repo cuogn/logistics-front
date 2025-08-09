@@ -376,6 +376,9 @@ class DistanceCalculator {
             
             console.log(`Địa chỉ ${point}:`, fullAddress);
             
+            // Cập nhật địa chỉ vào form fields
+            this.updateAddressFromDropdown(point, fullAddress);
+            
             // Get coordinates from address
             await this.getCoordinatesFromAddress(fullAddress, point);
         }
@@ -406,6 +409,9 @@ class DistanceCalculator {
                 const position = item.position;
                 
                 console.log(`Coordinates found for ${point}:`, position);
+                
+                // Cập nhật địa chỉ vào form fields
+                this.updateAddressFromDropdown(point, address);
                 
                 // Cập nhật tọa độ cho điểm
                 if (point === 'A') {
@@ -1195,31 +1201,6 @@ class DistanceCalculator {
         showNotification('🔄 Đã đổi vị trí 2 điểm', 'success');
     }
 
-    getDirections() {
-        if (!this.point1 || !this.point2) {
-            showNotification('Cần đủ 2 điểm để lấy chỉ đường', 'warning');
-            return;
-        }
-
-        console.log('Getting directions...');
-
-        try {
-            // Sử dụng HERE Maps Directions API
-            const API_KEY = '7GUpHwbsEgObqnGg4JG34CJvdbf89IU4iq-SDFe8vmE';
-            const url = `https://router.hereapi.com/v8/routes?transportMode=car&origin=${this.point1.lat},${this.point1.lng}&destination=${this.point2.lat},${this.point2.lng}&return=summary,guidance&apikey=${API_KEY}`;
-            
-            // Mở trong tab mới với thông tin chi tiết
-            const directionsUrl = `https://route.here.com/directions/v2/route?transportMode=car&origin=${this.point1.lat},${this.point1.lng}&destination=${this.point2.lat},${this.point2.lng}&return=summary,guidance&apikey=${API_KEY}`;
-            
-            window.open(directionsUrl, '_blank');
-            showNotification('🌐 Đã mở chỉ đường chi tiết trong tab mới', 'success');
-            
-        } catch (error) {
-            console.error('Error opening directions:', error);
-            showNotification('Lỗi mở chỉ đường', 'error');
-        }
-    }
-
     reset() {
         console.log('Resetting distance calculator...');
         this.clearPoints();
@@ -1335,18 +1316,6 @@ class DistanceCalculator {
             console.log('Swap button listener added');
         } else {
             console.warn('Swap button not found');
-        }
-
-        // Get directions button
-        const getDirectionsBtn = document.getElementById('getDirectionsBtn');
-        if (getDirectionsBtn) {
-            getDirectionsBtn.addEventListener('click', () => {
-                console.log('Get directions button clicked');
-                this.getDirections();
-            });
-            console.log('Get directions button listener added');
-        } else {
-            console.warn('Get directions button not found');
         }
 
         // Reset button
@@ -1800,6 +1769,33 @@ class DistanceCalculator {
         }
         
         return coordinates;
+    }
+
+    // Cập nhật địa chỉ từ dropdown vào form fields
+    updateAddressFromDropdown(point, address) {
+        console.log(`Updating address from dropdown for point ${point}:`, address);
+        
+        if (point === 'A') {
+            // Cập nhật vào senderAddress
+            const senderAddress = document.getElementById('senderAddress');
+            if (senderAddress) {
+                senderAddress.value = address;
+                console.log('Updated senderAddress from dropdown:', address);
+            }
+            
+            this.point1Address = address;
+            console.log('Updated this.point1Address from dropdown:', address);
+        } else if (point === 'B') {
+            // Cập nhật vào receiverAddress
+            const receiverAddress = document.getElementById('receiverAddress');
+            if (receiverAddress) {
+                receiverAddress.value = address;
+                console.log('Updated receiverAddress from dropdown:', address);
+            }
+            
+            this.point2Address = address;
+            console.log('Updated this.point2Address from dropdown:', address);
+        }
     }
 }
 
