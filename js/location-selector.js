@@ -351,11 +351,21 @@ class VietnamLocationSelector {
         { id: 9, name: "Phường An Thới" },
         { id: 10, name: "Phường Cái Khế" },
       ],
-    };
-
-    // Trả về wards cho tỉnh cụ thể hoặc wards mặc định
-    return (
-      fallbackWards[provinceId] || [
+      // An Giang
+      6: [
+        { id: 1, name: "Phường Mỹ Bình" },
+        { id: 2, name: "Phường Mỹ Long" },
+        { id: 3, name: "Phường Đông Xuyên" },
+        { id: 4, name: "Phường Mỹ Xuyên" },
+        { id: 5, name: "Phường Bình Đức" },
+        { id: 6, name: "Phường Bình Khánh" },
+        { id: 7, name: "Phường Mỹ Phước" },
+        { id: 8, name: "Phường Mỹ Quý" },
+        { id: 9, name: "Phường Mỹ Thạnh" },
+        { id: 10, name: "Phường Mỹ Thới" },
+      ],
+      // Bà Rịa - Vũng Tàu
+      7: [
         { id: 1, name: "Phường 1" },
         { id: 2, name: "Phường 2" },
         { id: 3, name: "Phường 3" },
@@ -366,8 +376,36 @@ class VietnamLocationSelector {
         { id: 8, name: "Phường 8" },
         { id: 9, name: "Phường 9" },
         { id: 10, name: "Phường 10" },
-      ]
-    );
+      ],
+      // Bắc Giang
+      8: [
+        { id: 1, name: "Phường Thọ Xương" },
+        { id: 2, name: "Phường Trần Nguyên Hãn" },
+        { id: 3, name: "Phường Ngô Quyền" },
+        { id: 4, name: "Phường Trần Phú" },
+        { id: 5, name: "Phường Lê Lợi" },
+        { id: 6, name: "Phường Hoàng Văn Thụ" },
+        { id: 7, name: "Phường Đồng Tâm" },
+        { id: 8, name: "Phường Tân Mỹ" },
+        { id: 9, name: "Phường Dĩnh Kế" },
+        { id: 10, name: "Phường Xương Giang" },
+      ],
+    };
+
+    // Trả về wards cho tỉnh cụ thể hoặc wards mặc định
+    return fallbackWards[provinceId] || this.getDefaultWards(provinceId);
+  }
+
+  // Lấy wards mặc định cho tỉnh không có dữ liệu cụ thể
+  getDefaultWards(provinceId) {
+    const defaultWards = [];
+    for (let i = 1; i <= 15; i++) {
+      defaultWards.push({
+        id: i,
+        name: `Phường ${i}`,
+      });
+    }
+    return defaultWards;
   }
 
   // Helper methods for UI feedback
@@ -513,6 +551,8 @@ class VietnamAddressAPI {
       "https://api.codetabs.com/v1/proxy?quest=",
       "https://corsproxy.io/?",
       "https://thingproxy.freeboard.io/fetch/",
+      "https://cors.bridged.cc/",
+      "https://tailieu365.com/api/address",
       null, // Direct fetch as last resort
     ];
 
@@ -558,7 +598,48 @@ class VietnamAddressAPI {
       }
     }
 
-    throw new Error("All proxies failed");
+    // If all proxies fail, try server-side proxy
+    console.log("🔄 All CORS proxies failed, trying server-side proxy...");
+    return await this.fetchWithServerProxy(url);
+  }
+
+  // Server-side proxy method
+  async fetchWithServerProxy(url) {
+    try {
+      // Try to use a server-side proxy endpoint
+      const serverProxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(
+        url
+      )}`;
+
+      console.log("🔄 Trying server-side proxy:", serverProxyUrl);
+
+      const response = await fetch(serverProxyUrl, {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        mode: "cors",
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.contents) {
+          // Parse the JSON content
+          const parsedData = JSON.parse(data.contents);
+          console.log("✅ Server-side proxy success");
+          return {
+            ok: true,
+            json: () => Promise.resolve(parsedData),
+          };
+        }
+      }
+
+      throw new Error("Server proxy failed");
+    } catch (error) {
+      console.error("❌ Server-side proxy failed:", error);
+      throw new Error("All proxies and server proxy failed");
+    }
   }
 
   // Cache helper methods
@@ -689,6 +770,7 @@ class VietnamAddressAPI {
         return cachedData;
       }
 
+      console.log(`🔄 Fetching wards for province ${provinceId}...`);
       const response = await this.fetchWithProxy(url);
 
       if (!response.ok) {
@@ -705,8 +787,42 @@ class VietnamAddressAPI {
       return data;
     } catch (error) {
       console.error("Lỗi khi lấy danh sách xã/phường theo tỉnh:", error);
-      return [];
+      console.log("🔄 Falling back to local data...");
+
+      // Try to load from local JSON files
+      try {
+        const localData = await this.loadLocalWardsData(provinceId);
+        if (localData && localData.length > 0) {
+          console.log(
+            `✅ Loaded ${localData.length} wards from local data for province ${provinceId}`
+          );
+          this.wards[`province_${provinceId}`] = localData;
+          return localData;
+        }
+      } catch (localError) {
+        console.error("Local data load failed:", localError);
+      }
+
+      // Final fallback to hardcoded data
+      console.log("🔄 Using hardcoded fallback data...");
+      return this.getFallbackWardsForProvince(provinceId);
     }
+  }
+
+  // Load wards data from local JSON files
+  async loadLocalWardsData(provinceId) {
+    try {
+      // Try to load from local JSON file
+      const response = await fetch(`/images/ward.json`);
+      if (response.ok) {
+        const allWards = await response.json();
+        // Filter wards by province ID
+        return allWards.filter((ward) => ward.provinceId == provinceId);
+      }
+    } catch (error) {
+      console.error("Failed to load local wards data:", error);
+    }
+    return [];
   }
 
   // Lấy danh sách xã/phường theo quận/huyện
